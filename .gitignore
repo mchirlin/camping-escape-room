@@ -1,0 +1,18 @@
+# Minecraft textures (copyrighted)
+textures/
+
+# MCompass repo (separate git repo)
+mcompass/
+
+# Node modules
+node_modules/
+minecraft-fog-map/node_modules/
+
+# Build output
+minecraft-fog-map/dist/
+
+# OS files
+.DS_Store
+
+# Editor
+.vscode/

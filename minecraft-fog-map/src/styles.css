@@ -1,0 +1,372 @@
+/* ============================================================
+   Minecraft Fog Map — Visual Theming
+   ============================================================ */
+
+/* --- Pixel Font (Press Start 2P from Google Fonts) --- */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* --- Base Reset & Font Application --- */
+:root {
+  --mc-bg: #1a1a1a;
+  --mc-btn-face: #8B8B8B;
+  --mc-btn-highlight: #C6C6C6;
+  --mc-btn-shadow: #555555;
+  --mc-text: #FFFFFF;
+  --mc-green: #55FF55;
+  --mc-orange: #FFAA00;
+  --mc-red: #FF5555;
+  --mc-font: 'Press Start 2P', monospace;
+}
+
+/* Apply pixel font to all UI overlay text */
+#ui-overlay,
+#ui-overlay * {
+  font-family: var(--mc-font);
+  color: var(--mc-text);
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  image-rendering: pixelated;
+}
+
+/* --- Full-screen overlay container --- */
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.ui-overlay > * {
+  pointer-events: auto;
+}
+
+/* --- Minecraft-style 3D Button --- */
+.ui-btn {
+  font-family: var(--mc-font);
+  font-size: 14px;
+  color: var(--mc-text);
+  background: var(--mc-btn-face);
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+
+  /* Raised 3D pixel border — light top/left, dark bottom/right */
+  box-shadow:
+    inset -2px -4px 0 0 var(--mc-btn-shadow),
+    inset 2px 2px 0 0 var(--mc-btn-highlight);
+  outline: 2px solid #000;
+  outline-offset: -2px;
+  transition: none;
+  line-height: 1;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ui-btn:active {
+  /* Pressed state — invert the 3D effect */
+  box-shadow:
+    inset 2px 4px 0 0 var(--mc-btn-shadow),
+    inset -2px -2px 0 0 var(--mc-btn-highlight);
+  padding: 10px 10px 6px 14px;
+}
+
+/* Icon buttons with padding:0 shouldn't shift on press */
+.ui-center-btn:active,
+.ui-zoom-controls .ui-btn:active,
+.ui-toggle-map:active {
+  padding: 0;
+}
+
+.ui-btn:hover {
+  background: #9E9E9E;
+}
+
+/* --- Compass (top-right) --- */
+.ui-compass {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px;
+  border: 2px solid var(--mc-btn-shadow);
+}
+
+.ui-compass-arrow {
+  font-size: 18px;
+  color: var(--mc-red);
+  transition: transform 0.3s ease;
+  line-height: 1;
+}
+
+.ui-compass-label {
+  font-size: 8px;
+  color: var(--mc-text);
+  letter-spacing: 1px;
+}
+
+/* --- Map Level Indicator (top-right, below compass) --- */
+.ui-map-level {
+  position: absolute;
+  top: 70px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 10px;
+  border: 2px solid var(--mc-btn-shadow);
+}
+
+.ui-map-level-icon {
+  font-size: 12px;
+}
+
+.ui-map-level-label {
+  font-size: 8px;
+  color: var(--mc-btn-highlight);
+}
+
+.ui-map-level-value {
+  font-size: 10px;
+  color: var(--mc-text);
+}
+
+.ui-map-level-select {
+  font-family: var(--mc-font);
+  font-size: 8px;
+  color: var(--mc-text);
+  background: var(--mc-btn-face);
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  box-shadow:
+    inset -1px -2px 0 0 var(--mc-btn-shadow),
+    inset 1px 1px 0 0 var(--mc-btn-highlight);
+  outline: 1px solid #000;
+  outline-offset: -1px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.ui-map-level-select option {
+  font-family: var(--mc-font);
+  font-size: 8px;
+  background: var(--mc-btn-face);
+  color: var(--mc-text);
+}
+
+/* --- Toggle Real Map Button (top-right, below map level) --- */
+.ui-toggle-map {
+  position: absolute;
+  top: 104px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* --- Center-on-me button (bottom-right) --- */
+.ui-center-btn {
+  position: absolute;
+  bottom: 120px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+  text-shadow: none;
+  line-height: 1;
+  box-shadow:
+    inset -2px -4px 0 0 var(--mc-btn-shadow),
+    inset 2px 2px 0 0 var(--mc-btn-highlight);
+  /* Offset content to visually center within the asymmetric shadow */
+  padding: 0 0 2px 0 !important;
+}
+.ui-zoom-controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ui-zoom-controls .ui-btn {
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 2px 0 !important;
+  text-shadow: none;
+  line-height: 1;
+  box-shadow:
+    inset -2px -4px 0 0 var(--mc-btn-shadow),
+    inset 2px 2px 0 0 var(--mc-btn-highlight);
+}
+
+/* --- GPS Status Indicator (top-left) --- */
+.ui-gps-status {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 10px;
+  border: 2px solid var(--mc-btn-shadow);
+}
+
+.ui-gps-icon {
+  font-size: 12px;
+}
+
+.ui-gps-text {
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+/* GPS status color coding */
+.ui-gps-status[data-status="active"] .ui-gps-text {
+  color: var(--mc-green);
+}
+
+.ui-gps-status[data-status="lost"] .ui-gps-text {
+  color: var(--mc-orange);
+}
+
+.ui-gps-status[data-status="denied"] .ui-gps-text {
+  color: var(--mc-red);
+}
+
+.ui-gps-status[data-status="simulation"] .ui-gps-text {
+  color: var(--mc-green);
+}
+
+/* --- Simulation Mode Banner (top-center) --- */
+.ui-sim-banner {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--mc-green);
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 14px;
+  border: 2px solid var(--mc-green);
+  letter-spacing: 2px;
+  text-shadow: 0 0 8px rgba(85, 255, 85, 0.5);
+  white-space: nowrap;
+}
+
+/* --- Simulation Arrow Key Hints (bottom-left) --- */
+.ui-sim-hints {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 10px;
+  border: 2px solid var(--mc-btn-shadow);
+}
+
+.ui-sim-hint-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+  background: var(--mc-btn-face);
+  box-shadow:
+    inset -1px -2px 0 0 var(--mc-btn-shadow),
+    inset 1px 1px 0 0 var(--mc-btn-highlight);
+  outline: 1px solid #000;
+  outline-offset: -1px;
+}
+
+.ui-sim-hint-label {
+  font-size: 8px;
+  margin-left: 4px;
+  color: var(--mc-btn-highlight);
+}
+
+/* --- Toast Notifications --- */
+.ui-toast-container {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.ui-toast {
+  font-family: var(--mc-font);
+  font-size: 8px;
+  color: var(--mc-text);
+  background: rgba(0, 0, 0, 0.85);
+  padding: 8px 16px;
+  border: 2px solid var(--mc-btn-shadow);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+  white-space: normal;
+  max-width: 90vw;
+  text-align: center;
+  animation: toast-fade 4s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes toast-fade {
+  0% { opacity: 0; transform: translateY(10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* --- Leaflet marker icons: crisp pixel art --- */
+.marker-icon-pixelated {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+}
+
+/* --- Reset Fog Button (bottom-left, above sim hints) --- */
+.ui-reset-fog {
+  position: absolute;
+  bottom: 60px;
+  left: 16px;
+  font-size: 8px;
+  padding: 6px 10px !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
