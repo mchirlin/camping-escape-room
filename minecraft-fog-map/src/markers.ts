@@ -158,6 +158,14 @@ export class MarkerStore {
     dbRemoveMarker(id);
   }
 
+  removeAll(): void {
+    const ids = this.markers.map((m) => m.id);
+    this.markers = [];
+    this.saveLocal();
+    for (const id of ids) dbRemoveMarker(id);
+    this.onChange?.(this.getAll());
+  }
+
   /** Mark a marker as collected (block scanned on crafting table) */
   collect(id: string): void {
     this.markers = this.markers.filter((m) => m.id !== id);

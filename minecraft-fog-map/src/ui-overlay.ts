@@ -46,6 +46,7 @@ export class UIOverlayImpl implements UIOverlay {
   onZoomOut: () => void = () => {};
   onResetFog: () => void = () => {};
   onRevealAll: () => void = () => {};
+  onRemoveAllItems: () => void = () => {};
   onHeadingChange: (degrees: number) => void = () => {};
   onRegionChange: (regionId: string) => void = () => {};
 
@@ -82,6 +83,7 @@ export class UIOverlayImpl implements UIOverlay {
     this.createRegionSelector();
     this.createResetFogButton();
     this.createRevealAllButton();
+    this.createRemoveAllItemsButton();
     this.createFullscreenButton();
     this.createToastContainer();
   }
@@ -124,6 +126,9 @@ export class UIOverlayImpl implements UIOverlay {
     }
     if (this.revealAllBtn) {
       this.revealAllBtn.style.display = visible ? 'flex' : 'none';
+    }
+    if (this.removeAllItemsBtn) {
+      this.removeAllItemsBtn.style.display = visible ? 'flex' : 'none';
     }
     if (this.regionSelect) {
       this.regionSelect.style.display = visible ? 'flex' : 'none';
@@ -419,6 +424,25 @@ export class UIOverlayImpl implements UIOverlay {
 
     this.container!.appendChild(btn);
     this.revealAllBtn = btn;
+  }
+
+  private removeAllItemsBtn: HTMLElement | null = null;
+
+  private createRemoveAllItemsButton(): void {
+    const btn = document.createElement('button');
+    btn.classList.add('ui-btn', 'ui-remove-all-items');
+    btn.setAttribute('data-testid', 'remove-all-items');
+    btn.setAttribute('aria-label', 'Remove all items');
+    btn.textContent = '🗑 Remove Items';
+    btn.style.display = 'none';
+    btn.addEventListener('click', () => {
+      if (confirm('Remove all placed items from the map?')) {
+        this.onRemoveAllItems();
+      }
+    });
+
+    this.container!.appendChild(btn);
+    this.removeAllItemsBtn = btn;
   }
 
   private createFullscreenButton(): void {

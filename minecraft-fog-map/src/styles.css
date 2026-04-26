@@ -377,6 +377,18 @@
   gap: 4px;
 }
 
+/* --- Remove All Items Button --- */
+.ui-remove-all-items {
+  position: absolute;
+  bottom: 60px;
+  left: 228px;
+  font-size: 8px;
+  padding: 6px 10px !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* --- Region Selector (bottom-left, above reset/reveal) --- */
 .ui-region-select {
   position: absolute;

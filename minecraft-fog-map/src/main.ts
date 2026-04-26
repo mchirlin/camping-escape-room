@@ -520,6 +520,15 @@ async function main(): Promise<void> {
     simHeading = degrees;
   };
 
+  uiOverlay.onRemoveAllItems = () => {
+    markerStore.removeAll();
+    // Clean up leaflet markers if any
+    for (const id of Object.keys(leafletMarkerLayers)) {
+      if (leafletMap) leafletMap.removeLayer(leafletMarkerLayers[id]);
+      delete leafletMarkerLayers[id];
+    }
+  };
+
   // Toggle between Minecraft map and real OpenStreetMap view
   let showingRealMap = false;
   const realMapDiv = document.getElementById('real-map') as HTMLElement | null;
