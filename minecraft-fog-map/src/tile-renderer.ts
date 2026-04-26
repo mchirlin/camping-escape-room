@@ -126,7 +126,8 @@ export class TileRenderer {
     viewport: ViewportState,
     mapLevel: number,
     isLevel4Revealed: (col: number, row: number) => boolean,
-    playerPos: WorldPosition | null
+    playerPos: WorldPosition | null,
+    playerHeading = 0
   ): void {
     if (!this.terrainData || !this.atlas) return;
 
@@ -140,34 +141,48 @@ export class TileRenderer {
     const gridCols = zoomData.cols;
     const gridRows = zoomData.rows;
 
-    // World size of one tile at this map level
     const tileWorldSize = TILE_SCREEN_SIZE * Math.pow(2, 4 - mapLevel);
-
-    const range = getVisibleTileRange(
-      viewport,
-      { cols: gridCols, rows: gridRows },
-      tileWorldSize
-    );
-
     const scale = Math.pow(2, viewport.zoomLevel);
     const tileScreenPx = tileWorldSize * scale;
-
-    // Level-4 sub-tiles within each coarse tile (for fog)
     const subTilesPerAxis = Math.round(Math.pow(2, 4 - mapLevel));
     const subTileScreenPx = TILE_SCREEN_SIZE * scale;
 
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
-    ctx.clearRect(0, 0, viewport.screenWidth, viewport.screenHeight);
+    // Fill background with Minecraft map paper color
+    ctx.fillStyle = '#D6BE96';
+    ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
+
+    ctx.save();
     ctx.imageSmoothingEnabled = false;
+
+    // Rotate around the player position (or screen center if no player)
+    if (playerHeading !== 0) {
+      let pivotX = viewport.screenWidth / 2;
+      let pivotY = viewport.screenHeight / 2;
+      if (playerPos) {
+        pivotX = (playerPos.x - viewLeft) * scale;
+        pivotY = (playerPos.y - viewTop) * scale;
+      }
+      ctx.translate(pivotX, pivotY);
+      ctx.rotate((-playerHeading * Math.PI) / 180);
+      ctx.translate(-pivotX, -pivotY);
+    }
+
+    // Expand tile range to cover rotated view (render extra tiles around edges)
+    const extraTiles = playerHeading !== 0 ? Math.ceil(Math.max(viewport.screenWidth, viewport.screenHeight) / tileScreenPx / 2) : 0;
+    const range = getVisibleTileRange(viewport, { cols: gridCols, rows: gridRows }, tileWorldSize);
+    range.minCol = Math.max(0, range.minCol - extraTiles);
+    range.maxCol = Math.min(gridCols - 1, range.maxCol + extraTiles);
+    range.minRow = Math.max(0, range.minRow - extraTiles);
+    range.maxRow = Math.min(gridRows - 1, range.maxRow + extraTiles);
 
     for (let row = range.minRow; row <= range.maxRow; row++) {
       for (let col = range.minCol; col <= range.maxCol; col++) {
         const screenX = (col * tileWorldSize - viewLeft) * scale;
         const screenY = (row * tileWorldSize - viewTop) * scale;
 
-        // Draw terrain directly from this level's grid as a flat color
         const gridRow = zoomData.grid[row];
         if (!gridRow) continue;
         const charCode = gridRow[col] as string;
@@ -190,7 +205,7 @@ export class TileRenderer {
           }
         }
 
-        // Fog at level-4 granularity within this tile
+        // Fog — fully opaque paper color
         const l4ColStart = col * subTilesPerAxis;
         const l4RowStart = row * subTilesPerAxis;
 
@@ -203,8 +218,7 @@ export class TileRenderer {
             if (!isLevel4Revealed(l4Col, l4Row)) {
               const subX = screenX + sc * subTileScreenPx;
               const subY = screenY + sr * subTileScreenPx;
-
-              ctx.fillStyle = '#1a1a1a';
+              ctx.fillStyle = '#D6BE96';
               ctx.fillRect(subX, subY, subTileScreenPx, subTileScreenPx);
             }
           }
@@ -212,16 +226,38 @@ export class TileRenderer {
       }
     }
 
-    // Player marker (fixed screen size)
+    // Player marker (rotated to face heading direction)
     if (playerPos && this.playerEntry && this.atlas) {
       const markerSize = 32;
-      const px = (playerPos.x - viewLeft) * scale - markerSize / 2;
-      const py = (playerPos.y - viewTop) * scale - markerSize / 2;
+      const px = (playerPos.x - viewLeft) * scale;
+      const py = (playerPos.y - viewTop) * scale;
+
+      ctx.save();
+      ctx.translate(px, py);
+      // Counter-rotate so the face stays upright relative to the heading
+      ctx.rotate((playerHeading * Math.PI) / 180);
       ctx.drawImage(
         this.atlas,
         this.playerEntry.x, this.playerEntry.y, this.playerEntry.w, this.playerEntry.h,
-        px, py, markerSize, markerSize
+        -markerSize / 2, -markerSize / 2, markerSize, markerSize
       );
+      ctx.restore();
     }
+
+    ctx.restore();
+
+    // Draw Minecraft map border around the map extent
+    // Border color: rgb(153, 135, 108) — the tan frame from map_background.png
+    const borderWidth = 4;
+    const mapLeft = (0 - viewLeft) * scale;
+    const mapTop = (0 - viewTop) * scale;
+    const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
+    const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
+    const mapW = level4WorldW * scale;
+    const mapH = level4WorldH * scale;
+
+    ctx.strokeStyle = '#99876C';
+    ctx.lineWidth = borderWidth;
+    ctx.strokeRect(mapLeft, mapTop, mapW, mapH);
   }
 }

@@ -217,7 +217,11 @@ async function main(): Promise<void> {
     });
 
     const lm = L.marker([lat, lng], { icon, draggable: true }).addTo(leafletMap);
-    lm.bindPopup(`<b>${tagInfo.label}${count > 1 ? ' x' + count : ''}</b><br><button onclick="document.dispatchEvent(new CustomEvent('remove-marker',{detail:'${id}'}))">Remove</button>`);
+    lm.bindPopup(
+      `<b>${tagInfo.label}${count > 1 ? ' x' + count : ''}</b><br>` +
+      `<button onclick="document.dispatchEvent(new CustomEvent('collect-marker',{detail:'${id}'}))">✅ Collect</button> ` +
+      `<button onclick="document.dispatchEvent(new CustomEvent('remove-marker',{detail:'${id}'}))">🗑 Remove</button>`
+    );
 
     // Update marker position in store when dragged
     lm.on('dragend', () => {
@@ -265,6 +269,7 @@ async function main(): Promise<void> {
   // 10. Detect simulation mode and set up position source
   const isSimulation = shouldActivateSimulation();
   let simulation: ReturnType<typeof createSimulationMode> | null = null;
+  let simHeading = 0; // simulated compass heading in degrees
 
   if (isSimulation) {
     simulation = createSimulationMode({
@@ -313,18 +318,19 @@ async function main(): Promise<void> {
         case '_':
           mapInteraction.setZoomLevel(mapInteraction.getViewport().zoomLevel - 0.5);
           break;
+        case 'q':
+        case 'Q':
+          simHeading = (simHeading - 15 + 360) % 360;
+          uiOverlay.setCompassHeading(simHeading);
+          break;
+        case 'e':
+        case 'E':
+          simHeading = (simHeading + 15) % 360;
+          uiOverlay.setCompassHeading(simHeading);
+          break;
       }
     });
 
-    // Wire map click/tap for simulation
-    canvas.addEventListener('click', (e) => {
-      simulation!.handleMapClick(e.clientX, e.clientY);
-    });
-
-    // Mobile tap support (touch events prevent click from firing)
-    mapInteraction.onTap = (screenX: number, screenY: number) => {
-      simulation!.handleMapClick(screenX, screenY);
-    };
   } else {
     // Real GPS mode
     const gpsTracker = createGPSTracker();
@@ -389,6 +395,10 @@ async function main(): Promise<void> {
 
   uiOverlay.onResetFog = () => {
     fogEngine.reset();
+  };
+
+  uiOverlay.onHeadingChange = (degrees: number) => {
+    simHeading = degrees;
   };
 
   // Toggle between Minecraft map and real OpenStreetMap view
@@ -597,6 +607,93 @@ async function main(): Promise<void> {
     }
   };
 
+  // Marker popup on the Minecraft canvas map
+  let markerPopupEl: HTMLElement | null = null;
+
+  function showMarkerPopup(marker: { id: string; tag: string; count: number }, screenX: number, screenY: number) {
+    hideMarkerPopup();
+    const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
+    const label = tagInfo?.label ?? marker.tag;
+
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+      position:absolute;left:${screenX}px;top:${screenY - 60}px;z-index:50;
+      background:rgba(0,0,0,0.9);border:2px solid #555;padding:8px;
+      font-family:var(--mc-font);font-size:8px;color:#fff;pointer-events:auto;
+      display:flex;flex-direction:column;gap:6px;align-items:center;
+    `;
+    popup.innerHTML = `
+      <div>${label}${marker.count > 1 ? ' x' + marker.count : ''}</div>
+      <div style="display:flex;gap:4px;">
+        <button data-action="collect" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#55FF55;color:#000;border:1px solid #333;cursor:pointer;">✅ Collect</button>
+        <button data-action="close" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;">✕</button>
+      </div>
+    `;
+
+    popup.querySelector('[data-action="collect"]')!.addEventListener('click', () => {
+      markerStore.collect(marker.id);
+      hideMarkerPopup();
+    });
+    popup.querySelector('[data-action="close"]')!.addEventListener('click', () => {
+      hideMarkerPopup();
+    });
+
+    document.getElementById('app')!.appendChild(popup);
+    markerPopupEl = popup;
+  }
+
+  function hideMarkerPopup() {
+    if (markerPopupEl) {
+      markerPopupEl.remove();
+      markerPopupEl = null;
+    }
+  }
+
+  // Detect clicks/taps on markers on the Minecraft canvas
+  function handleMarkerClick(screenX: number, screenY: number) {
+    const viewport = mapInteraction.getViewport();
+    const scale = Math.pow(2, viewport.zoomLevel);
+    const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
+    const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
+    const hitRadius = 16; // pixels
+
+    for (const marker of markerStore.getAll()) {
+      const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
+      const tileCol = Math.floor(worldPos.x / TILE_SCREEN_SIZE);
+      const tileRow = Math.floor(worldPos.y / TILE_SCREEN_SIZE);
+      if (!fogEngine.isRevealed(4, tileCol, tileRow)) continue;
+
+      const mx = (worldPos.x - viewLeft) * scale;
+      const my = (worldPos.y - viewTop) * scale;
+      const dx = screenX - mx;
+      const dy = screenY - my;
+
+      if (Math.sqrt(dx * dx + dy * dy) < hitRadius) {
+        showMarkerPopup(marker, screenX, screenY);
+        return true;
+      }
+    }
+
+    hideMarkerPopup();
+    return false;
+  }
+
+  // Wire canvas click for marker interaction (non-simulation mode uses this too)
+  canvas.addEventListener('click', (e) => {
+    handleMarkerClick(e.clientX, e.clientY);
+  });
+
+  // Wire tap for mobile marker interaction
+  const existingOnTap = mapInteraction.onTap;
+  mapInteraction.onTap = (screenX: number, screenY: number) => {
+    if (!handleMarkerClick(screenX, screenY)) {
+      // If no marker was hit, pass through to simulation if active
+      if (simulation) {
+        simulation.handleMapClick(screenX, screenY);
+      }
+    }
+  };
+
   // 12. Handle canvas resize
   window.addEventListener('resize', () => {
     resizeCanvas(canvas);
@@ -639,7 +736,7 @@ async function main(): Promise<void> {
 
     // When performance is degraded, skip player marker rendering
     const effectivePlayerPos = skipNonEssential ? null : playerWorldPos;
-    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos);
+    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading);
 
     // Render user-placed markers on revealed tiles
     if (!skipNonEssential) {

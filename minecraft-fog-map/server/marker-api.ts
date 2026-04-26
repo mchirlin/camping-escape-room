@@ -131,9 +131,9 @@ export function handleMarkerApi(req: IncomingMessage, res: ServerResponse): bool
     return true;
   }
 
-  // POST /api/markers/:id/collect
+  // POST or GET /api/markers/:id/collect
   const collectMatch = url.match(/^\/api\/markers\/([^/]+)\/collect$/);
-  if (method === 'POST' && collectMatch) {
+  if (collectMatch && (method === 'POST' || method === 'GET')) {
     const id = collectMatch[1];
     const markers = loadMarkers();
     const marker = markers.find((m) => m.id === id);
@@ -143,7 +143,14 @@ export function handleMarkerApi(req: IncomingMessage, res: ServerResponse): bool
     }
     marker.collected = true;
     saveMarkers(markers);
-    json(res, marker);
+
+    if (method === 'GET') {
+      // Show a brief collected confirmation, try to close tab
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`<html><body style="background:#1a1a1a;color:#55FF55;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:24px;">✅ Collected!<script>setTimeout(()=>window.close(),500)</script></body></html>`);
+    } else {
+      json(res, marker);
+    }
     return true;
   }
 

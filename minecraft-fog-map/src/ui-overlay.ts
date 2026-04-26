@@ -20,6 +20,7 @@ export interface UIOverlay {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetFog: () => void;
+  onHeadingChange: (degrees: number) => void;
 }
 
 const GPS_STATUS_LABELS: Record<GPSStatus, string> = {
@@ -44,6 +45,7 @@ export class UIOverlayImpl implements UIOverlay {
   onZoomIn: () => void = () => {};
   onZoomOut: () => void = () => {};
   onResetFog: () => void = () => {};
+  onHeadingChange: (degrees: number) => void = () => {};
 
   // DOM element references
   private container: HTMLElement | null = null;
@@ -58,6 +60,7 @@ export class UIOverlayImpl implements UIOverlay {
   private simBanner: HTMLElement | null = null;
   private simHints: HTMLElement | null = null;
   private resetFogBtn: HTMLElement | null = null;
+  private fullscreenBtn: HTMLElement | null = null;
   private toastContainer: HTMLElement | null = null;
   private toggleMapBtn: HTMLElement | null = null;
 
@@ -72,8 +75,8 @@ export class UIOverlayImpl implements UIOverlay {
     this.createZoomButtons();
     this.createGPSStatus();
     this.createSimulationBanner();
-    this.createSimulationHints();
     this.createResetFogButton();
+    this.createFullscreenButton();
     this.createToastContainer();
   }
 
@@ -91,6 +94,8 @@ export class UIOverlayImpl implements UIOverlay {
 
   setCompassHeading(degrees: number): void {
     if (this.compassArrow) {
+      // Arrow points to north: rotate by the heading so it indicates
+      // where north is relative to the screen
       this.compassArrow.style.transform = `rotate(${degrees}deg)`;
     }
   }
@@ -104,9 +109,6 @@ export class UIOverlayImpl implements UIOverlay {
   setSimulationVisible(visible: boolean): void {
     if (this.simBanner) {
       this.simBanner.style.display = visible ? 'block' : 'none';
-    }
-    if (this.simHints) {
-      this.simHints.style.display = visible ? 'block' : 'none';
     }
     if (this.toggleMapBtn) {
       this.toggleMapBtn.style.display = visible ? 'flex' : 'none';
@@ -140,27 +142,60 @@ export class UIOverlayImpl implements UIOverlay {
   // --- Private creation methods ---
 
   private createCompass(): void {
-    const compass = document.createElement('div');
-    compass.classList.add('ui-compass');
-    compass.setAttribute('data-testid', 'compass');
+    const btn = document.createElement('button');
+    btn.classList.add('ui-btn', 'ui-compass');
+    btn.setAttribute('data-testid', 'compass');
+    btn.setAttribute('aria-label', 'Toggle compass heading');
+    btn.innerHTML = '<svg class="ui-compass-arrow" data-testid="compass-arrow" width="18" height="18" viewBox="0 0 18 18" shape-rendering="crispEdges" style="transition:transform 0.15s ease"><polygon points="9,2 14,14 9,11 4,14" fill="#FF5555"/><polygon points="9,11 14,14 9,16 4,14" fill="#FFFFFF"/></svg>';
 
-    const arrow = document.createElement('div');
-    arrow.classList.add('ui-compass-arrow');
-    arrow.setAttribute('data-testid', 'compass-arrow');
-    arrow.textContent = '▲';
-    // Default: pointing north (0 degrees)
-    arrow.style.transform = 'rotate(0deg)';
+    let headingActive = false;
 
-    const label = document.createElement('span');
-    label.classList.add('ui-compass-label');
-    label.textContent = 'N';
+    btn.addEventListener('click', () => {
+      headingActive = !headingActive;
 
-    compass.appendChild(arrow);
-    compass.appendChild(label);
-    this.container!.appendChild(compass);
+      if (headingActive) {
+        // Request permission on iOS
+        if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+          (DeviceOrientationEvent as any).requestPermission().then((state: string) => {
+            if (state === 'granted') {
+              this.startHeadingWatch();
+            } else {
+              headingActive = false;
+            }
+          });
+        } else {
+          this.startHeadingWatch();
+        }
+        btn.style.outlineColor = '#55FF55';
+      } else {
+        this.stopHeadingWatch();
+        const arrow = btn.querySelector('.ui-compass-arrow') as SVGElement;
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+        btn.style.outlineColor = '#000';
+      }
+    });
 
-    this.compassEl = compass;
-    this.compassArrow = arrow;
+    this.container!.appendChild(btn);
+    this.compassEl = btn;
+    this.compassArrow = btn.querySelector('.ui-compass-arrow') as HTMLElement;
+  }
+
+  private headingHandler: ((e: DeviceOrientationEvent) => void) | null = null;
+
+  private startHeadingWatch(): void {
+    this.headingHandler = (e: DeviceOrientationEvent) => {
+      const heading = (e as any).webkitCompassHeading ?? (e.alpha ? 360 - e.alpha : 0);
+      this.setCompassHeading(heading);
+      this.onHeadingChange(heading);
+    };
+    window.addEventListener('deviceorientation', this.headingHandler, true);
+  }
+
+  private stopHeadingWatch(): void {
+    if (this.headingHandler) {
+      window.removeEventListener('deviceorientation', this.headingHandler, true);
+      this.headingHandler = null;
+    }
   }
 
   private createMapLevel(): void {
@@ -319,6 +354,26 @@ export class UIOverlayImpl implements UIOverlay {
 
     this.container!.appendChild(btn);
     this.resetFogBtn = btn;
+  }
+
+  private createFullscreenButton(): void {
+    const btn = document.createElement('button');
+    btn.classList.add('ui-btn', 'ui-fullscreen');
+    btn.setAttribute('data-testid', 'fullscreen');
+    btn.setAttribute('aria-label', 'Toggle fullscreen');
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="white" shape-rendering="crispEdges"><rect x="0" y="0" width="3" height="2"/><rect x="0" y="0" width="2" height="3"/><rect x="13" y="0" width="3" height="2"/><rect x="14" y="0" width="2" height="3"/><rect x="0" y="14" width="3" height="2"/><rect x="0" y="13" width="2" height="3"/><rect x="13" y="14" width="3" height="2"/><rect x="14" y="13" width="2" height="3"/></svg>';
+
+    btn.addEventListener('click', () => {
+      const el = document.documentElement;
+      if (!document.fullscreenElement) {
+        (el.requestFullscreen?.() || (el as any).webkitRequestFullscreen?.());
+      } else {
+        (document.exitFullscreen?.() || (document as any).webkitExitFullscreen?.());
+      }
+    });
+
+    this.container!.appendChild(btn);
+    this.fullscreenBtn = btn;
   }
 
   private createToastContainer(): void {

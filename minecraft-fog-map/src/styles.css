@@ -92,27 +92,21 @@
   position: absolute;
   top: 16px;
   right: 16px;
+  width: 44px;
+  height: 44px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  font-size: 10px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 8px;
-  border: 2px solid var(--mc-btn-shadow);
+  justify-content: center;
+  padding: 0 0 2px 0 !important;
+  text-shadow: none;
+  line-height: 1;
+  box-shadow:
+    inset -2px -4px 0 0 var(--mc-btn-shadow),
+    inset 2px 2px 0 0 var(--mc-btn-highlight);
 }
 
 .ui-compass-arrow {
-  font-size: 18px;
-  color: var(--mc-red);
-  transition: transform 0.3s ease;
-  line-height: 1;
-}
-
-.ui-compass-label {
-  font-size: 8px;
-  color: var(--mc-text);
-  letter-spacing: 1px;
+  transition: transform 0.15s ease;
 }
 
 /* --- Map Level Indicator (top-right, below compass) --- */
@@ -369,4 +363,22 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* --- Fullscreen Button (bottom-left) --- */
+.ui-fullscreen {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0 2px 0 !important;
+  text-shadow: none;
+  line-height: 1;
+  box-shadow:
+    inset -2px -4px 0 0 var(--mc-btn-shadow),
+    inset 2px 2px 0 0 var(--mc-btn-highlight);
 }
