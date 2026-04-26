@@ -55,9 +55,9 @@ An Ender Dragon egg has been detected somewhere near the campsite. The kids are 
    - Craft unlocks the fog-of-war map on the iPad/phone — game master hands over the device with the map app loaded
    - The digital map shows the campsite in Minecraft style with fog covering unexplored areas
    - Block hiding spots are marked on the map as item icons (only visible once the fog is cleared by walking near them)
+   - The dig site is marked on the map as a special marker — kids have to explore to reveal it
    - The map also shows the player's real-time GPS position
    - Optionally: a second map device can be given so kids can split up
-   - Also reveals a hand-drawn parchment treasure map showing the dig site location
    - Reveals Recipe Card #5
 
 5. **Diamond Shovel** (2 diamonds + 1 stick)
@@ -87,8 +87,7 @@ Mine → Fish → Fight → Navigate (with digital map + compass) → Dig
 
 ## Tools the Kids Carry
 - **MCompass** — always points back to the tent/crafting table. Given at the start or after the first craft. Helps kids navigate back from distant biomes.
-- **Fog Map (1–2 devices)** — unlocked by crafting the Map (recipe #4). Shows Minecraft-style terrain with fog of war. Block locations appear as markers when the fog clears. Real-time GPS tracking.
-- **Parchment treasure map** — also from the Map craft. Hand-drawn X marks the dig site for the finale.
+- **Fog Map (1–2 devices)** — unlocked by crafting the Map (recipe #4). Shows Minecraft-style terrain with fog of war. Block locations and the dig site appear as markers when the fog clears. Real-time GPS tracking.
 
 ## Open Questions
 - What does the crafting table display/do when a recipe is correct? Screen? Sounds? Lights?

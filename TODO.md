@@ -19,7 +19,7 @@
   - [ ] Matte clear coat spray
 - [ ] **Props & materials**
   - [x] Neodymium disc magnets (for fishing rod)
-  - [ ] Parchment paper (recipe scrolls + map)
+  - [ ] Parchment paper (recipe scrolls)
   - [ ] Spray paint — diamond blue/teal (shovel)
   - [ ] Green spray paint (creeper)
   - [ ] Black acrylic paint (creeper face)
@@ -133,8 +133,6 @@
   - [ ] #5 Diamond Shovel (1 diamond + 2 stick)
 - [ ] Tea-stain parchment paper for aged look
 - [ ] Roll into scroll format
-- [ ] Hand-draw treasure map on parchment (X marks dig site)
-- [ ] Write directions on back of map
 
 ## 🎣 Props Assembly
 
@@ -164,7 +162,6 @@
   - [ ] Crafting table + power bank
   - [ ] All 34 blocks (in labeled bags by biome)
   - [ ] 5 recipe scrolls
-  - [ ] Treasure map
   - [ ] Fishing rod + gold target
   - [ ] Foam gold sword
   - [ ] Diamond shovel
