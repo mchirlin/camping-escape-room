@@ -122,6 +122,9 @@ export class UIOverlayImpl implements UIOverlay {
     if (this.resetFogBtn) {
       this.resetFogBtn.style.display = visible ? 'flex' : 'none';
     }
+    if (this.revealAllBtn) {
+      this.revealAllBtn.style.display = visible ? 'flex' : 'none';
+    }
     if (this.regionSelect) {
       this.regionSelect.style.display = visible ? 'flex' : 'none';
     }
@@ -409,6 +412,7 @@ export class UIOverlayImpl implements UIOverlay {
     btn.setAttribute('data-testid', 'reveal-all');
     btn.setAttribute('aria-label', 'Reveal entire map');
     btn.textContent = '👁 Reveal All';
+    btn.style.display = 'none';
     btn.addEventListener('click', () => {
       this.onRevealAll();
     });
@@ -425,11 +429,26 @@ export class UIOverlayImpl implements UIOverlay {
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="white" shape-rendering="crispEdges"><rect x="0" y="0" width="3" height="2"/><rect x="0" y="0" width="2" height="3"/><rect x="13" y="0" width="3" height="2"/><rect x="14" y="0" width="2" height="3"/><rect x="0" y="14" width="3" height="2"/><rect x="0" y="13" width="2" height="3"/><rect x="13" y="14" width="3" height="2"/><rect x="14" y="13" width="2" height="3"/></svg>';
 
     btn.addEventListener('click', () => {
-      const el = document.documentElement;
-      if (!document.fullscreenElement) {
-        (el.requestFullscreen?.() || (el as any).webkitRequestFullscreen?.());
+      const doc = document as any;
+      const el = document.documentElement as any;
+      const isFullscreen = doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement;
+
+      if (!isFullscreen) {
+        if (el.requestFullscreen) {
+          el.requestFullscreen().catch(() => {});
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        } else if (el.msRequestFullscreen) {
+          el.msRequestFullscreen();
+        }
       } else {
-        (document.exitFullscreen?.() || (document as any).webkitExitFullscreen?.());
+        if (doc.exitFullscreen) {
+          doc.exitFullscreen().catch(() => {});
+        } else if (doc.webkitExitFullscreen) {
+          doc.webkitExitFullscreen();
+        } else if (doc.msExitFullscreen) {
+          doc.msExitFullscreen();
+        }
       }
     });
 
