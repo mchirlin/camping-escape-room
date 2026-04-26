@@ -53,8 +53,31 @@ function showError(message: string): void {
 
 // ---- Asset loading ----
 
-async function loadTerrainData(): Promise<TerrainData> {
-  const res = await fetch(`${import.meta.env.BASE_URL}terrain-data.json`);
+interface RegionInfo {
+  id: string;
+  name: string;
+  file: string;
+}
+
+async function loadRegions(): Promise<RegionInfo[]> {
+  const res = await fetch(`${import.meta.env.BASE_URL}regions.json`);
+  if (!res.ok) return [];
+  return res.json() as Promise<RegionInfo[]>;
+}
+
+function getSelectedRegionFile(regions: RegionInfo[]): string {
+  const params = new URLSearchParams(window.location.search);
+  const regionId = params.get('region');
+  if (regionId) {
+    const match = regions.find((r) => r.id === regionId);
+    if (match) return match.file;
+  }
+  // Default to first region
+  return regions.length > 0 ? regions[0].file : 'terrain-data.json';
+}
+
+async function loadTerrainData(filename: string): Promise<TerrainData> {
+  const res = await fetch(`${import.meta.env.BASE_URL}${filename}`);
   if (!res.ok) throw new Error('Failed to load terrain data');
   return res.json() as Promise<TerrainData>;
 }
@@ -94,10 +117,13 @@ async function main(): Promise<void> {
   let terrainData: TerrainData;
   let atlasManifest: TextureAtlasManifest;
   let atlasImage: HTMLImageElement;
+  let regions: RegionInfo[] = [];
 
   try {
+    regions = await loadRegions();
+    const terrainFile = getSelectedRegionFile(regions);
     [terrainData, atlasManifest, atlasImage] = await Promise.all([
-      loadTerrainData(),
+      loadTerrainData(terrainFile),
       loadAtlasManifest(),
       loadAtlasImage(),
     ]);
@@ -310,6 +336,19 @@ async function main(): Promise<void> {
     simulation.activate(mapCenterGeo);
     uiOverlay.setGPSStatus('simulation');
     uiOverlay.setSimulationVisible(true);
+
+    // Populate region selector
+    if (regions.length > 1) {
+      const params = new URLSearchParams(window.location.search);
+      const currentRegionId = params.get('region') || regions[0].id;
+      uiOverlay.setRegions(regions, currentRegionId);
+      uiOverlay.onRegionChange = (regionId: string) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('region', regionId);
+        params.set('simulate', 'true');
+        window.location.search = params.toString();
+      };
+    }
 
     // Wire keyboard for simulation
     window.addEventListener('keydown', (e) => {

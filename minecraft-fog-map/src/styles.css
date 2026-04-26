@@ -377,6 +377,34 @@
   gap: 4px;
 }
 
+/* --- Region Selector (bottom-left, above reset/reveal) --- */
+.ui-region-select {
+  position: absolute;
+  bottom: 100px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 6px 10px;
+  border: 2px solid var(--mc-btn-shadow);
+}
+
+.ui-region-label {
+  font-size: 12px;
+}
+
+.ui-region-select select {
+  font-family: var(--mc-font);
+  font-size: 8px;
+  color: var(--mc-text);
+  background: var(--mc-btn-face);
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+
 /* --- Fullscreen Button (bottom-left) --- */
 .ui-fullscreen {
   position: absolute;

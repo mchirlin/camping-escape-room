@@ -47,6 +47,7 @@ export class UIOverlayImpl implements UIOverlay {
   onResetFog: () => void = () => {};
   onRevealAll: () => void = () => {};
   onHeadingChange: (degrees: number) => void = () => {};
+  onRegionChange: (regionId: string) => void = () => {};
 
   // DOM element references
   private container: HTMLElement | null = null;
@@ -65,6 +66,7 @@ export class UIOverlayImpl implements UIOverlay {
   private fullscreenBtn: HTMLElement | null = null;
   private toastContainer: HTMLElement | null = null;
   private toggleMapBtn: HTMLElement | null = null;
+  private regionSelect: HTMLElement | null = null;
 
   init(container: HTMLElement): void {
     this.container = container;
@@ -77,6 +79,7 @@ export class UIOverlayImpl implements UIOverlay {
     this.createZoomButtons();
     this.createGPSStatus();
     this.createSimulationBanner();
+    this.createRegionSelector();
     this.createResetFogButton();
     this.createRevealAllButton();
     this.createFullscreenButton();
@@ -121,6 +124,9 @@ export class UIOverlayImpl implements UIOverlay {
     }
     if (this.revealAllBtn) {
       this.revealAllBtn.style.display = visible ? 'flex' : 'none';
+    }
+    if (this.regionSelect) {
+      this.regionSelect.style.display = visible ? 'flex' : 'none';
     }
     if (this.mapLevelEl) {
       this.mapLevelEl.style.display = visible ? 'flex' : 'none';
@@ -346,6 +352,41 @@ export class UIOverlayImpl implements UIOverlay {
 
     this.container!.appendChild(hints);
     this.simHints = hints;
+  }
+
+  private createRegionSelector(): void {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('ui-region-select');
+    wrapper.style.display = 'none';
+
+    const label = document.createElement('span');
+    label.classList.add('ui-region-label');
+    label.textContent = '🗺️';
+    wrapper.appendChild(label);
+
+    const select = document.createElement('select');
+    select.setAttribute('data-testid', 'region-select');
+    select.setAttribute('aria-label', 'Select map region');
+    select.addEventListener('change', () => {
+      this.onRegionChange(select.value);
+    });
+    wrapper.appendChild(select);
+
+    this.container!.appendChild(wrapper);
+    this.regionSelect = wrapper;
+  }
+
+  setRegions(regions: Array<{ id: string; name: string }>, currentId: string): void {
+    const select = this.regionSelect?.querySelector('select');
+    if (!select) return;
+    select.innerHTML = '';
+    for (const r of regions) {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = r.name;
+      if (r.id === currentId) opt.selected = true;
+      select.appendChild(opt);
+    }
   }
 
   private createResetFogButton(): void {

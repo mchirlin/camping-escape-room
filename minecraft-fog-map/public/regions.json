@@ -1,0 +1,12 @@
+[
+  {
+    "id": "lake-fairfax-campsite",
+    "name": "Lake Fairfax Campsite",
+    "file": "terrain-lakefairfax.json"
+  },
+  {
+    "id": "depaul-dr",
+    "name": "2632 Depaul Dr",
+    "file": "terrain-depaul.json"
+  }
+]
