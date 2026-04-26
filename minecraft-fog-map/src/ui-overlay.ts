@@ -122,9 +122,6 @@ export class UIOverlayImpl implements UIOverlay {
     if (this.resetFogBtn) {
       this.resetFogBtn.style.display = visible ? 'flex' : 'none';
     }
-    if (this.revealAllBtn) {
-      this.revealAllBtn.style.display = visible ? 'flex' : 'none';
-    }
     if (this.regionSelect) {
       this.regionSelect.style.display = visible ? 'flex' : 'none';
     }
@@ -412,7 +409,6 @@ export class UIOverlayImpl implements UIOverlay {
     btn.setAttribute('data-testid', 'reveal-all');
     btn.setAttribute('aria-label', 'Reveal entire map');
     btn.textContent = '👁 Reveal All';
-    btn.style.display = 'none';
     btn.addEventListener('click', () => {
       this.onRevealAll();
     });
