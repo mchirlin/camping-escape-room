@@ -41,7 +41,9 @@ export function calculateGridSize(
   metersPerTile: number
 ): { cols: number; rows: number } {
   const { widthM, heightM } = bboxSizeMeters(bbox);
-  const cols = Math.ceil(widthM / metersPerTile);
-  const rows = Math.ceil(heightM / metersPerTile);
-  return { cols, rows };
+  const cols = Math.round(widthM / metersPerTile);
+  const rows = Math.round(heightM / metersPerTile);
+  // Use the larger dimension for both to keep the grid square
+  const size = Math.max(cols, rows);
+  return { cols: size, rows: size };
 }
