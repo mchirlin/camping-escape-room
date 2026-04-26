@@ -156,8 +156,8 @@ export class TileRenderer {
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
-    // Fill background black — the map_background texture provides the paper color
-    ctx.fillStyle = '#000000';
+    // Fill background with paper color — unexplored areas are just paper
+    ctx.fillStyle = '#D6BE96';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
 
     ctx.save();
@@ -194,6 +194,24 @@ export class TileRenderer {
         const charCode = gridRow[col] as string;
         const terrainType = CHAR_TO_TERRAIN[charCode] ?? 'grass';
 
+        // Only draw terrain for revealed tiles — unrevealed stays as paper background
+        const l4ColStart = col * subTilesPerAxis;
+        const l4RowStart = row * subTilesPerAxis;
+
+        // Check if ANY level-4 sub-tile in this coarse tile is revealed
+        let anyRevealed = false;
+        for (let sr = 0; sr < subTilesPerAxis && !anyRevealed; sr++) {
+          for (let sc = 0; sc < subTilesPerAxis && !anyRevealed; sc++) {
+            const l4Col = l4ColStart + sc;
+            const l4Row = l4RowStart + sr;
+            if (l4Col < level4Cols && l4Row < level4Rows && isLevel4Revealed(l4Col, l4Row)) {
+              anyRevealed = true;
+            }
+          }
+        }
+
+        if (!anyRevealed) continue; // Skip entirely — paper shows through
+
         ctx.fillStyle = MAP_COLORS[terrainType] ?? MAP_COLORS.grass;
         ctx.fillRect(screenX, screenY, tileScreenPx, tileScreenPx);
 
@@ -211,10 +229,7 @@ export class TileRenderer {
           }
         }
 
-        // Fog — fully opaque paper color
-        const l4ColStart = col * subTilesPerAxis;
-        const l4RowStart = row * subTilesPerAxis;
-
+        // Cover unrevealed sub-tiles with paper color for partial reveals
         for (let sr = 0; sr < subTilesPerAxis; sr++) {
           for (let sc = 0; sc < subTilesPerAxis; sc++) {
             const l4Col = l4ColStart + sc;
@@ -252,38 +267,39 @@ export class TileRenderer {
 
     ctx.restore();
 
-    // Draw map background frame (torn paper border from map_background.png)
-    // The 64×64 texture has a ~2px torn border around a ~60px paper interior.
-    // We scale it so the inner paper area aligns with the map extent,
-    // and the border extends slightly outside.
+    // Draw map border frame using the torn paper texture
+    // The texture goes BEHIND the terrain (destination-over) to fill paper areas,
+    // then black fills behind everything for the outside.
     if (this.mapBgImage) {
-      const borderFrac = 2 / 64; // border is ~2px of the 64px texture
+      const borderFrac = 2 / 64;
       const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
       const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
       const mapScreenW = level4WorldW * scale;
       const mapScreenH = level4WorldH * scale;
       const mapScreenL = (0 - viewLeft) * scale;
       const mapScreenT = (0 - viewTop) * scale;
-
-      // Expand to include the border
       const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
       const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
 
-      // Draw black outside the map area (fill the whole canvas, then the texture covers the map)
-      // We use destination-over to draw black behind everything
-      ctx.save();
-      ctx.globalCompositeOperation = 'destination-over';
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
-      ctx.restore();
-
-      // Draw the torn border on top using the texture
+      // Draw the torn border texture ON TOP — it only has opaque pixels
+      // at the border edges (the center is the same paper color as our bg)
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(
         this.mapBgImage,
         mapScreenL - bw, mapScreenT - bh,
         mapScreenW + 2 * bw, mapScreenH + 2 * bh
       );
+
+      // Fill black outside the texture bounds
+      // Top
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, viewport.screenWidth, mapScreenT - bh);
+      // Bottom
+      ctx.fillRect(0, mapScreenT + mapScreenH + bh, viewport.screenWidth, viewport.screenHeight - (mapScreenT + mapScreenH + bh));
+      // Left
+      ctx.fillRect(0, mapScreenT - bh, mapScreenL - bw, mapScreenH + 2 * bh);
+      // Right
+      ctx.fillRect(mapScreenL + mapScreenW + bw, mapScreenT - bh, viewport.screenWidth - (mapScreenL + mapScreenW + bw), mapScreenH + 2 * bh);
     }
   }
 }
