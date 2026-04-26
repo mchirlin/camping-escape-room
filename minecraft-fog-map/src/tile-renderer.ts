@@ -95,6 +95,7 @@ export class TileRenderer {
   private terrainAtlas: Map<TerrainType, AtlasEntry> = new Map();
   private fogEntry: AtlasEntry | null = null;
   private playerEntry: AtlasEntry | null = null;
+  private mapBgImage: HTMLImageElement | null = null;
 
   init(
     terrainData: TerrainData,
@@ -113,6 +114,11 @@ export class TileRenderer {
 
     this.fogEntry = atlasManifest.textures['fog'] ?? null;
     this.playerEntry = atlasManifest.textures['player'] ?? null;
+
+    // Load map background texture (torn paper border)
+    const bgImg = new Image();
+    bgImg.onload = () => { this.mapBgImage = bgImg; };
+    bgImg.src = `${import.meta.env.BASE_URL}map-background.png`;
   }
 
   /**
@@ -150,8 +156,8 @@ export class TileRenderer {
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
-    // Fill background with Minecraft map paper color
-    ctx.fillStyle = '#D6BE96';
+    // Fill background black — the map_background texture provides the paper color
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
 
     ctx.save();
@@ -246,18 +252,38 @@ export class TileRenderer {
 
     ctx.restore();
 
-    // Draw Minecraft map border around the map extent
-    // Border color: rgb(153, 135, 108) — the tan frame from map_background.png
-    const borderWidth = 4;
-    const mapLeft = (0 - viewLeft) * scale;
-    const mapTop = (0 - viewTop) * scale;
-    const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
-    const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
-    const mapW = level4WorldW * scale;
-    const mapH = level4WorldH * scale;
+    // Draw map background frame (torn paper border from map_background.png)
+    // The 64×64 texture has a ~2px torn border around a ~60px paper interior.
+    // We scale it so the inner paper area aligns with the map extent,
+    // and the border extends slightly outside.
+    if (this.mapBgImage) {
+      const borderFrac = 2 / 64; // border is ~2px of the 64px texture
+      const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
+      const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
+      const mapScreenW = level4WorldW * scale;
+      const mapScreenH = level4WorldH * scale;
+      const mapScreenL = (0 - viewLeft) * scale;
+      const mapScreenT = (0 - viewTop) * scale;
 
-    ctx.strokeStyle = '#99876C';
-    ctx.lineWidth = borderWidth;
-    ctx.strokeRect(mapLeft, mapTop, mapW, mapH);
+      // Expand to include the border
+      const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
+      const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
+
+      // Draw black outside the map area (fill the whole canvas, then the texture covers the map)
+      // We use destination-over to draw black behind everything
+      ctx.save();
+      ctx.globalCompositeOperation = 'destination-over';
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
+      ctx.restore();
+
+      // Draw the torn border on top using the texture
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        this.mapBgImage,
+        mapScreenL - bw, mapScreenT - bh,
+        mapScreenW + 2 * bw, mapScreenH + 2 * bh
+      );
+    }
   }
 }
