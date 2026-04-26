@@ -45,6 +45,7 @@ export class UIOverlayImpl implements UIOverlay {
   onZoomIn: () => void = () => {};
   onZoomOut: () => void = () => {};
   onResetFog: () => void = () => {};
+  onRevealAll: () => void = () => {};
   onHeadingChange: (degrees: number) => void = () => {};
 
   // DOM element references
@@ -60,6 +61,7 @@ export class UIOverlayImpl implements UIOverlay {
   private simBanner: HTMLElement | null = null;
   private simHints: HTMLElement | null = null;
   private resetFogBtn: HTMLElement | null = null;
+  private revealAllBtn: HTMLElement | null = null;
   private fullscreenBtn: HTMLElement | null = null;
   private toastContainer: HTMLElement | null = null;
   private toggleMapBtn: HTMLElement | null = null;
@@ -76,6 +78,7 @@ export class UIOverlayImpl implements UIOverlay {
     this.createGPSStatus();
     this.createSimulationBanner();
     this.createResetFogButton();
+    this.createRevealAllButton();
     this.createFullscreenButton();
     this.createToastContainer();
   }
@@ -115,6 +118,9 @@ export class UIOverlayImpl implements UIOverlay {
     }
     if (this.resetFogBtn) {
       this.resetFogBtn.style.display = visible ? 'flex' : 'none';
+    }
+    if (this.revealAllBtn) {
+      this.revealAllBtn.style.display = visible ? 'flex' : 'none';
     }
     if (this.mapLevelEl) {
       this.mapLevelEl.style.display = visible ? 'flex' : 'none';
@@ -357,6 +363,21 @@ export class UIOverlayImpl implements UIOverlay {
 
     this.container!.appendChild(btn);
     this.resetFogBtn = btn;
+  }
+
+  private createRevealAllButton(): void {
+    const btn = document.createElement('button');
+    btn.classList.add('ui-btn', 'ui-reveal-all');
+    btn.setAttribute('data-testid', 'reveal-all');
+    btn.setAttribute('aria-label', 'Reveal entire map');
+    btn.textContent = '👁 Reveal All';
+    btn.style.display = 'none';
+    btn.addEventListener('click', () => {
+      this.onRevealAll();
+    });
+
+    this.container!.appendChild(btn);
+    this.revealAllBtn = btn;
   }
 
   private createFullscreenButton(): void {

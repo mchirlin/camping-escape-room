@@ -330,4 +330,18 @@ export class FogEngine {
       try { localStorage.removeItem(key); } catch { /* ignore */ }
     }
   }
+
+  /** Reveal every tile at all zoom levels. */
+  revealAll(): void {
+    const { gridSizes } = this.config;
+    for (let level = 0; level <= 4; level++) {
+      const grid = gridSizes[level];
+      for (let row = 0; row < grid.rows; row++) {
+        for (let col = 0; col < grid.cols; col++) {
+          this.revealedTiles.add(tileKey(level, col, row));
+        }
+      }
+    }
+    this.persistToStorage();
+  }
 }

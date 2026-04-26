@@ -260,10 +260,38 @@ async function main(): Promise<void> {
     }
   }) as EventListener);
 
+  // Track which map quadrants the player has stepped into (per display level)
+  const discoveredQuadrants = new Map<number, Set<string>>();
+
+  // Map level: display level 0=128m, 1=256m, 2=512m
+  // Maps to internal terrain grid level and a visible area fraction
+  const MAP_LEVEL_CONFIG = [
+    { display: 0, internal: 4, sizeFraction: 0.25 },  // 128m = 1/4 of 512m
+    { display: 1, internal: 3, sizeFraction: 0.5 },   // 256m = 1/2 of 512m
+    { display: 2, internal: 2, sizeFraction: 1.0 },   // 512m = full map
+  ];
+
   // Position update handler shared by GPS and simulation
   const onPosition = (pos: GeoPosition): void => {
     fogEngine.reveal(pos, 15);
     playerWorldPos = geoToWorld(pos, bbox, level4Grid, TILE_SCREEN_SIZE);
+
+    // Mark the player's current quadrant as discovered for each display level
+    for (const cfg of MAP_LEVEL_CONFIG) {
+      if (!discoveredQuadrants.has(cfg.display)) {
+        discoveredQuadrants.set(cfg.display, new Set());
+      }
+      const levelData = terrainData.zoomLevels.find((zl) => zl.level === cfg.internal);
+      if (levelData) {
+        // getQuadrantKey uses level-4 world coords, but quadrant size is based on
+        // the selected level's grid scaled to world space
+        const quadWorldW = Math.round(levelData.cols * cfg.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - cfg.internal);
+        const quadWorldH = Math.round(levelData.rows * cfg.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - cfg.internal);
+        const qx = Math.floor(playerWorldPos.x / quadWorldW);
+        const qy = Math.floor(playerWorldPos.y / quadWorldH);
+        discoveredQuadrants.get(cfg.display)!.add(`${qx},${qy}`);
+      }
+    }
   };
 
   // 10. Detect simulation mode and set up position source
@@ -289,25 +317,25 @@ async function main(): Promise<void> {
         case 'ArrowUp':
         case 'w':
         case 'W':
-          simulation!.handleKeyboard('up');
+          simulation!.handleKeyboard('up', simHeading);
           if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
           break;
         case 'ArrowDown':
         case 's':
         case 'S':
-          simulation!.handleKeyboard('down');
+          simulation!.handleKeyboard('down', simHeading);
           if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
           break;
         case 'ArrowLeft':
         case 'a':
         case 'A':
-          simulation!.handleKeyboard('left');
+          simulation!.handleKeyboard('left', simHeading);
           if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
           break;
         case 'ArrowRight':
         case 'd':
         case 'D':
-          simulation!.handleKeyboard('right');
+          simulation!.handleKeyboard('right', simHeading);
           if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
           break;
         case '=':
@@ -375,17 +403,9 @@ async function main(): Promise<void> {
     }
   };
 
-  // Map level: display level 0=128m, 1=256m, 2=512m
-  // Maps to internal terrain grid level and a visible area fraction
-  const MAP_LEVEL_CONFIG = [
-    { display: 0, internal: 4, sizeFraction: 0.25 },  // 128m = 1/4 of 512m
-    { display: 1, internal: 3, sizeFraction: 0.5 },   // 256m = 1/2 of 512m
-    { display: 2, internal: 2, sizeFraction: 1.0 },   // 512m = full map
-  ];
-
-  let currentDisplayLevel = 2;
-  let currentMapLevel = 2; // internal terrain grid level
-  let mapSizeFraction = 1.0; // fraction of the full map to show
+  let currentDisplayLevel = 0;
+  let currentMapLevel = 4; // internal terrain grid level
+  let mapSizeFraction = 0.25; // fraction of the full map to show
   uiOverlay.setMapLevel(currentDisplayLevel);
 
   uiOverlay.onMapLevelChange = (displayLevel: number) => {
@@ -408,6 +428,29 @@ async function main(): Promise<void> {
 
   uiOverlay.onResetFog = () => {
     fogEngine.reset();
+  };
+
+  uiOverlay.onRevealAll = () => {
+    fogEngine.revealAll();
+    // Discover all quadrants for every display level
+    for (const cfg of MAP_LEVEL_CONFIG) {
+      if (!discoveredQuadrants.has(cfg.display)) {
+        discoveredQuadrants.set(cfg.display, new Set());
+      }
+      const levelData = terrainData.zoomLevels.find((zl) => zl.level === cfg.internal);
+      if (levelData) {
+        const quadCols = Math.round(levelData.cols * cfg.sizeFraction);
+        const quadRows = Math.round(levelData.rows * cfg.sizeFraction);
+        const numQX = Math.ceil(levelData.cols / quadCols);
+        const numQY = Math.ceil(levelData.rows / quadRows);
+        const set = discoveredQuadrants.get(cfg.display)!;
+        for (let qy = 0; qy < numQY; qy++) {
+          for (let qx = 0; qx < numQX; qx++) {
+            set.add(`${qx},${qy}`);
+          }
+        }
+      }
+    }
   };
 
   uiOverlay.onHeadingChange = (degrees: number) => {
@@ -719,7 +762,7 @@ async function main(): Promise<void> {
 
     // When performance is degraded, skip player marker rendering
     const effectivePlayerPos = skipNonEssential ? null : playerWorldPos;
-    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading, mapSizeFraction);
+    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading, mapSizeFraction, discoveredQuadrants.get(currentDisplayLevel) ?? null);
 
     // Render user-placed markers on revealed tiles
     if (!skipNonEssential) {

@@ -365,6 +365,18 @@
   gap: 4px;
 }
 
+/* --- Reveal All Button (bottom-left, next to reset fog) --- */
+.ui-reveal-all {
+  position: absolute;
+  bottom: 60px;
+  left: 120px;
+  font-size: 8px;
+  padding: 6px 10px !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* --- Fullscreen Button (bottom-left) --- */
 .ui-fullscreen {
   position: absolute;

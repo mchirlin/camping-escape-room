@@ -47,7 +47,7 @@ export interface ViewportState {
 
 // --- Terrain ---
 
-export type TerrainType = 'grass' | 'forest' | 'water' | 'path' | 'road' | 'building' | 'sand';
+export type TerrainType = 'grass' | 'forest' | 'water' | 'path' | 'road' | 'building' | 'sand' | 'park';
 
 export interface TerrainData {
   version: number;             // schema version for cache busting

@@ -41,7 +41,7 @@ const OUTPUT_DIR = path.resolve('public');
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'terrain-data.json');
 
 // Single-character terrain codes for compact JSON storage
-type TerrainCode = 'g' | 'f' | 'w' | 'p' | 'r' | 'b' | 's';
+type TerrainCode = 'g' | 'f' | 'w' | 'p' | 'r' | 'b' | 's' | 'k';
 
 const TERRAIN_CODE_MAP: Record<string, TerrainCode> = {
   grass: 'g',
@@ -51,6 +51,7 @@ const TERRAIN_CODE_MAP: Record<string, TerrainCode> = {
   road: 'r',
   building: 'b',
   sand: 's',
+  park: 'k',
 };
 
 // --- Overpass API types ---
@@ -86,6 +87,8 @@ function buildOverpassQuery(bbox: BoundingBox): string {
   relation["natural"="water"](${b});
   way["natural"="wood"](${b});
   way["landuse"="forest"](${b});
+  relation["natural"="wood"](${b});
+  relation["landuse"="forest"](${b});
   way["highway"="path"](${b});
   way["highway"="footway"](${b});
   way["highway"="track"](${b});
@@ -99,9 +102,72 @@ function buildOverpassQuery(bbox: BoundingBox): string {
   way["natural"="sand"](${b});
   way["natural"="beach"](${b});
   way["leisure"="parking"](${b});
+  way["leisure"="pitch"](${b});
+  way["leisure"="park"](${b});
+  relation["leisure"="park"](${b});
+  way["tourism"="camp_site"](${b});
 );
 out body geom;
 `;
+}
+
+/**
+ * Join open line segments into closed rings.
+ * Segments are connected when one's last point matches another's first point (within tolerance).
+ * Returns an array of closed polygon rings.
+ */
+function joinSegmentsIntoRings(
+  segments: Array<Array<{ lat: number; lon: number }>>
+): Array<Array<{ lat: number; lon: number }>> {
+  const EPS = 1e-7;
+  const match = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
+    Math.abs(a.lat - b.lat) < EPS && Math.abs(a.lon - b.lon) < EPS;
+
+  const rings: Array<Array<{ lat: number; lon: number }>> = [];
+  const remaining = segments.map((s) => [...s]);
+
+  while (remaining.length > 0) {
+    const chain = remaining.shift()!;
+
+    // Check if already closed
+    if (chain.length > 2 && match(chain[0], chain[chain.length - 1])) {
+      rings.push(chain);
+      continue;
+    }
+
+    // Try to extend the chain by finding connecting segments
+    let changed = true;
+    while (changed) {
+      changed = false;
+      const last = chain[chain.length - 1];
+
+      for (let i = 0; i < remaining.length; i++) {
+        const seg = remaining[i];
+        if (match(last, seg[0])) {
+          // Append segment (skip first point to avoid duplicate)
+          chain.push(...seg.slice(1));
+          remaining.splice(i, 1);
+          changed = true;
+          break;
+        } else if (match(last, seg[seg.length - 1])) {
+          // Append reversed segment
+          chain.push(...seg.reverse().slice(1));
+          remaining.splice(i, 1);
+          changed = true;
+          break;
+        }
+      }
+
+      // Check if chain is now closed
+      if (chain.length > 2 && match(chain[0], chain[chain.length - 1])) {
+        break;
+      }
+    }
+
+    rings.push(chain);
+  }
+
+  return rings;
 }
 
 async function queryOverpass(bbox: BoundingBox): Promise<OverpassElement[]> {
@@ -122,7 +188,51 @@ async function queryOverpass(bbox: BoundingBox): Promise<OverpassElement[]> {
 
   const data = (await response.json()) as OverpassResponse;
   console.log(`  Received ${data.elements.length} elements`);
-  return data.elements;
+
+  // Flatten multipolygon relations into synthetic way elements.
+  // Relations have `members` with geometry instead of a top-level `geometry` array.
+  // Outer members may be open segments that chain together to form closed rings —
+  // we join connected segments before creating way-like elements.
+  const flattened: OverpassElement[] = [];
+  for (const el of data.elements) {
+    if (el.type === 'relation' && (el as any).members) {
+      const members = (el as any).members as Array<{
+        type: string;
+        role: string;
+        geometry?: Array<{ lat: number; lon: number }>;
+      }>;
+
+      // Collect outer segments and join them into closed rings
+      const outerSegments: Array<Array<{ lat: number; lon: number }>> = [];
+      for (const member of members) {
+        if (member.role === 'outer' && member.geometry && member.geometry.length > 0) {
+          outerSegments.push([...member.geometry]);
+        }
+      }
+
+      const rings = joinSegmentsIntoRings(outerSegments);
+      for (const ring of rings) {
+        flattened.push({
+          type: 'way',
+          id: el.id,
+          tags: el.tags,
+          geometry: ring,
+        });
+      }
+
+      // Also extract inner rings (holes) — these are typically already closed
+      for (const member of members) {
+        if (member.role === 'inner' && member.geometry && member.geometry.length > 0) {
+          // Inner rings don't need special handling for now
+        }
+      }
+    } else {
+      flattened.push(el);
+    }
+  }
+
+  console.log(`  After flattening relations: ${flattened.length} elements`);
+  return flattened;
 }
 
 // --- Terrain classification ---
@@ -153,6 +263,14 @@ function classifyElement(tags: Record<string, string>): string | null {
   // Parking lots
   if (tags['leisure'] === 'parking') {
     return 'building';
+  }
+  // Sports fields/pitches
+  if (tags['leisure'] === 'pitch') {
+    return 'sand';
+  }
+  // Campsites — open clearings within forest
+  if (tags['tourism'] === 'camp_site') {
+    return 'park';
   }
   // Building: building=*
   if (tags['building']) {
@@ -256,6 +374,7 @@ const TERRAIN_PRIORITY: Record<string, number> = {
   road: 3,
   path: 3,
   sand: 2,
+  park: 1.5,
   forest: 1,
   grass: 0,
 };

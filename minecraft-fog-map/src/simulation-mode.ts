@@ -14,7 +14,7 @@ export interface SimulationMode {
   activate(initialPosition: GeoPosition): void;
   deactivate(): void;
   handleMapClick(screenX: number, screenY: number): void;
-  handleKeyboard(direction: 'up' | 'down' | 'left' | 'right'): void;
+  handleKeyboard(direction: 'up' | 'down' | 'left' | 'right', headingDegrees?: number): void;
   isActive(): boolean;
 }
 
@@ -85,37 +85,32 @@ export function createSimulationMode(config: SimulationModeConfig): SimulationMo
       config.onPosition(currentPosition);
     },
 
-    handleKeyboard(direction: 'up' | 'down' | 'left' | 'right'): void {
+    handleKeyboard(direction: 'up' | 'down' | 'left' | 'right', headingDegrees = 0): void {
       if (!active || !currentPosition) return;
 
       const lng = lngStep(currentPosition.latitude);
 
+      // Base movement vector in screen-relative space (up = forward)
+      let dLat = 0;
+      let dLng = 0;
       switch (direction) {
-        case 'up':
-          currentPosition = {
-            latitude: currentPosition.latitude + LAT_STEP,
-            longitude: currentPosition.longitude,
-          };
-          break;
-        case 'down':
-          currentPosition = {
-            latitude: currentPosition.latitude - LAT_STEP,
-            longitude: currentPosition.longitude,
-          };
-          break;
-        case 'left':
-          currentPosition = {
-            latitude: currentPosition.latitude,
-            longitude: currentPosition.longitude - lng,
-          };
-          break;
-        case 'right':
-          currentPosition = {
-            latitude: currentPosition.latitude,
-            longitude: currentPosition.longitude + lng,
-          };
-          break;
+        case 'up':    dLat =  LAT_STEP; dLng = 0;   break;
+        case 'down':  dLat = -LAT_STEP; dLng = 0;   break;
+        case 'left':  dLat = 0;         dLng = -lng; break;
+        case 'right': dLat = 0;         dLng =  lng; break;
       }
+
+      // Rotate movement by heading so WASD is relative to the map view
+      const rad = (headingDegrees * Math.PI) / 180;
+      const cosH = Math.cos(rad);
+      const sinH = Math.sin(rad);
+      const rotLat = dLat * cosH - dLng * sinH;
+      const rotLng = dLat * sinH + dLng * cosH;
+
+      currentPosition = {
+        latitude: currentPosition.latitude + rotLat,
+        longitude: currentPosition.longitude + rotLng,
+      };
 
       config.onPosition(currentPosition);
     },

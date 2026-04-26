@@ -21,6 +21,7 @@ const CHAR_TO_TERRAIN: Record<string, TerrainType> = {
   r: 'road',
   b: 'building',
   s: 'sand',
+  k: 'park',
 };
 
 /**
@@ -34,10 +35,28 @@ const MAP_COLORS: Record<TerrainType, string> = {
   road: '#707070',     // stone/cobblestone — roads
   building: '#909090',
   sand: '#F7E9A3',
+  park: '#59A524',     // lighter forest — open parkland with scattered trees
 };
 
 /** Base tile size in world-space pixels (level-4 grid, 1 tile = 32 world px) */
 export const TILE_SCREEN_SIZE = 32;
+
+/**
+ * Compute the quadrant key ("qx,qy") for a world position given a map level and size fraction.
+ * Returns null if the position is outside the grid.
+ */
+export function getQuadrantKey(
+  worldPos: WorldPosition,
+  fullGridCols: number,
+  fullGridRows: number,
+  mapSizeFraction: number
+): string {
+  const quadWorldW = Math.round(fullGridCols * mapSizeFraction) * TILE_SCREEN_SIZE;
+  const quadWorldH = Math.round(fullGridRows * mapSizeFraction) * TILE_SCREEN_SIZE;
+  const qx = Math.floor(worldPos.x / quadWorldW);
+  const qy = Math.floor(worldPos.y / quadWorldH);
+  return `${qx},${qy}`;
+}
 
 /**
  * Visible tile range returned by viewport culling.
@@ -106,7 +125,7 @@ export class TileRenderer {
     this.atlas = textureAtlas;
     this.atlasManifest = atlasManifest;
 
-    const terrainTypes: TerrainType[] = ['grass', 'forest', 'water', 'path', 'building', 'sand'];
+    const terrainTypes: TerrainType[] = ['grass', 'forest', 'water', 'path', 'building', 'sand', 'park'];
     for (const t of terrainTypes) {
       const entry = atlasManifest.textures[t];
       if (entry) this.terrainAtlas.set(t, entry);
@@ -134,7 +153,8 @@ export class TileRenderer {
     isLevel4Revealed: (col: number, row: number) => boolean,
     playerPos: WorldPosition | null,
     playerHeading = 0,
-    mapSizeFraction = 1.0
+    mapSizeFraction = 1.0,
+    discoveredQuadrants: Set<string> | null = null
   ): void {
     if (!this.terrainData || !this.atlas) return;
 
@@ -148,17 +168,9 @@ export class TileRenderer {
     const fullGridCols = zoomData.cols;
     const fullGridRows = zoomData.rows;
 
-    // Clip to center portion based on map size fraction
-    const clipCols = Math.round(fullGridCols * mapSizeFraction);
-    const clipRows = Math.round(fullGridRows * mapSizeFraction);
-    const clipColStart = Math.floor((fullGridCols - clipCols) / 2);
-    const clipRowStart = Math.floor((fullGridRows - clipRows) / 2);
-
-    // Level-4 clip bounds
-    const l4ClipCols = Math.round(level4Cols * mapSizeFraction);
-    const l4ClipRows = Math.round(level4Rows * mapSizeFraction);
-    const l4ClipColStart = Math.floor((level4Cols - l4ClipCols) / 2);
-    const l4ClipRowStart = Math.floor((level4Rows - l4ClipRows) / 2);
+    // Quadrant size in grid tiles at this map level
+    const quadCols = Math.round(fullGridCols * mapSizeFraction);
+    const quadRows = Math.round(fullGridRows * mapSizeFraction);
 
     const tileWorldSize = TILE_SCREEN_SIZE * Math.pow(2, 4 - mapLevel);
     const scale = Math.pow(2, viewport.zoomLevel);
@@ -166,9 +178,9 @@ export class TileRenderer {
     const subTilesPerAxis = Math.round(Math.pow(2, 4 - mapLevel));
     const subTileScreenPx = TILE_SCREEN_SIZE * scale;
 
-    // World offset for the clipped area
-    const clipWorldOffsetX = clipColStart * tileWorldSize;
-    const clipWorldOffsetY = clipRowStart * tileWorldSize;
+    // Quadrant dimensions in world pixels
+    const quadWorldW = quadCols * tileWorldSize;
+    const quadWorldH = quadRows * tileWorldSize;
 
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
@@ -176,26 +188,6 @@ export class TileRenderer {
     // 1. Black background
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
-
-    // 2. Draw map background texture sized to the clipped area
-    if (this.mapBgImage) {
-      const borderFrac = 3 / 64;
-      const clipWorldW = clipCols * tileWorldSize;
-      const clipWorldH = clipRows * tileWorldSize;
-      const mapScreenW = clipWorldW * scale;
-      const mapScreenH = clipWorldH * scale;
-      const mapScreenL = (clipWorldOffsetX - viewLeft) * scale;
-      const mapScreenT = (clipWorldOffsetY - viewTop) * scale;
-      const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
-      const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
-
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(
-        this.mapBgImage,
-        mapScreenL - bw, mapScreenT - bh,
-        mapScreenW + 2 * bw, mapScreenH + 2 * bh
-      );
-    }
 
     ctx.save();
     ctx.imageSmoothingEnabled = false;
@@ -213,17 +205,69 @@ export class TileRenderer {
       ctx.translate(-pivotX, -pivotY);
     }
 
+    // Determine which quadrants are visible (quadrant grid covers the full terrain)
+    // Quadrant (qx, qy) covers grid cols [qx*quadCols .. (qx+1)*quadCols-1]
+    const numQuadX = Math.ceil(fullGridCols / quadCols);
+    const numQuadY = Math.ceil(fullGridRows / quadRows);
+
+    // Viewport bounds in world pixels (with extra margin for rotation)
+    const extraWorld = playerHeading !== 0
+      ? Math.max(viewport.screenWidth, viewport.screenHeight) / scale / 2
+      : 0;
+    const visLeft = viewLeft - extraWorld;
+    const visTop = viewTop - extraWorld;
+    const visRight = viewLeft + viewport.screenWidth / scale + extraWorld;
+    const visBottom = viewTop + viewport.screenHeight / scale + extraWorld;
+
+    const minQX = Math.max(0, Math.floor(visLeft / quadWorldW));
+    const maxQX = Math.min(numQuadX - 1, Math.floor(visRight / quadWorldW));
+    const minQY = Math.max(0, Math.floor(visTop / quadWorldH));
+    const maxQY = Math.min(numQuadY - 1, Math.floor(visBottom / quadWorldH));
+
+    // 2. Draw map background textures for each visible quadrant
+    if (this.mapBgImage) {
+      const borderFrac = 3 / 64;
+      const mapScreenW = quadWorldW * scale;
+      const mapScreenH = quadWorldH * scale;
+      const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
+      const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
+
+      for (let qy = minQY; qy <= maxQY; qy++) {
+        for (let qx = minQX; qx <= maxQX; qx++) {
+          // Only draw parchment for discovered quadrants (or all if no tracking)
+          if (discoveredQuadrants && !discoveredQuadrants.has(`${qx},${qy}`)) continue;
+
+          const qWorldX = qx * quadWorldW;
+          const qWorldY = qy * quadWorldH;
+          const mapScreenL = (qWorldX - viewLeft) * scale;
+          const mapScreenT = (qWorldY - viewTop) * scale;
+
+          ctx.drawImage(
+            this.mapBgImage,
+            mapScreenL - bw, mapScreenT - bh,
+            mapScreenW + 2 * bw, mapScreenH + 2 * bh
+          );
+        }
+      }
+    }
+
     // Expand tile range to cover rotated view (render extra tiles around edges)
     const extraTiles = playerHeading !== 0 ? Math.ceil(Math.max(viewport.screenWidth, viewport.screenHeight) / tileScreenPx / 2) : 0;
     const range = getVisibleTileRange(viewport, { cols: fullGridCols, rows: fullGridRows }, tileWorldSize);
-    // Clamp to clipped area
-    range.minCol = Math.max(clipColStart, range.minCol - extraTiles);
-    range.maxCol = Math.min(clipColStart + clipCols - 1, range.maxCol + extraTiles);
-    range.minRow = Math.max(clipRowStart, range.minRow - extraTiles);
-    range.maxRow = Math.min(clipRowStart + clipRows - 1, range.maxRow + extraTiles);
+    range.minCol = Math.max(0, range.minCol - extraTiles);
+    range.maxCol = Math.min(fullGridCols - 1, range.maxCol + extraTiles);
+    range.minRow = Math.max(0, range.minRow - extraTiles);
+    range.maxRow = Math.min(fullGridRows - 1, range.maxRow + extraTiles);
 
     for (let row = range.minRow; row <= range.maxRow; row++) {
       for (let col = range.minCol; col <= range.maxCol; col++) {
+        // Skip tiles in undiscovered quadrants
+        if (discoveredQuadrants) {
+          const qx = Math.floor(col / quadCols);
+          const qy = Math.floor(row / quadRows);
+          if (!discoveredQuadrants.has(`${qx},${qy}`)) continue;
+        }
+
         const screenX = (col * tileWorldSize - viewLeft) * scale;
         const screenY = (row * tileWorldSize - viewTop) * scale;
 
