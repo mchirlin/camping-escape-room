@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import basicSsl from '@vitejs/plugin-basic-ssl';
-import { handleGenerateTerrain } from './server/generate-terrain-api';
+
+const isDev = process.env.NODE_ENV !== 'production';
 
 export default defineConfig({
   base: '/minecraft-escape-room/',
@@ -20,25 +20,9 @@ export default defineConfig({
   },
   server: {
     host: true,
-    https: {},
   },
   preview: {
     host: true,
-    https: {},
   },
-  plugins: [
-    basicSsl(),
-    {
-      name: 'terrain-api',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          if (req.method === 'POST' && req.url === '/api/generate-terrain') {
-            handleGenerateTerrain(req, res);
-          } else {
-            next();
-          }
-        });
-      },
-    },
-  ],
+  plugins: [],
 });

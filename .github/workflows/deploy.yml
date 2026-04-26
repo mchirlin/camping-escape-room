@@ -26,11 +26,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: minecraft-fog-map
-        run: npm ci
+        run: npm install
 
       - name: Build
         working-directory: minecraft-fog-map
-        run: npx vite build
+        run: NODE_ENV=production npx vite build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
