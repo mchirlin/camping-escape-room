@@ -12,7 +12,7 @@
   - [x] Micro SD card for DFPlayer
   - [x] Copper tape (1" wide roll) — ~$5
   - [x] Jumper wires / hookup wire — ~$8
-- [ ] **MCompass** — buy pre-assembled from Etsy
+- [x] **MCompass** — buy pre-assembled from Etsy
 - [ ] **3D Printing supplies**
   - [ ] Black PLA filament (1-2 spools)
   - [x] Printable vinyl sticker paper (matte, waterproof, 25-pack)
@@ -89,21 +89,37 @@
 
 ## 🧭 MCompass Setup
 
-- [ ] Receive compass from Etsy
+- [ ] Receive compass from Etsy (or build from PCB order)
 - [ ] Flash GPS-WIFI firmware (if not pre-flashed)
-- [ ] Configure WiFi + set spawn point to dig site coordinates
+- [ ] Configure WiFi + set spawn point to **tent/crafting table coordinates** (so it always points home)
 - [ ] Test compass pointing accuracy outdoors
 - [ ] Calibrate (6 quick presses, figure-8 motion)
+- [ ] Decide when kids receive the compass:
+  - Option A: Given at the very start (always have a way home)
+  - Option B: Given after first craft (pickaxe) as a reward
+  - Option C: Found inside the creeper loot alongside map ingredients
 
 ## 🗺️ Fog-of-War Map (Digital)
 
-- [ ] Finalize map bounding box for campsite
-- [ ] Generate terrain data for final location
+- [x] Finalize map bounding box for campsite
+- [x] Generate terrain data for final location
+- [x] Multi-region support (Lake Fairfax + Depaul Dr)
+- [x] Region selector in simulation UI
+- [x] Map rotation with device compass heading
+- [x] WASD movement relative to heading (simulation mode)
+- [x] Map quadrant discovery (parchments appear as you explore)
+- [x] Forest/park/campsite terrain classification
+- [x] Sports fields rendering
+- [x] Reveal All / Reset Fog / Remove Items buttons
+- [x] Player auto-follow in GPS mode
+- [x] Markers rotate with map
+- [x] Heading resets to north-up when leaving orientation mode
+- [x] Favicon + iOS home screen icon
+- [x] Deploy to GitHub Pages
 - [ ] Place markers on real-world map for block hiding spots
 - [ ] Place markers for key locations (mine, creeper, dig site)
 - [ ] Test on iPad (Safari, performance)
 - [ ] Test GPS tracking at campsite
-- [ ] Deploy as static site (or run from laptop)
 - [ ] Clear fog state before each game run
 
 ## 📜 Recipe Cards & Map
@@ -159,8 +175,9 @@
   - [ ] Minecraft fox stuffed animal
   - [ ] Phone with soundboard app
   - [ ] Bluetooth speaker
-  - [ ] MCompass
-  - [ ] iPad with fog map loaded
+  - [ ] MCompass (charged, spawn set to tent location)
+  - [ ] iPad(s) with fog map loaded (1–2 devices)
+  - [ ] Phone charger / power bank for map devices
   - [ ] Spare blocks
   - [ ] Tape, markers, zip ties (field repairs)
 - [ ] Prep two dig sites (for running twice)
@@ -180,8 +197,9 @@
 - [ ] Set up creeper along trail (hidden from initial view)
 - [ ] Bury treasure at dig site
 - [ ] Place mine sign on bathroom door
-- [ ] Set MCompass spawn point to dig site
-- [ ] Start fog map on iPad
+- [ ] Set MCompass spawn point to tent/crafting table location
+- [ ] Start fog map on iPad(s) — load Lake Fairfax region
+- [ ] Pre-place item markers on fog map for block hiding spots (via real map view, right-click)
 - [ ] Queue up Minecraft music on speaker
 - [ ] Load soundboard on phone
 
@@ -191,7 +209,8 @@
 - [ ] Re-hide blocks in same spots
 - [ ] Re-stack creeper, reload loot
 - [ ] Re-bury treasure at second dig site
-- [ ] Reset fog map (🔄 Reset Fog button)
+- [ ] Reset fog map (🔄 Reset Fog button — also resets discovered quadrants)
+- [ ] Re-place item markers on fog map (or use 🗑 Remove Items + re-add)
 - [ ] Reload recipe scrolls
 - [ ] Verify crafting table still working
 

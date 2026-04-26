@@ -22,7 +22,9 @@ An Ender Dragon egg has been detected somewhere near the campsite. The kids are 
 - One RFID crafting table as the tech centerpiece (Arduino/Pi powered, battery)
 - Blocks are scattered from the start — exploration is open-world
 - Recipes are gated — each successful craft reveals the next recipe card
-- Everything except the crafting table is analog
+- **1–2 iPads/phones with the fog-of-war map app** — kids carry these to explore and find blocks. The map reveals terrain as they walk, Minecraft-style. Block hiding spots are pre-marked as item markers on the map.
+- **MCompass** — a real Minecraft compass that always points toward the tent (crafting table home base). Kids carry it while exploring so they can always find their way back. Set spawn point to the tent GPS coordinates.
+- Everything except the crafting table and digital map is analog
 - Game master acts as "NPC" to verify tool-gated steps (e.g., pickaxe to enter the mine)
 
 ## The 5 Main Crafts
@@ -50,7 +52,12 @@ An Ender Dragon egg has been detected somewhere near the campsite. The kids are 
 
 4. **Map** (8 paper + 1 compass)
    - Paper and compass from the creeper
-   - Craft reveals a hand-drawn treasure map showing the dig site
+   - Craft unlocks the fog-of-war map on the iPad/phone — game master hands over the device with the map app loaded
+   - The digital map shows the campsite in Minecraft style with fog covering unexplored areas
+   - Block hiding spots are marked on the map as item icons (only visible once the fog is cleared by walking near them)
+   - The map also shows the player's real-time GPS position
+   - Optionally: a second map device can be given so kids can split up
+   - Also reveals a hand-drawn parchment treasure map showing the dig site location
    - Reveals Recipe Card #5
 
 5. **Diamond Shovel** (2 diamonds + 1 stick)
@@ -76,7 +83,12 @@ An Ender Dragon egg has been detected somewhere near the campsite. The kids are 
 - Diamond ore vs diamond blocks distinction is a detail Minecraft kids will love
 
 ## Adventure Arc
-Mine → Fish → Fight → Navigate → Dig
+Mine → Fish → Fight → Navigate (with digital map + compass) → Dig
+
+## Tools the Kids Carry
+- **MCompass** — always points back to the tent/crafting table. Given at the start or after the first craft. Helps kids navigate back from distant biomes.
+- **Fog Map (1–2 devices)** — unlocked by crafting the Map (recipe #4). Shows Minecraft-style terrain with fog of war. Block locations appear as markers when the fog clears. Real-time GPS tracking.
+- **Parchment treasure map** — also from the Map craft. Hand-drawn X marks the dig site for the finale.
 
 ## Open Questions
 - What does the crafting table display/do when a recipe is correct? Screen? Sounds? Lights?
