@@ -163,7 +163,7 @@ export class TileRenderer {
     // 2. Draw map background texture (paper + torn border)
     //    This goes on top of black — transparent torn edges reveal black
     if (this.mapBgImage) {
-      const borderFrac = 2 / 64;
+      const borderFrac = 3 / 64; // ~3px border in the 64px texture
       const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
       const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
       const mapScreenW = level4WorldW * scale;
