@@ -70,10 +70,32 @@ function getSelectedRegionFile(regions: RegionInfo[]): string {
   const regionId = params.get('region');
   if (regionId) {
     const match = regions.find((r) => r.id === regionId);
-    if (match) return match.file;
+    if (match) {
+      try { localStorage.setItem('fogmap:region', regionId); } catch { /* ignore */ }
+      return match.file;
+    }
   }
+  // Check localStorage for a previously selected region
+  try {
+    const saved = localStorage.getItem('fogmap:region');
+    if (saved) {
+      const match = regions.find((r) => r.id === saved);
+      if (match) return match.file;
+    }
+  } catch { /* ignore */ }
   // Default to first region
   return regions.length > 0 ? regions[0].file : 'terrain-data.json';
+}
+
+function getSelectedRegionId(regions: RegionInfo[]): string {
+  const params = new URLSearchParams(window.location.search);
+  const regionId = params.get('region');
+  if (regionId && regions.find((r) => r.id === regionId)) return regionId;
+  try {
+    const saved = localStorage.getItem('fogmap:region');
+    if (saved && regions.find((r) => r.id === saved)) return saved;
+  } catch { /* ignore */ }
+  return regions.length > 0 ? regions[0].id : '';
 }
 
 async function loadTerrainData(filename: string): Promise<TerrainData> {
@@ -339,10 +361,10 @@ async function main(): Promise<void> {
 
     // Populate region selector
     if (regions.length > 1) {
-      const params = new URLSearchParams(window.location.search);
-      const currentRegionId = params.get('region') || regions[0].id;
+      const currentRegionId = getSelectedRegionId(regions);
       uiOverlay.setRegions(regions, currentRegionId);
       uiOverlay.onRegionChange = (regionId: string) => {
+        try { localStorage.setItem('fogmap:region', regionId); } catch { /* ignore */ }
         const params = new URLSearchParams(window.location.search);
         params.set('region', regionId);
         params.set('simulate', 'true');
