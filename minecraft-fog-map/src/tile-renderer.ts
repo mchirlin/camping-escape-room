@@ -221,10 +221,6 @@ export class TileRenderer {
     range.maxCol = Math.min(clipColStart + clipCols - 1, range.maxCol + extraTiles);
     range.minRow = Math.max(clipRowStart, range.minRow - extraTiles);
     range.maxRow = Math.min(clipRowStart + clipRows - 1, range.maxRow + extraTiles);
-    range.minCol = Math.max(0, range.minCol - extraTiles);
-    range.maxCol = Math.min(gridCols - 1, range.maxCol + extraTiles);
-    range.minRow = Math.max(0, range.minRow - extraTiles);
-    range.maxRow = Math.min(gridRows - 1, range.maxRow + extraTiles);
 
     for (let row = range.minRow; row <= range.maxRow; row++) {
       for (let col = range.minCol; col <= range.maxCol; col++) {
