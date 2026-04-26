@@ -430,6 +430,8 @@ async function main(): Promise<void> {
       (pos) => {
         onPosition(pos);
         uiOverlay.setGPSStatus('active');
+        // Auto-follow: center map on player position
+        mapInteraction.centerOn(pos, false);
       },
       (err) => {
         if (err === 'permission_denied') {
@@ -831,6 +833,20 @@ async function main(): Promise<void> {
       const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
       const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
+      // Apply the same rotation transform as the tile renderer
+      ctx!.save();
+      if (simHeading !== 0) {
+        let pivotX = viewport.screenWidth / 2;
+        let pivotY = viewport.screenHeight / 2;
+        if (playerWorldPos) {
+          pivotX = (playerWorldPos.x - viewLeft) * scale;
+          pivotY = (playerWorldPos.y - viewTop) * scale;
+        }
+        ctx!.translate(pivotX, pivotY);
+        ctx!.rotate((-simHeading * Math.PI) / 180);
+        ctx!.translate(-pivotX, -pivotY);
+      }
+
       for (const marker of markerStore.getAll()) {
         const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
 
@@ -870,6 +886,7 @@ async function main(): Promise<void> {
           ctx!.fillText(text, tx, ty);
         }
       }
+      ctx!.restore();
     }
     requestAnimationFrame(renderLoop);
   }
