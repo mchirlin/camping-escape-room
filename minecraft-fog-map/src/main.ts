@@ -491,7 +491,10 @@ async function main(): Promise<void> {
 
   uiOverlay.onResetFog = () => {
     fogEngine.reset();
-    discoveredQuadrants.clear();
+    // Reset discovered quadrants to empty sets (not null — null means show all)
+    for (const cfg of MAP_LEVEL_CONFIG) {
+      discoveredQuadrants.set(cfg.display, new Set());
+    }
   };
 
   uiOverlay.onRevealAll = () => {
