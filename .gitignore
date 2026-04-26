@@ -16,3 +16,6 @@ minecraft-fog-map/dist/
 
 # Editor
 .vscode/
+
+# Lockfile (generated in CI with matching npm version)
+minecraft-fog-map/package-lock.json
