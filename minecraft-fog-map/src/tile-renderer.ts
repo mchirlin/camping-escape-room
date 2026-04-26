@@ -156,9 +156,30 @@ export class TileRenderer {
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
-    // Fill background with paper color — unexplored areas are just paper
-    ctx.fillStyle = '#D6BE96';
+    // 1. Black background
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
+
+    // 2. Draw map background texture (paper + torn border)
+    //    This goes on top of black — transparent torn edges reveal black
+    if (this.mapBgImage) {
+      const borderFrac = 2 / 64;
+      const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
+      const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
+      const mapScreenW = level4WorldW * scale;
+      const mapScreenH = level4WorldH * scale;
+      const mapScreenL = (0 - viewLeft) * scale;
+      const mapScreenT = (0 - viewTop) * scale;
+      const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
+      const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        this.mapBgImage,
+        mapScreenL - bw, mapScreenT - bh,
+        mapScreenW + 2 * bw, mapScreenH + 2 * bh
+      );
+    }
 
     ctx.save();
     ctx.imageSmoothingEnabled = false;
@@ -266,40 +287,5 @@ export class TileRenderer {
     }
 
     ctx.restore();
-
-    // Draw map border frame using the torn paper texture
-    // The texture goes BEHIND the terrain (destination-over) to fill paper areas,
-    // then black fills behind everything for the outside.
-    if (this.mapBgImage) {
-      const borderFrac = 2 / 64;
-      const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
-      const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
-      const mapScreenW = level4WorldW * scale;
-      const mapScreenH = level4WorldH * scale;
-      const mapScreenL = (0 - viewLeft) * scale;
-      const mapScreenT = (0 - viewTop) * scale;
-      const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
-      const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
-
-      // Draw the torn border texture ON TOP — it only has opaque pixels
-      // at the border edges (the center is the same paper color as our bg)
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(
-        this.mapBgImage,
-        mapScreenL - bw, mapScreenT - bh,
-        mapScreenW + 2 * bw, mapScreenH + 2 * bh
-      );
-
-      // Fill black outside the texture bounds
-      // Top
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, viewport.screenWidth, mapScreenT - bh);
-      // Bottom
-      ctx.fillRect(0, mapScreenT + mapScreenH + bh, viewport.screenWidth, viewport.screenHeight - (mapScreenT + mapScreenH + bh));
-      // Left
-      ctx.fillRect(0, mapScreenT - bh, mapScreenL - bw, mapScreenH + 2 * bh);
-      // Right
-      ctx.fillRect(mapScreenL + mapScreenW + bw, mapScreenT - bh, viewport.screenWidth - (mapScreenL + mapScreenW + bw), mapScreenH + 2 * bh);
-    }
   }
 }
