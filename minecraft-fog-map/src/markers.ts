@@ -26,21 +26,21 @@ export type MarkerTag =
   | 'danger'
   | 'star';
 
-const TEXTURE_BASE = './projects/2026-camping-minecraft/textures';
+const BASE = import.meta.env.BASE_URL;
 
 export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; texture: string }[] = [
-  { tag: 'wood',      label: 'Wood',           color: '#8B6914', texture: `${TEXTURE_BASE}/block/oak_planks.png` },
-  { tag: 'diamond',   label: 'Diamond',        color: '#5CDBD5', texture: `${TEXTURE_BASE}/item/diamond.png` },
-  { tag: 'chest',     label: 'Chest',          color: '#C8A24E', texture: '/chest-icon.png' },
-  { tag: 'iron',      label: 'Iron',           color: '#D8D8D8', texture: `${TEXTURE_BASE}/item/iron_ingot.png` },
-  { tag: 'gold',      label: 'Gold',           color: '#FAEE57', texture: `${TEXTURE_BASE}/item/gold_ingot.png` },
-  { tag: 'emerald',   label: 'Emerald',        color: '#17DD62', texture: `${TEXTURE_BASE}/item/emerald.png` },
-  { tag: 'redstone',  label: 'Redstone',       color: '#FF0000', texture: `${TEXTURE_BASE}/item/redstone.png` },
-  { tag: 'tnt',       label: 'TNT',            color: '#FF3333', texture: `${TEXTURE_BASE}/block/tnt_side.png` },
-  { tag: 'crafting',  label: 'Crafting Table',  color: '#B5804A', texture: `${TEXTURE_BASE}/block/crafting_table_front.png` },
-  { tag: 'spawn',     label: 'Spawn Point',    color: '#FFFFFF', texture: `${TEXTURE_BASE}/item/compass_00.png` },
-  { tag: 'danger',    label: 'Danger',         color: '#FF5555', texture: `${TEXTURE_BASE}/item/barrier.png` },
-  { tag: 'star',      label: 'Star',           color: '#FFFF55', texture: `${TEXTURE_BASE}/item/nether_star.png` },
+  { tag: 'wood',      label: 'Wood',           color: '#8B6914', texture: `${BASE}markers/wood.png` },
+  { tag: 'diamond',   label: 'Diamond',        color: '#5CDBD5', texture: `${BASE}markers/diamond.png` },
+  { tag: 'chest',     label: 'Chest',          color: '#C8A24E', texture: `${BASE}markers/chest.png` },
+  { tag: 'iron',      label: 'Iron',           color: '#D8D8D8', texture: `${BASE}markers/iron.png` },
+  { tag: 'gold',      label: 'Gold',           color: '#FAEE57', texture: `${BASE}markers/gold.png` },
+  { tag: 'emerald',   label: 'Emerald',        color: '#17DD62', texture: `${BASE}markers/emerald.png` },
+  { tag: 'redstone',  label: 'Redstone',       color: '#FF0000', texture: `${BASE}markers/redstone.png` },
+  { tag: 'tnt',       label: 'TNT',            color: '#FF3333', texture: `${BASE}markers/tnt.png` },
+  { tag: 'crafting',  label: 'Crafting Table',  color: '#B5804A', texture: `${BASE}markers/crafting.png` },
+  { tag: 'spawn',     label: 'Spawn Point',    color: '#FFFFFF', texture: `${BASE}markers/spawn.png` },
+  { tag: 'danger',    label: 'Danger',         color: '#FF5555', texture: `${BASE}markers/danger.png` },
+  { tag: 'star',      label: 'Star',           color: '#FFFF55', texture: `${BASE}markers/star.png` },
 ];
 
 /** Preloaded marker textures: tag → HTMLImageElement */

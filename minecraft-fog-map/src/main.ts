@@ -54,13 +54,13 @@ function showError(message: string): void {
 // ---- Asset loading ----
 
 async function loadTerrainData(): Promise<TerrainData> {
-  const res = await fetch('/terrain-data.json');
+  const res = await fetch(`${import.meta.env.BASE_URL}terrain-data.json`);
   if (!res.ok) throw new Error('Failed to load terrain data');
   return res.json() as Promise<TerrainData>;
 }
 
 async function loadAtlasManifest(): Promise<TextureAtlasManifest> {
-  const res = await fetch('/atlas.json');
+  const res = await fetch(`${import.meta.env.BASE_URL}atlas.json`);
   if (!res.ok) throw new Error('Failed to load atlas manifest');
   return res.json() as Promise<TextureAtlasManifest>;
 }
@@ -70,7 +70,7 @@ function loadAtlasImage(): Promise<HTMLImageElement> {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('Failed to load atlas image'));
-    img.src = '/atlas.png';
+    img.src = `${import.meta.env.BASE_URL}atlas.png`;
   });
 }
 
