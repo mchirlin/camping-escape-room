@@ -1,8 +1,6 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
-const isDev = process.env.NODE_ENV !== 'production';
-
 export default defineConfig({
   base: '/camping-escape-room/',
   build: {
@@ -24,5 +22,19 @@ export default defineConfig({
   preview: {
     host: true,
   },
-  plugins: [],
+  plugins: [
+    {
+      name: 'marker-api',
+      configureServer(server) {
+        // Lazy-load to avoid issues in production build
+        import('./server/marker-api').then(({ handleMarkerApi }) => {
+          server.middlewares.use((req, res, next) => {
+            if (!handleMarkerApi(req as any, res as any)) {
+              next();
+            }
+          });
+        });
+      },
+    },
+  ],
 });

@@ -20,5 +20,8 @@
   "optionalDependencies": {
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "sharp": "^0.34.5"
+  },
+  "dependencies": {
+    "firebase": "^12.12.1"
   }
 }

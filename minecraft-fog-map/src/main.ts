@@ -196,6 +196,11 @@ async function main(): Promise<void> {
   const markerStore = new MarkerStore();
   const leafletMarkerLayers: Record<string, any> = {}; // id → Leaflet marker
 
+  // Initialize Firebase sync (falls back to localStorage if not configured)
+  import('./marker-db').then(({ initMarkerDb }) => {
+    initMarkerDb().then(() => markerStore.startSync());
+  });
+
   // Preload marker textures
   preloadMarkerImages();
 

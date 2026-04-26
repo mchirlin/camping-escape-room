@@ -19,3 +19,6 @@ minecraft-fog-map/dist/
 
 # Lockfile (generated in CI with matching npm version)
 minecraft-fog-map/package-lock.json
+
+# Local marker data
+minecraft-fog-map/server/markers.json

@@ -74,25 +74,52 @@ export function getMarkerImage(tag: MarkerTag): HTMLImageElement | null {
   return markerImages.get(tag) ?? null;
 }
 
+import {
+  isDbActive,
+  dbPutMarker,
+  dbRemoveMarker,
+  dbCollectMarker,
+  dbUpdatePosition,
+  dbUpdateCount,
+  dbPollMarkers,
+  type DbMarker,
+} from './marker-db';
+
 const STORAGE_KEY = 'fogmap:markers';
 
 export class MarkerStore {
   private markers: MapMarker[] = [];
+  /** Called whenever markers change (local or remote) */
+  onChange: ((markers: MapMarker[]) => void) | null = null;
 
   constructor() {
     this.load();
+  }
+
+  /** Start listening for remote changes via polling */
+  async startSync(): Promise<void> {
+    if (!isDbActive()) return;
+
+    dbPollMarkers((dbMarkers) => {
+      this.markers = dbMarkers
+        .filter((m) => !m.collected)
+        .map((m) => ({
+          id: m.id,
+          position: m.position,
+          tag: m.tag as MarkerTag,
+          count: m.count,
+          label: m.label,
+        }));
+      this.saveLocal();
+      this.onChange?.(this.getAll());
+    });
   }
 
   getAll(): MapMarker[] {
     return [...this.markers];
   }
 
-  /**
-   * Add a marker or increment count if one of the same tag exists nearby (~5m).
-   * Returns the new or updated marker, plus whether it was an increment.
-   */
   add(position: GeoPosition, tag: MarkerTag, label?: string): { marker: MapMarker; incremented: boolean } {
-    // Check for existing marker of same type within ~5m
     const nearby = this.markers.find((m) => {
       if (m.tag !== tag) return false;
       const dLat = Math.abs(m.position.latitude - position.latitude) * 111320;
@@ -103,40 +130,56 @@ export class MarkerStore {
 
     if (nearby) {
       nearby.count += 1;
-      this.save();
+      this.saveLocal();
+      dbUpdateCount(nearby.id, nearby.count);
       return { marker: nearby, incremented: true };
     }
 
     const marker: MapMarker = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: crypto.randomUUID(),
       position,
       tag,
       count: 1,
       label,
     };
     this.markers.push(marker);
-    this.save();
+    this.saveLocal();
+    dbPutMarker({
+      ...marker,
+      collected: false,
+      createdAt: Date.now(),
+    });
     return { marker, incremented: false };
   }
 
   remove(id: string): void {
     this.markers = this.markers.filter((m) => m.id !== id);
-    this.save();
+    this.saveLocal();
+    dbRemoveMarker(id);
+  }
+
+  /** Mark a marker as collected (block scanned on crafting table) */
+  collect(id: string): void {
+    this.markers = this.markers.filter((m) => m.id !== id);
+    this.saveLocal();
+    dbCollectMarker(id);
+    this.onChange?.(this.getAll());
   }
 
   updatePosition(id: string, position: GeoPosition): void {
     const marker = this.markers.find((m) => m.id === id);
     if (marker) {
       marker.position = position;
-      this.save();
+      this.saveLocal();
+      dbUpdatePosition(id, position);
     }
   }
 
-  private save(): void {
+  private saveLocal(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.markers));
     } catch {
-      // ignore storage errors
+      // ignore
     }
   }
 
@@ -145,7 +188,6 @@ export class MarkerStore {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         this.markers = JSON.parse(raw);
-        // Backfill count for old markers
         for (const m of this.markers) {
           if (!m.count) m.count = 1;
         }
