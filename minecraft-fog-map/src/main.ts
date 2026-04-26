@@ -491,6 +491,7 @@ async function main(): Promise<void> {
 
   uiOverlay.onResetFog = () => {
     fogEngine.reset();
+    discoveredQuadrants.clear();
   };
 
   uiOverlay.onRevealAll = () => {
