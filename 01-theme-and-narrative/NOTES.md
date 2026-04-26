@@ -70,12 +70,6 @@ An Ender Dragon egg has been detected somewhere near the campsite. The kids are 
 - Inside: 3D-printed Ender Dragon egg (painted, keepsake) + treats/prizes for everyone
 - Kids dig it up with the diamond shovel
 
-## Bonus Discovery Recipes (no recipe card — kids experiment and find these)
-- **TNT** (4 sand + 5 gunpowder) → pop rocks candy
-- **Cookie** (2 wheat + 1 cocoa bean) → actual cookies
-- Bonus ingredients scattered in biomes alongside main blocks
-- Rewards are small treats — not plot-critical
-
 ## Extras
 - Minecraft fox stuffed animal hidden somewhere, holding a hint to a hard-to-find block
 - Older kids will appreciate the gold sword being famously terrible in Minecraft

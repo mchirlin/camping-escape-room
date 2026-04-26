@@ -25,7 +25,7 @@
   - [ ] Black acrylic paint (creeper face)
   - [ ] Cardboard boxes for creeper (free — grocery store)
   - [ ] Waterproof container for buried treasure
-  - [ ] Candy/treats for finale + bonus recipes
+  - [ ] Candy/treats for finale
   - [ ] Foam board for signs
 - [ ] **Foam gold sword** — check friends first, Amazon backup
 - [x] **Printer** — Epson EcoTank ET-2850 (if not already owned)
@@ -41,7 +41,6 @@
   - [ ] Paper × 9
   - [ ] Compass × 2
   - [ ] Diamond × 2
-  - [ ] Bonus recipe blocks (sand, gunpowder, wheat, cocoa bean)
 - [ ] Design block with NTAG215 cavity (pause-at-layer method)
 - [ ] Test print one block with embedded NFC tag — verify read range
 - [ ] **Ender Dragon Egg** — print and paint (keepsake quality)
@@ -65,7 +64,7 @@
 - [ ] Write ESP32 firmware:
   - [ ] Sequential I2C scanning of 9 readers
   - [ ] NFC tag reading + block type parsing
-  - [ ] Recipe matching (5 main + bonus recipes)
+  - [ ] Recipe matching (5 main recipes)
   - [ ] NeoPixel feedback (white=detected, green=valid, rainbow=success)
   - [ ] Sound playback on successful craft
   - [ ] Empty-grid detection (prevent re-triggering)
@@ -73,7 +72,6 @@
 - [ ] Write all block tags using registration program
 - [ ] Test every block on every grid slot
 - [ ] Test all 5 main recipes
-- [ ] Test bonus recipes
 - [ ] Test wrong recipe rejection
 
 ## 🪑 Crafting Table — Physical Build
@@ -190,7 +188,6 @@
   - [ ] Forest: wood planks, sticks (near trees)
   - [ ] Mine/bathroom: iron, string, diamonds (inside stall)
   - [ ] Stream: gold target in water
-  - [ ] Trail: bonus recipe ingredients scattered
 - [ ] Set up creeper along trail (hidden from initial view)
 - [ ] Bury treasure at dig site
 - [ ] Place mine sign on bathroom door
