@@ -4,7 +4,7 @@ import { resolve } from 'path';
 const isDev = process.env.NODE_ENV !== 'production';
 
 export default defineConfig({
-  base: '/minecraft-escape-room/',
+  base: '/camping-escape-room/',
   build: {
     target: 'es2020',
     outDir: 'dist',
