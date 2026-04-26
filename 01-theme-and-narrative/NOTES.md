@@ -71,7 +71,6 @@ An Ender Dragon egg has been detected somewhere near the campsite. The kids are 
 - Kids dig it up with the diamond shovel
 
 ## Bonus Discovery Recipes (no recipe card — kids experiment and find these)
-- **Cake** (3 wheat + 3 milk + 2 sugar + 1 egg) → candy/cupcakes
 - **TNT** (4 sand + 5 gunpowder) → pop rocks candy
 - **Cookie** (2 wheat + 1 cocoa bean) → actual cookies
 - Bonus ingredients scattered in biomes alongside main blocks

@@ -41,7 +41,7 @@
   - [ ] Paper × 9
   - [ ] Compass × 2
   - [ ] Diamond × 2
-  - [ ] Bonus recipe blocks (wheat, milk, sugar, egg, sand, gunpowder, cocoa bean)
+  - [ ] Bonus recipe blocks (sand, gunpowder, wheat, cocoa bean)
 - [ ] Design block with NTAG215 cavity (pause-at-layer method)
 - [ ] Test print one block with embedded NFC tag — verify read range
 - [ ] **Ender Dragon Egg** — print and paint (keepsake quality)
