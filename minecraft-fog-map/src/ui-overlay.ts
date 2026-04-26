@@ -181,8 +181,8 @@ export class UIOverlayImpl implements UIOverlay {
         btn.style.outlineColor = '#55FF55';
       } else {
         this.stopHeadingWatch();
-        const arrow = btn.querySelector('.ui-compass-arrow') as SVGElement;
-        if (arrow) arrow.style.transform = 'rotate(0deg)';
+        this.onHeadingChange(0);
+        this.setCompassHeading(0);
         btn.style.outlineColor = '#000';
       }
     });
