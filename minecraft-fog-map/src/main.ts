@@ -375,12 +375,25 @@ async function main(): Promise<void> {
     }
   };
 
-  // Map level dropdown — controls terrain grid resolution (0-4)
-  let currentMapLevel = 4;
-  uiOverlay.setMapLevel(currentMapLevel);
+  // Map level: display level 0=128m, 1=256m, 2=512m
+  // Maps to internal terrain grid level and a visible area fraction
+  const MAP_LEVEL_CONFIG = [
+    { display: 0, internal: 4, sizeFraction: 0.25 },  // 128m = 1/4 of 512m
+    { display: 1, internal: 3, sizeFraction: 0.5 },   // 256m = 1/2 of 512m
+    { display: 2, internal: 2, sizeFraction: 1.0 },   // 512m = full map
+  ];
 
-  uiOverlay.onMapLevelChange = (level: number) => {
-    currentMapLevel = Math.max(0, Math.min(4, level));
+  let currentDisplayLevel = 2;
+  let currentMapLevel = 2; // internal terrain grid level
+  let mapSizeFraction = 1.0; // fraction of the full map to show
+  uiOverlay.setMapLevel(currentDisplayLevel);
+
+  uiOverlay.onMapLevelChange = (displayLevel: number) => {
+    const config = MAP_LEVEL_CONFIG.find((c) => c.display === displayLevel);
+    if (!config) return;
+    currentDisplayLevel = displayLevel;
+    currentMapLevel = config.internal;
+    mapSizeFraction = config.sizeFraction;
   };
 
   uiOverlay.onZoomIn = () => {
@@ -451,60 +464,30 @@ async function main(): Promise<void> {
               font-family:var(--mc-font);font-size:8px;padding:6px 8px;cursor:pointer;
               background:#555;color:#fff;border:1px solid #333;width:100%;margin-bottom:6px;
             `;
-            genBtn.addEventListener('click', () => {
-              // Replace with confirmation
-              div.innerHTML = '';
-              const msg = document.createElement('div');
-              msg.style.cssText = 'font-family:var(--mc-font);font-size:7px;color:#333;margin-bottom:6px;';
-              msg.textContent = `Generate new map at ${lat.toFixed(4)}, ${lng.toFixed(4)}? This takes ~60s.`;
-              div.appendChild(msg);
+            genBtn.addEventListener('click', async () => {
+              leafletMap.closePopup();
+              showLoading(`Generating map at ${lat.toFixed(4)}, ${lng.toFixed(4)}... (this takes ~60s)`);
+              showingRealMap = false;
+              canvas.style.display = 'block';
+              if (realMapDiv) realMapDiv.style.display = 'none';
 
-              const row = document.createElement('div');
-              row.style.cssText = 'display:flex;gap:4px;';
-
-              const yesBtn = document.createElement('button');
-              yesBtn.textContent = 'Yes';
-              yesBtn.style.cssText = `
-                font-family:var(--mc-font);font-size:8px;padding:4px 10px;cursor:pointer;
-                background:#55FF55;color:#000;border:1px solid #333;flex:1;
-              `;
-              yesBtn.addEventListener('click', async () => {
-                leafletMap.closePopup();
-                showLoading(`Generating map at ${lat.toFixed(4)}, ${lng.toFixed(4)}... (this takes ~60s)`);
-                showingRealMap = false;
-                canvas.style.display = 'block';
-                if (realMapDiv) realMapDiv.style.display = 'none';
-
-                try {
-                  const controller = new AbortController();
-                  const timeout = setTimeout(() => controller.abort(), 180000);
-                  const res = await fetch('/api/generate-terrain', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lat, lng, size: 500 }),
-                    signal: controller.signal,
-                  });
-                  clearTimeout(timeout);
-                  if (!res.ok) throw new Error('Generation failed');
-                  window.location.reload();
-                } catch (err) {
-                  hideLoading();
-                  uiOverlay.showToast('Failed to generate terrain. Try again.');
-                  console.error(err);
-                }
-              });
-
-              const noBtn = document.createElement('button');
-              noBtn.textContent = 'Cancel';
-              noBtn.style.cssText = `
-                font-family:var(--mc-font);font-size:8px;padding:4px 10px;cursor:pointer;
-                background:#FF5555;color:#fff;border:1px solid #333;flex:1;
-              `;
-              noBtn.addEventListener('click', () => leafletMap.closePopup());
-
-              row.appendChild(yesBtn);
-              row.appendChild(noBtn);
-              div.appendChild(row);
+              try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 180000);
+                const res = await fetch('/api/generate-terrain', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ lat, lng, size: 500 }),
+                  signal: controller.signal,
+                });
+                clearTimeout(timeout);
+                if (!res.ok) throw new Error('Generation failed');
+                window.location.reload();
+              } catch (err) {
+                hideLoading();
+                uiOverlay.showToast('Failed to generate terrain. Try again.');
+                console.error(err);
+              }
             });
             div.appendChild(genBtn);
 
@@ -736,7 +719,7 @@ async function main(): Promise<void> {
 
     // When performance is degraded, skip player marker rendering
     const effectivePlayerPos = skipNonEssential ? null : playerWorldPos;
-    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading);
+    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading, mapSizeFraction);
 
     // Render user-placed markers on revealed tiles
     if (!skipNonEssential) {

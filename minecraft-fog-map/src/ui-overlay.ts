@@ -212,18 +212,21 @@ export class UIOverlayImpl implements UIOverlay {
     select.setAttribute('data-testid', 'map-level-select');
     select.setAttribute('aria-label', 'Map zoom level');
 
-    for (let i = 0; i <= 4; i++) {
-      // Minecraft convention: 0/4 = finest, 4/4 = coarsest
-      // Internal level: 4 - i (so display 0 → internal 4, display 4 → internal 0)
-      const internalLevel = 4 - i;
-      const mpt = ZOOM_LEVELS[internalLevel].metersPerTile;
+    // Minecraft map levels: 0=128m, 1=256m, 2=512m
+    const mapLevels = [
+      { display: 0, internal: 4, size: 128 },
+      { display: 1, internal: 3, size: 256 },
+      { display: 2, internal: 2, size: 512 },
+    ];
+
+    for (const ml of mapLevels) {
       const opt = document.createElement('option');
-      opt.value = String(internalLevel);
-      opt.textContent = `${i}/4 (${mpt}m/px)`;
+      opt.value = String(ml.display);
+      opt.textContent = `${ml.display}/4 (${ml.size}m)`;
       select.appendChild(opt);
     }
 
-    select.value = '4'; // default to finest (display 0/4, internal 4)
+    select.value = '2'; // default to level 2 (512m, full map)
     select.addEventListener('change', () => {
       this.onMapLevelChange(parseInt(select.value, 10));
     });

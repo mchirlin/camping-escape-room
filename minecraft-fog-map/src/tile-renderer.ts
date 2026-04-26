@@ -133,7 +133,8 @@ export class TileRenderer {
     mapLevel: number,
     isLevel4Revealed: (col: number, row: number) => boolean,
     playerPos: WorldPosition | null,
-    playerHeading = 0
+    playerHeading = 0,
+    mapSizeFraction = 1.0
   ): void {
     if (!this.terrainData || !this.atlas) return;
 
@@ -144,14 +145,30 @@ export class TileRenderer {
     const level4Cols = level4Data ? level4Data.cols : 256;
     const level4Rows = level4Data ? level4Data.rows : 256;
 
-    const gridCols = zoomData.cols;
-    const gridRows = zoomData.rows;
+    const fullGridCols = zoomData.cols;
+    const fullGridRows = zoomData.rows;
+
+    // Clip to center portion based on map size fraction
+    const clipCols = Math.round(fullGridCols * mapSizeFraction);
+    const clipRows = Math.round(fullGridRows * mapSizeFraction);
+    const clipColStart = Math.floor((fullGridCols - clipCols) / 2);
+    const clipRowStart = Math.floor((fullGridRows - clipRows) / 2);
+
+    // Level-4 clip bounds
+    const l4ClipCols = Math.round(level4Cols * mapSizeFraction);
+    const l4ClipRows = Math.round(level4Rows * mapSizeFraction);
+    const l4ClipColStart = Math.floor((level4Cols - l4ClipCols) / 2);
+    const l4ClipRowStart = Math.floor((level4Rows - l4ClipRows) / 2);
 
     const tileWorldSize = TILE_SCREEN_SIZE * Math.pow(2, 4 - mapLevel);
     const scale = Math.pow(2, viewport.zoomLevel);
     const tileScreenPx = tileWorldSize * scale;
     const subTilesPerAxis = Math.round(Math.pow(2, 4 - mapLevel));
     const subTileScreenPx = TILE_SCREEN_SIZE * scale;
+
+    // World offset for the clipped area
+    const clipWorldOffsetX = clipColStart * tileWorldSize;
+    const clipWorldOffsetY = clipRowStart * tileWorldSize;
 
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
@@ -160,16 +177,15 @@ export class TileRenderer {
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
 
-    // 2. Draw map background texture (paper + torn border)
-    //    This goes on top of black — transparent torn edges reveal black
+    // 2. Draw map background texture sized to the clipped area
     if (this.mapBgImage) {
-      const borderFrac = 3 / 64; // ~3px border in the 64px texture
-      const level4WorldW = level4Cols * TILE_SCREEN_SIZE;
-      const level4WorldH = level4Rows * TILE_SCREEN_SIZE;
-      const mapScreenW = level4WorldW * scale;
-      const mapScreenH = level4WorldH * scale;
-      const mapScreenL = (0 - viewLeft) * scale;
-      const mapScreenT = (0 - viewTop) * scale;
+      const borderFrac = 3 / 64;
+      const clipWorldW = clipCols * tileWorldSize;
+      const clipWorldH = clipRows * tileWorldSize;
+      const mapScreenW = clipWorldW * scale;
+      const mapScreenH = clipWorldH * scale;
+      const mapScreenL = (clipWorldOffsetX - viewLeft) * scale;
+      const mapScreenT = (clipWorldOffsetY - viewTop) * scale;
       const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
       const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
 
@@ -199,7 +215,12 @@ export class TileRenderer {
 
     // Expand tile range to cover rotated view (render extra tiles around edges)
     const extraTiles = playerHeading !== 0 ? Math.ceil(Math.max(viewport.screenWidth, viewport.screenHeight) / tileScreenPx / 2) : 0;
-    const range = getVisibleTileRange(viewport, { cols: gridCols, rows: gridRows }, tileWorldSize);
+    const range = getVisibleTileRange(viewport, { cols: fullGridCols, rows: fullGridRows }, tileWorldSize);
+    // Clamp to clipped area
+    range.minCol = Math.max(clipColStart, range.minCol - extraTiles);
+    range.maxCol = Math.min(clipColStart + clipCols - 1, range.maxCol + extraTiles);
+    range.minRow = Math.max(clipRowStart, range.minRow - extraTiles);
+    range.maxRow = Math.min(clipRowStart + clipRows - 1, range.maxRow + extraTiles);
     range.minCol = Math.max(0, range.minCol - extraTiles);
     range.maxCol = Math.min(gridCols - 1, range.maxCol + extraTiles);
     range.minRow = Math.max(0, range.minRow - extraTiles);

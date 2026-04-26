@@ -13,7 +13,7 @@ import fs from 'fs/promises';
 import type { TextureAtlasManifest, AtlasEntry } from '../src/types.js';
 
 const TILE_SIZE = 16;
-const TEXTURE_DIR = path.resolve('projects/2026-camping-minecraft/textures');
+const TEXTURE_DIR = new URL('../../textures', import.meta.url).pathname;
 const BLOCK_DIR = path.join(TEXTURE_DIR, 'block');
 const OUTPUT_DIR = path.resolve('public');
 
@@ -78,15 +78,15 @@ async function createFogTexture(): Promise<Buffer> {
 }
 
 /**
- * Extract a 16×16 player marker from Steve's face on the 64×64 skin texture.
- * Steve's face is at (8,8) to (16,16) in the skin layout — 8×8 pixels.
+ * Extract a 16×16 player marker from Alex's face on the 64×64 skin texture.
+ * Alex's face is at (8,8) to (16,16) in the skin layout — 8×8 pixels.
  * We scale it up to 16×16 with nearest-neighbor for pixel-art crispness.
  */
 async function createPlayerMarker(): Promise<Buffer> {
-  const stevePath = path.join(TEXTURE_DIR, 'entity', 'player', 'wide', 'steve.png');
+  const alexPath = path.join(TEXTURE_DIR, 'entity', 'player', 'wide', 'alex.png');
 
   try {
-    return await sharp(stevePath)
+    return await sharp(alexPath)
       .extract({ left: 8, top: 8, width: 8, height: 8 })
       .resize(TILE_SIZE, TILE_SIZE, { kernel: sharp.kernel.nearest })
       .png()
@@ -243,7 +243,7 @@ async function main() {
       console.log(`  Creating fog texture (programmatic)`);
       textures.push(await createFogTexture());
     } else if (key === 'player') {
-      console.log(`  Creating player marker (from steve.png)`);
+      console.log(`  Creating player marker (from alex.png)`);
       textures.push(await createPlayerMarker());
     } else {
       const filename = TERRAIN_TEXTURES[key];

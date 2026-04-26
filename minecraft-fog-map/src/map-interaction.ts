@@ -16,8 +16,9 @@ export interface MapInteractionConfig {
   initialViewport: ViewportState;
 }
 
-/** Min continuous zoom level (no max — zoom out as far as you want) */
-const MIN_ZOOM = -5;
+/** Zoom limits */
+const MIN_ZOOM = -3;
+const MAX_ZOOM = 6;
 
 /**
  * Pure function: clamp a viewport center to stay within world bounds.
@@ -154,7 +155,7 @@ export class MapInteraction {
   /** Set zoom level programmatically (continuous float) */
   setZoomLevel(level: number): void {
     this.stopAnimation();
-    this.viewport.zoomLevel = Math.max(MIN_ZOOM, level);
+    this.viewport.zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
   }
 
   // Tap detection
@@ -220,7 +221,7 @@ export class MapInteraction {
       // Continuous zoom: log2(ratio) gives smooth zoom delta
       this.viewport.zoomLevel = Math.max(
         MIN_ZOOM,
-        this.pinchStartZoom + Math.log2(ratio)
+        Math.min(MAX_ZOOM, this.pinchStartZoom + Math.log2(ratio))
       );
     }
   }
@@ -294,7 +295,7 @@ export class MapInteraction {
 
     const delta = e.deltaY > 0 ? -0.15 : 0.15;
     const oldZoom = this.viewport.zoomLevel;
-    const newZoom = Math.max(MIN_ZOOM, oldZoom + delta);
+    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom + delta));
 
     // Zoom toward the mouse cursor position (like Google Maps)
     // Convert mouse screen position to world position at old zoom

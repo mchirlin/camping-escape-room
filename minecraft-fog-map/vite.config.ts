@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { handleMarkerApi } from './server/marker-api';
+import { handleGenerateTerrain } from './server/generate-terrain-api';
 
 export default defineConfig(({ command }) => ({
   base: command === 'build' ? '/camping-escape-room/' : '/',
@@ -28,7 +29,9 @@ export default defineConfig(({ command }) => ({
       name: 'marker-api',
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
-          if (!handleMarkerApi(req as any, res as any)) {
+          if (req.method === 'POST' && req.url === '/api/generate-terrain') {
+            handleGenerateTerrain(req as any, res as any);
+          } else if (!handleMarkerApi(req as any, res as any)) {
             next();
           }
         });
