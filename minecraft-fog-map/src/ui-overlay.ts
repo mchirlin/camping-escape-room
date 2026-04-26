@@ -419,7 +419,9 @@ export class UIOverlayImpl implements UIOverlay {
     btn.textContent = '👁 Reveal All';
     btn.style.display = 'none';
     btn.addEventListener('click', () => {
-      this.onRevealAll();
+      if (confirm('Reveal the entire map? This removes all fog of war.')) {
+        this.onRevealAll();
+      }
     });
 
     this.container!.appendChild(btn);
