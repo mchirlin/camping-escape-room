@@ -79,14 +79,22 @@
 
 ## 🪑 Crafting Table — Physical Build
 
+- [ ] **Materials**
+  - [ ] 2×6 lumber × 4' (16 pieces)
+  - [ ] Plywood 2'×2' × 1/8" (4 pieces)
+  - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
+  - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
+  - [ ] 2.5' square of camel pleather
+  - [ ] 3" strips of dark brown pleather
+  - [ ] 1'×1' frosted acrylic
+  - [ ] 1"×1" wood rods, 4' total
 - [ ] Design table (nightstand-sized, kid height)
 - [ ] Build frame (wood)
 - [ ] Build top surface with 3x3 recessed grid + lip
-- [ ] Choose surface material (thin plywood or frosted acrylic)
 - [ ] Mount PN532 + NeoPixel ring units under each slot
 - [ ] Route wiring underneath
-- [ ] Test read range through surface material
-- [ ] Finish/paint table
+- [ ] Test read range through frosted acrylic
+- [ ] Finish/wrap table with pleather
 
 ## 🧭 MCompass Setup
 
