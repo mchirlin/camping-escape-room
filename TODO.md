@@ -98,10 +98,10 @@
 
 ## 🚪 Crafting Table — Servo Doors (3 doors)
 
-Each door is a 2"×5"×9" block hinged at the bottom. Gravity swings it open when unlatched. A servo arm acts as a latch — it pokes through a slot and holds the door shut. On a successful craft, the servo rotates the arm out of the way and the door drops open, revealing the crafted item prop on a shelf behind it. A magnetic reed switch detects when the door is pushed closed again and the servo re-latches automatically.
+Each door is a 2"×5"×9" block hinged at the bottom, flush with the table's outer panel. Gravity swings it open when unlatched. Servos are mounted on the inside of the table wall — completely hidden from the outside. A narrow slot in the wall lets the servo's latch tab poke through to hold the door shut. On a successful craft, the servo rotates the tab out of the way and the door drops open, revealing the crafted item prop on a shelf inside. A magnetic reed switch detects when the door is pushed closed and the servo re-latches automatically.
 
 - [ ] **Materials**
-  - [ ] High-torque servos (3) — e.g., MG996R or SG90 (latch needs minimal torque)
+  - [ ] Servos (3) — SG90 or MG90S (latch needs minimal torque)
   - [ ] PCA9685 16-channel PWM servo driver board
   - [ ] Magnetic reed switches (3) + small neodymium magnets (3)
   - [ ] Jumper wires / servo extension cables
@@ -109,28 +109,33 @@ Each door is a 2"×5"×9" block hinged at the bottom. Gravity swings it open whe
   - [ ] Small hinges for door blocks (3 sets — piano hinge or butt hinges)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **3D Printing**
-  - [ ] Servo mounting brackets (attach servo behind door frame)
-  - [ ] Servo arm latch extension (flat tab that catches the door)
-  - [ ] Print 3 sets
+  - [ ] Servo mounting brackets (mount servo to inside of table wall, horn axis perpendicular to wall)
+  - [ ] Latch tab (flat arm that screws onto servo horn, extends through slot to catch door)
+  - [ ] Print 3 sets of brackets + tabs
+- [ ] **Table Modifications**
+  - [ ] Cut narrow slot in table wall behind each door (just wide enough for latch tab)
+  - [ ] Attach small catch ledge (screw head or wood strip) to inside face of each door for tab to engage
+  - [ ] Install hinges at bottom edge of each door opening
+  - [ ] Build prop shelf behind each door (holds pickaxe, fishing rod, etc.)
+  - [ ] Ensure door face sits flush with table outer panel — all hardware hidden inside
 - [ ] **Electronics**
-  - [ ] Wire PCA9685 servo driver to ESP32 via I2C
+  - [ ] Wire PCA9685 servo driver to ESP32 via I2C (shares bus with NFC multiplexer)
   - [ ] Wire 3 servos to PCA9685 channels
   - [ ] Wire 3 reed switches to ESP32 GPIO pins (digital input, pull-up)
   - [ ] Glue magnets to inside of each door block
-  - [ ] Mount reed switches on door frame aligned with magnets
-- [ ] **Assembly**
-  - [ ] Mount servos inside table frame behind each door
-  - [ ] Install door blocks on hinges (hinge at bottom edge)
-  - [ ] Attach latch extensions to servo horns
-  - [ ] Test latch engagement — servo arm blocks door, rotation releases it
-  - [ ] Calibrate servo positions (locked angle, unlocked angle)
-  - [ ] Install prop shelves behind each door
+  - [ ] Mount reed switches on inside of table wall, aligned with magnets when door is closed
+  - [ ] Route all wiring inside the table
 - [ ] **Firmware**
   - [ ] Map each recipe to a door (door 1 = pickaxe, door 2 = fishing rod, etc.)
-  - [ ] On successful craft: rotate servo to unlatch, door drops open
-  - [ ] Reed switch detects door pushed closed → servo re-latches automatically
+  - [ ] On successful craft: rotate servo 90° to retract latch tab, door drops open by gravity
+  - [ ] Reed switch detects door pushed closed → servo rotates back to latch position
   - [ ] Fallback: auto re-latch after 15 second timeout
   - [ ] "Reset all doors" command for between-run resets
+- [ ] **Testing**
+  - [ ] Verify latch holds door securely (no rattle)
+  - [ ] Verify door drops open cleanly when unlatched
+  - [ ] Verify reed switch triggers reliably when door is pushed shut
+  - [ ] Test full cycle: craft → door opens → grab prop → push door shut → re-latches
 
 ## 🧭 MCompass Setup
 
