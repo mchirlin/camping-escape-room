@@ -6,15 +6,14 @@
   - [x] PN532 NFC/RFID modules (10-pack) — $32
   - [x] NeoPixel WS2812B 24-LED rings (2x 5-pack) — $38
   - [x] NTAG215 NFC coin tags (50-pack, 25mm) — ~$10
-  - [x] TCA9548A I2C multiplexer (2-pack) — ~$7
+  - [x] d I2C multiplexer (2-pack) — ~$7
   - [x] ESP32 dev board (or confirm you have one)
   - [x] DFPlayer Mini MP3 module + speaker — ~$9
   - [x] Micro SD card for DFPlayer
   - [x] Copper tape (1" wide roll) — ~$5
   - [x] Jumper wires / hookup wire — ~$8
-  - [ ] PCA9685 16-channel PWM servo driver board — ~$6
-  - [ ] SG90 or MG90S micro servos (3) — ~$8
-  - [ ] Magnetic reed switches (3) + small neodymium magnets (3) — ~$5
+  - [x] SG90 or MG90S micro servos (3) — ~$8
+  - [x] Magnetic reed switches (3) + small neodymium magnets (3) — ~$5
   - [ ] 5V power supply for servos (separate from ESP32) — ~$8
 - [x] **MCompass** — buy pre-assembled from Etsy
 - [ ] **Crafting Table — Lumber & Hardware**
@@ -26,13 +25,13 @@
   - [ ] Small hinges for servo doors (3 sets)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **Crafting Table — Finishing**
-  - [ ] 2.5' square of camel pleather
-  - [ ] 3" strips of dark brown pleather
+  - [x] 2.5' square of camel pleather
+  - [x] 3" strips of dark brown pleather
   - [ ] 1'×1' frosted acrylic
 - [ ] **3D Printing supplies**
   - [ ] Black PLA filament (1-2 spools)
   - [x] Printable vinyl sticker paper (matte, waterproof, 25-pack)
-  - [ ] Matte clear coat spray
+  - [x] Matte clear coat spray
 - [ ] **Props & materials**
   - [x] Neodymium disc magnets (for fishing rod)
   - [ ] Parchment paper (recipe scrolls)
@@ -122,7 +121,6 @@ Each door is a 2"×5"×9" block hinged at the bottom, flush with the table's out
 
 - [ ] **Materials**
   - [ ] Servos (3) — SG90 or MG90S (latch needs minimal torque)
-  - [ ] PCA9685 16-channel PWM servo driver board
   - [ ] Magnetic reed switches (3) + small neodymium magnets (3)
   - [ ] Jumper wires / servo extension cables
   - [ ] Power supply for servos (5–6V, separate from ESP32)
@@ -139,8 +137,7 @@ Each door is a 2"×5"×9" block hinged at the bottom, flush with the table's out
   - [ ] Build prop shelf behind each door (holds pickaxe, fishing rod, etc.)
   - [ ] Ensure door face sits flush with table outer panel — all hardware hidden inside
 - [ ] **Electronics**
-  - [ ] Wire PCA9685 servo driver to ESP32 via I2C (shares bus with NFC multiplexer)
-  - [ ] Wire 3 servos to PCA9685 channels
+  - [ ] Wire 3 servos directly to ESP32 GPIO pins
   - [ ] Wire 3 reed switches to ESP32 GPIO pins (digital input, pull-up)
   - [ ] Glue magnets to inside of each door block
   - [ ] Mount reed switches on inside of table wall, aligned with magnets when door is closed

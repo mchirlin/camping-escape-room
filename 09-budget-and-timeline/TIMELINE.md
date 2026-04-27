@@ -6,9 +6,10 @@
 
 Do this NOW so shipping doesn't block you later.
 
-- [x] Order remaining electronics (PCA9685, 3 servos, 3 reed switch modules, 5V servo power supply)
+- [x] Order remaining electronics (3 servos, 3 reed switch modules, 5V servo power supply)
 - [ ] Order crafting table lumber & hardware (2×6s, plywood, aluminum angle/flat bar, hinges, wood rods)
-- [ ] Order crafting table finishing (pleather, frosted acrylic)
+- [x] Order crafting table finishing (pleather)
+- [ ] Find frosted acrylic
 - [ ] Order PLA filament (1-2 spools black)
 - [x] Order matte clear coat spray
 - [ ] Order spray paint (diamond blue/teal, green)
@@ -45,7 +46,7 @@ This is the biggest single build. Start as soon as lumber arrives.
 - [ ] Test NFC read range through acrylic
 - [ ] Cut door openings, install hinges, build door blocks
 - [ ] Mount 3 servos with 3D-printed brackets + latch tabs
-- [ ] Wire servo driver (PCA9685) + reed switches
+- [ ] Wire 3 servos to ESP32 GPIO pins + reed switches
 - [ ] Route all wiring inside table
 - [ ] Wrap/finish table with pleather
 - [ ] Test all 9 reader slots
