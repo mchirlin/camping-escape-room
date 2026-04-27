@@ -12,7 +12,23 @@
   - [x] Micro SD card for DFPlayer
   - [x] Copper tape (1" wide roll) — ~$5
   - [x] Jumper wires / hookup wire — ~$8
+  - [ ] PCA9685 16-channel PWM servo driver board — ~$6
+  - [ ] SG90 or MG90S micro servos (3) — ~$8
+  - [ ] Magnetic reed switches (3) + small neodymium magnets (3) — ~$5
+  - [ ] 5V power supply for servos (separate from ESP32) — ~$8
 - [x] **MCompass** — buy pre-assembled from Etsy
+- [ ] **Crafting Table — Lumber & Hardware**
+  - [ ] 2×6 lumber × 4' (16 pieces)
+  - [ ] Plywood 2'×2' × 1/8" (4 pieces)
+  - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
+  - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
+  - [ ] 1"×1" wood rods, 4' total
+  - [ ] Small hinges for servo doors (3 sets)
+  - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
+- [ ] **Crafting Table — Finishing**
+  - [ ] 2.5' square of camel pleather
+  - [ ] 3" strips of dark brown pleather
+  - [ ] 1'×1' frosted acrylic
 - [ ] **3D Printing supplies**
   - [ ] Black PLA filament (1-2 spools)
   - [x] Printable vinyl sticker paper (matte, waterproof, 25-pack)
@@ -25,6 +41,8 @@
   - [ ] Black acrylic paint (creeper face)
   - [ ] Cardboard boxes for creeper (free — grocery store)
   - [ ] Waterproof container for buried treasure
+  - [ ] Waterproof container / chest for TNT chest prop
+  - [ ] Chain or tape for TNT chest lock
   - [ ] Candy/treats for finale
   - [ ] Foam board for signs
 - [ ] **Foam gold sword** — check friends first, Amazon backup
