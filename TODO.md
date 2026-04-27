@@ -98,34 +98,39 @@
 
 ## 🚪 Crafting Table — Servo Doors (3 doors)
 
-Doors are built into the crafting table. Each door is a 2"×5"×9" block that swings open when a specific recipe is crafted, dispensing the crafted item prop.
+Each door is a 2"×5"×9" block hinged at the bottom. Gravity swings it open when unlatched. A servo arm acts as a latch — it pokes through a slot and holds the door shut. On a successful craft, the servo rotates the arm out of the way and the door drops open, revealing the crafted item prop on a shelf behind it. A magnetic reed switch detects when the door is pushed closed again and the servo re-latches automatically.
 
 - [ ] **Materials**
-  - [ ] High-torque servos capable of pushing 2×5×9" blocks (3) — e.g., MG996R or DS3218
-  - [ ] Servo driver board (PCA9685 16-channel PWM) — to offload servo control from ESP32
+  - [ ] High-torque servos (3) — e.g., MG996R or SG90 (latch needs minimal torque)
+  - [ ] PCA9685 16-channel PWM servo driver board
+  - [ ] Magnetic reed switches (3) + small neodymium magnets (3)
   - [ ] Jumper wires / servo extension cables
-  - [ ] Power supply for servos (5–6V, servos draw ~1–2A each under load — separate from ESP32)
-  - [ ] Hinges or pivot hardware for doors (3 sets)
+  - [ ] Power supply for servos (5–6V, separate from ESP32)
+  - [ ] Small hinges for door blocks (3 sets — piano hinge or butt hinges)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **3D Printing**
-  - [ ] Design servo mounting brackets (attach servo to table frame)
-  - [ ] Design servo arm linkage/pusher (connects servo horn to door block)
-  - [ ] Print 3 sets of mounts + linkages
+  - [ ] Servo mounting brackets (attach servo behind door frame)
+  - [ ] Servo arm latch extension (flat tab that catches the door)
+  - [ ] Print 3 sets
 - [ ] **Electronics**
-  - [ ] Wire PCA9685 servo driver to ESP32 via I2C (shares bus with NFC multiplexer)
+  - [ ] Wire PCA9685 servo driver to ESP32 via I2C
   - [ ] Wire 3 servos to PCA9685 channels
-  - [ ] Add servo control to ESP32 firmware (open/close per recipe)
-  - [ ] Add limit switches or endstops if needed for door position sensing
+  - [ ] Wire 3 reed switches to ESP32 GPIO pins (digital input, pull-up)
+  - [ ] Glue magnets to inside of each door block
+  - [ ] Mount reed switches on door frame aligned with magnets
 - [ ] **Assembly**
-  - [ ] Mount servos inside table frame
-  - [ ] Install door blocks on hinges/pivots
-  - [ ] Connect servo linkages to doors
-  - [ ] Test open/close travel and force
-  - [ ] Calibrate servo positions (open angle, closed angle)
-- [ ] **Firmware Integration**
+  - [ ] Mount servos inside table frame behind each door
+  - [ ] Install door blocks on hinges (hinge at bottom edge)
+  - [ ] Attach latch extensions to servo horns
+  - [ ] Test latch engagement — servo arm blocks door, rotation releases it
+  - [ ] Calibrate servo positions (locked angle, unlocked angle)
+  - [ ] Install prop shelves behind each door
+- [ ] **Firmware**
   - [ ] Map each recipe to a door (door 1 = pickaxe, door 2 = fishing rod, etc.)
-  - [ ] Trigger door open on successful craft
-  - [ ] Auto-close door after item is retrieved (timeout or button)
+  - [ ] On successful craft: rotate servo to unlatch, door drops open
+  - [ ] Reed switch detects door pushed closed → servo re-latches automatically
+  - [ ] Fallback: auto re-latch after 15 second timeout
+  - [ ] "Reset all doors" command for between-run resets
 
 ## 🧭 MCompass Setup
 
