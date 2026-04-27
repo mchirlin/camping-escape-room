@@ -45,6 +45,8 @@
   - [ ] Chain or tape for TNT chest lock
   - [ ] Candy/treats for finale
   - [ ] Foam board for signs
+- [ ] **Wooden prop materials**
+  - [ ] 1/4" plywood sheet (for sword, pickaxe, shovel, fishing rod cutouts)
 - [ ] **Foam gold sword** — check friends first, Amazon backup
 - [x] **Printer** — Epson EcoTank ET-2850 (if not already owned)
 

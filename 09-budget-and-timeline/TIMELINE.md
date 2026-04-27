@@ -6,16 +6,17 @@
 
 Do this NOW so shipping doesn't block you later.
 
-- [ ] Order remaining electronics (PCA9685, 3 servos, 3 reed switch modules, 5V servo power supply)
+- [x] Order remaining electronics (PCA9685, 3 servos, 3 reed switch modules, 5V servo power supply)
 - [ ] Order crafting table lumber & hardware (2×6s, plywood, aluminum angle/flat bar, hinges, wood rods)
 - [ ] Order crafting table finishing (pleather, frosted acrylic)
 - [ ] Order PLA filament (1-2 spools black)
-- [ ] Order matte clear coat spray
+- [x] Order matte clear coat spray
 - [ ] Order spray paint (diamond blue/teal, green)
 - [ ] Order parchment paper
-- [ ] Source foam gold sword (ask friends, Amazon backup)
+- [ ] Order 1/4" plywood sheet for wooden props (sword, pickaxe, shovel, fishing rod)
+- [o] Source foam gold sword (ask friends, Amazon backup)
 - [ ] Source cardboard boxes for creeper (grocery store)
-- [ ] Get a working ESP32 dev board (your ESP8266 CP2102 is dead)
+- [x] Get a working ESP32 dev board
 - [ ] Get a map device — iPad mini 4+ or use phones
 
 ## Phase 2: 3D Print Test + Block Design (Weeks 2-3 — May 5-16)
@@ -87,7 +88,10 @@ Quick builds, mostly crafting/painting.
 - [ ] Paint creeper boxes (green + black face)
 - [ ] Pre-score creeper tape for easy collapse
 - [ ] Cut wooden props from plywood using stencils (sword, pickaxe, shovel, rod)
-- [ ] Apply vinyl textures to wooden props
+- [ ] Sand edges smooth on all wooden props
+- [ ] Apply vinyl sticker textures to both faces of each prop
+- [ ] Paint edges with matching colors (gold for sword, brown for pickaxe handle, etc.)
+- [ ] Clear coat wooden props
 - [ ] Write explorer's diary entry
 - [ ] Prep TNT chest (container + chain + sign)
 - [ ] Prep buried treasure containers (2×, dragon egg + candy)
