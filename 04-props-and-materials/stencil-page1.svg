@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="8.5in" height="11in" viewBox="0 0 612 792">
+<rect width="100%" height="100%" fill="white"/>
+<!-- Sword [2,1] -->
+<rect x="486.0" y="216.0" width="90.0" height="90.0" fill="rgb(130,93,22)" stroke="#555" stroke-width="0.5"/>
+<rect x="396.0" y="306.0" width="90.0" height="90.0" fill="rgb(130,93,22)" stroke="#555" stroke-width="0.5"/>
+<rect x="486.0" y="306.0" width="90.0" height="90.0" fill="rgb(255,255,255)" stroke="#555" stroke-width="0.5"/>
+<text x="36.0" y="394.0" font-size="6" fill="#333">Sword [2,1]</text>
+<!-- Sword [2,2] -->
+<rect x="306.0" y="396.0" width="90.0" height="90.0" fill="rgb(130,93,22)" stroke="#555" stroke-width="0.5"/>
+<rect x="396.0" y="396.0" width="90.0" height="90.0" fill="rgb(255,255,255)" stroke="#555" stroke-width="0.5"/>
+<rect x="486.0" y="396.0" width="90.0" height="90.0" fill="rgb(234,238,87)" stroke="#555" stroke-width="0.5"/>
+<rect x="216.0" y="486.0" width="90.0" height="90.0" fill="rgb(130,93,22)" stroke="#555" stroke-width="0.5"/>
+<rect x="306.0" y="486.0" width="90.0" height="90.0" fill="rgb(255,255,255)" stroke="#555" stroke-width="0.5"/>
+<rect x="396.0" y="486.0" width="90.0" height="90.0" fill="rgb(234,238,87)" stroke="#555" stroke-width="0.5"/>
+<rect x="486.0" y="486.0" width="90.0" height="90.0" fill="rgb(253,255,118)" stroke="#555" stroke-width="0.5"/>
+<rect x="126.0" y="576.0" width="90.0" height="90.0" fill="rgb(130,93,22)" stroke="#555" stroke-width="0.5"/>
+<rect x="216.0" y="576.0" width="90.0" height="90.0" fill="rgb(253,255,118)" stroke="#555" stroke-width="0.5"/>
+<rect x="306.0" y="576.0" width="90.0" height="90.0" fill="rgb(234,238,87)" stroke="#555" stroke-width="0.5"/>
+<rect x="396.0" y="576.0" width="90.0" height="90.0" fill="rgb(253,255,118)" stroke="#555" stroke-width="0.5"/>
+<rect x="486.0" y="576.0" width="90.0" height="90.0" fill="rgb(63,46,14)" stroke="#555" stroke-width="0.5"/>
+<rect x="36.0" y="666.0" width="90.0" height="90.0" fill="rgb(130,93,22)" stroke="#555" stroke-width="0.5"/>
+<rect x="126.0" y="666.0" width="90.0" height="90.0" fill="rgb(253,255,118)" stroke="#555" stroke-width="0.5"/>
+<rect x="216.0" y="666.0" width="90.0" height="90.0" fill="rgb(234,238,87)" stroke="#555" stroke-width="0.5"/>
+<rect x="306.0" y="666.0" width="90.0" height="90.0" fill="rgb(253,255,118)" stroke="#555" stroke-width="0.5"/>
+<rect x="396.0" y="666.0" width="90.0" height="90.0" fill="rgb(63,46,14)" stroke="#555" stroke-width="0.5"/>
+<text x="36.0" y="754.0" font-size="6" fill="#333">Sword [2,2]</text>
+<text x="36" y="781.1999999999999" font-size="8" fill="#999">Sword — 1 sq = 1.25"</text>
+</svg>

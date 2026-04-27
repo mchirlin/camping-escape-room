@@ -430,8 +430,10 @@ async function main(): Promise<void> {
       (pos) => {
         onPosition(pos);
         uiOverlay.setGPSStatus('active');
-        // Auto-follow: center map on player position
-        mapInteraction.centerOn(pos, false);
+        // Auto-follow only when orientation/heading mode is active
+        if (simHeading !== 0) {
+          mapInteraction.centerOn(pos, false);
+        }
       },
       (err) => {
         if (err === 'permission_denied') {

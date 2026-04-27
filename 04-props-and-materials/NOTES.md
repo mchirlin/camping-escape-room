@@ -5,13 +5,21 @@ Created: 2026-04-18
 
 ## Decisions
 
-### 3D-Printed Blocks
-- 3-inch cubes, black PLA
-- **Printable vinyl sticker paper** for textures — actual Minecraft block textures printed on matte waterproof vinyl sheets
-- Print 6 faces per block, cut to 3" squares, apply to all sides
+### 3D-Printed Blocks & Items
+- **Two shapes** to match Minecraft's block vs item distinction:
+  - **Blocks** (Wood Plank): 3" × 3" × 3" full cubes — 4 total
+  - **Items** (everything else): 3" × 3" × 1.5" flat slabs — 30 total
+- Same 3×3" footprint so both fit the crafting table grid slots
+- Flat items use less filament and print faster (~half the volume)
+- Kids can tell blocks from items by feel, just like in Minecraft
+- Black PLA base
+- **Printable vinyl sticker paper** for textures — actual Minecraft block/item textures printed on matte waterproof vinyl sheets
+- Blocks: texture on all 6 faces (cut to 3" squares)
+- Items: item texture centered on top face, plain/dark sides (top: 3"×3", sides: 3"×1.5")
 - Clear coat matte spray over stickers to prevent edge peeling
 - Bottom face can be left bare (sits on reader, nobody sees it)
 - NTAG215 coin tags embedded mid-print (cavity near bottom, pause at layer, drop in, resume)
+- NFC tag is closer to the reader in flat items (1.5" vs 3") — better read reliability
 - Block type written to tag data (Option B)
 - Registration program on ESP32 to write block types to tags
 
@@ -35,7 +43,7 @@ Created: 2026-04-18
 1. Wooden Pickaxe — prop (3D printed or crafted from wood)
 2. Fishing Rod — real stick + string + magnet
 3. Gold Sword — foam (sourcing from friends, or Minecraft licensed foam sword from Amazon)
-4. Map — hand-drawn on tea-stained parchment, directions on back
+4. Map — fog-of-war map app on iPad/phone (digital, no physical prop needed)
 5. Diamond Shovel — real kid-sized garden shovel, painted diamond blue/teal (already owned)
 
 ### Creeper

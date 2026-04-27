@@ -18,12 +18,14 @@ export type MarkerTag =
   | 'iron'
   | 'string'
   | 'gold'
-  | 'paper'
-  | 'compass_block'
   | 'diamond'
+  | 'gunpowder'
+  | 'sand'
+  | 'redstone'
   | 'creeper'
   | 'crafting'
   | 'mine'
+  | 'tnt_chest'
   | 'dig_site';
 
 const BASE = import.meta.env.BASE_URL;
@@ -34,12 +36,14 @@ export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; textur
   { tag: 'iron',          label: 'Iron Ingot',     color: '#D8D8D8', texture: `${BASE}markers/iron.png` },
   { tag: 'string',        label: 'String',         color: '#EEEEEE', texture: `${BASE}markers/string.png` },
   { tag: 'gold',          label: 'Gold Ingot',     color: '#FAEE57', texture: `${BASE}markers/gold.png` },
-  { tag: 'paper',         label: 'Paper',          color: '#F5F5DC', texture: `${BASE}markers/paper.png` },
-  { tag: 'compass_block', label: 'Compass',        color: '#CC4444', texture: `${BASE}markers/compass_block.png` },
   { tag: 'diamond',       label: 'Diamond',        color: '#5CDBD5', texture: `${BASE}markers/diamond.png` },
+  { tag: 'gunpowder',     label: 'Gunpowder',     color: '#444444', texture: `${BASE}markers/gunpowder.png` },
+  { tag: 'sand',          label: 'Sand',           color: '#E8D8A0', texture: `${BASE}markers/sand.png` },
+  { tag: 'redstone',      label: 'Redstone',       color: '#FF0000', texture: `${BASE}markers/redstone.png` },
   { tag: 'creeper',       label: 'Creeper',        color: '#55AA33', texture: `${BASE}markers/creeper.png` },
   { tag: 'crafting',      label: 'Crafting Table',  color: '#B5804A', texture: `${BASE}markers/crafting.png` },
   { tag: 'mine',          label: 'Mine',           color: '#707070', texture: `${BASE}markers/mine.png` },
+  { tag: 'tnt_chest',     label: 'TNT Chest',      color: '#FF3333', texture: `${BASE}markers/tnt_chest.png` },
   { tag: 'dig_site',      label: 'Dig Site',       color: '#AA5500', texture: `${BASE}markers/dig_site.png` },
 ];
 

@@ -32,17 +32,20 @@
 
 ## 🧊 3D Printing
 
-- [ ] **Blocks** (34 total — ~2-3 per overnight print)
-  - [ ] Wood Plank × 4
-  - [ ] Stick × 9
-  - [ ] Iron Ingot × 2
-  - [ ] String × 3
+- [ ] **Blocks — 3" × 3" × 3" cubes** (21 total)
+  - [ ] Wood Plank × 8
   - [ ] Gold Ingot × 3
-  - [ ] Paper × 9
-  - [ ] Compass × 2
+  - [ ] Gunpowder × 5
+  - [ ] Sand × 5
+- [ ] **Items — 3" × 3" × 1.5" flat slabs** (23 total)
+  - [ ] Stick × 10
+  - [ ] Iron Ingot × 6
+  - [ ] String × 3
+  - [ ] Redstone × 2
   - [ ] Diamond × 2
-- [ ] Design block with NTAG215 cavity (pause-at-layer method)
-- [ ] Test print one block with embedded NFC tag — verify read range
+- [ ] Design block model with NTAG215 cavity (pause-at-layer method)
+- [ ] Design item model (half-height) with NTAG215 cavity
+- [ ] Test print one block + one item with embedded NFC tag — verify read range
 - [ ] **Ender Dragon Egg** — print and paint (keepsake quality)
 - [ ] **Wooden Pickaxe prop** (if 3D printing it)
 
@@ -64,14 +67,14 @@
 - [ ] Write ESP32 firmware:
   - [ ] Sequential I2C scanning of 9 readers
   - [ ] NFC tag reading + block type parsing
-  - [ ] Recipe matching (5 main recipes)
+  - [ ] Recipe matching (6 recipes: pickaxe, fishing rod, gold sword, TNT, compass, diamond shovel)
   - [ ] NeoPixel feedback (white=detected, green=valid, rainbow=success)
   - [ ] Sound playback on successful craft
   - [ ] Empty-grid detection (prevent re-triggering)
   - [ ] Tag registration/writing mode
 - [ ] Write all block tags using registration program
 - [ ] Test every block on every grid slot
-- [ ] Test all 5 main recipes
+- [ ] Test all 6 recipes
 - [ ] Test wrong recipe rejection
 
 ## 🪑 Crafting Table — Physical Build
@@ -89,13 +92,10 @@
 
 - [ ] Receive compass from Etsy (or build from PCB order)
 - [ ] Flash GPS-WIFI firmware (if not pre-flashed)
-- [ ] Configure WiFi + set spawn point to **tent/crafting table coordinates** (so it always points home)
+- [ ] Configure WiFi + set spawn point to **buried treasure dig site coordinates** (compass points to treasure)
 - [ ] Test compass pointing accuracy outdoors
 - [ ] Calibrate (6 quick presses, figure-8 motion)
-- [ ] Decide when kids receive the compass:
-  - Option A: Given at the very start (always have a way home)
-  - Option B: Given after first craft (pickaxe) as a reward
-  - Option C: Found inside the creeper loot alongside map ingredients
+- [ ] Compass is given to kids after they craft the Compass recipe (Step 5)
 
 ## 🗺️ Fog-of-War Map (Digital)
 
@@ -123,12 +123,13 @@
 ## 📜 Recipe Cards & Map
 
 - [ ] Design recipe scroll template (3×3 grid with block icons)
-- [ ] Print/write 5 recipe scrolls:
-  - [ ] #1 Wooden Pickaxe (3 wood plank + 2 stick)
-  - [ ] #2 Fishing Rod (2 stick + 2 string + 1 iron)
-  - [ ] #3 Gold Sword (2 gold + 1 stick)
-  - [ ] #4 Map (8 paper + 1 compass)
-  - [ ] #5 Diamond Shovel (1 diamond + 2 stick)
+- [ ] Print/write 6 recipe cards:
+  - [ ] #1 Wooden Pickaxe (3 wood plank + 2 stick) — given with crafting table
+  - [ ] #2 Fishing Rod (3 stick + 2 string + 1 iron) — after pickaxe craft
+  - [ ] #3 Gold Sword (2 gold + 1 stick) — found with gold in stream
+  - [ ] #4 TNT (5 gunpowder + 4 sand) — found in creeper loot
+  - [ ] #5 Compass (4 iron + 1 redstone) — found in TNT chest
+  - [ ] #6 Diamond Shovel (1 diamond + 2 stick) — found in TNT chest
 - [ ] Tea-stain parchment paper for aged look
 - [ ] Roll into scroll format
 
@@ -137,7 +138,8 @@
 - [ ] **Fishing Rod** — attach string + magnet to a stick
 - [ ] **Gold fishing target** — waterproof container with metal ring/washer in stream
 - [ ] **Creeper** — stack 4 boxes, paint green, paint face on top box, pre-score tape
-- [ ] **Creeper loot** — put paper blocks + compass block inside head box
+- [ ] **Creeper loot** — put 5 gunpowder blocks + Recipe Card #4 inside head box
+- [ ] **TNT chest** — locked/chained container with "⚠ TNT Required" sign, containing diamond, redstone, 4 iron, Recipe Cards #5 + #6
 - [ ] **Diamond Shovel** — paint kid garden shovel diamond blue/teal
 - [ ] **Explorer's Diary** — write last journal entry about Ender Dragon egg sighting
 - [ ] **Buried treasure** — waterproof container with dragon egg + candy
@@ -158,8 +160,8 @@
 - [ ] Wife playtest — full walkthrough at home
 - [ ] Pack checklist:
   - [ ] Crafting table + power bank
-  - [ ] All 34 blocks (in labeled bags by biome)
-  - [ ] 5 recipe scrolls
+  - [ ] All 44 blocks/items (in labeled bags by biome/step)
+  - [ ] 6 recipe cards
   - [ ] Fishing rod + gold target
   - [ ] Foam gold sword
   - [ ] Diamond shovel
@@ -170,9 +172,10 @@
   - [ ] Minecraft fox stuffed animal
   - [ ] Phone with soundboard app
   - [ ] Bluetooth speaker
-  - [ ] MCompass (charged, spawn set to tent location)
+  - [ ] MCompass (charged, spawn set to dig site)
   - [ ] iPad(s) with fog map loaded (1–2 devices)
   - [ ] Phone charger / power bank for map devices
+  - [ ] TNT chest + chain/tape + sign
   - [ ] Spare blocks
   - [ ] Tape, markers, zip ties (field repairs)
 - [ ] Prep two dig sites (for running twice)
@@ -185,15 +188,18 @@
 - [ ] Set up crafting table in tent + power on
 - [ ] Test all readers one more time
 - [ ] Hide blocks by biome:
-  - [ ] Forest: wood planks, sticks (near trees)
-  - [ ] Mine/bathroom: iron, string, diamonds (inside stall)
-  - [ ] Stream: gold target in water
-- [ ] Set up creeper along trail (hidden from initial view)
+  - [ ] Forest: wood planks (4 for trade + 3 for pickaxe), sticks (near trees)
+  - [ ] Mine/bathroom: iron ingot, string (inside stall)
+  - [ ] Stream: gold target in water (with Recipe Card #3)
+  - [ ] Scattered: sand blocks along trails
+- [ ] Set up creeper along trail (hidden from initial view, loaded with 5 gunpowder + Recipe Card #4)
+- [ ] Set up TNT chest (loaded with diamond, redstone, 4 iron, Recipe Cards #5 + #6)
 - [ ] Bury treasure at dig site
 - [ ] Place mine sign on bathroom door
-- [ ] Set MCompass spawn point to tent/crafting table location
+- [ ] Set MCompass spawn point to buried treasure dig site
 - [ ] Start fog map on iPad(s) — load Lake Fairfax region
 - [ ] Pre-place item markers on fog map for block hiding spots (via real map view, right-click)
+- [ ] Set up TNT chest along trail (locked/chained)
 - [ ] Queue up Minecraft music on speaker
 - [ ] Load soundboard on phone
 
