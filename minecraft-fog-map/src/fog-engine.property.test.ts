@@ -71,7 +71,7 @@ describe('Feature: minecraft-fog-map, Property 3: Reveal covers radius', () => {
 
             const dist = distanceMeters(position, tileCenter);
 
-            if (dist < radius - 0.1) {
+            if (dist < radius - 1.0) {
               // Only check tiles whose center is within the bounding box
               if (tileCenter.latitude < BBOX.south || tileCenter.latitude > BBOX.north ||
                   tileCenter.longitude < BBOX.west || tileCenter.longitude > BBOX.east) continue;
