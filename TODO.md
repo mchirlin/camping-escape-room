@@ -28,9 +28,9 @@
   - [x] 2.5' square of camel pleather
   - [x] 3" strips of dark brown pleather
   - [ ] 1'×1' frosted acrylic
-  - [ ] Wood stain — light (natural/golden oak) for lighter planks
-  - [ ] Wood stain — medium (early American/provincial) for darker planks
-  - [ ] Wood stain — dark (dark walnut/espresso) for plywood backing
+  - [ ] Danish oil (for wood planks — natural finish)
+  - [ ] Watered-down acrylic paints (for pixel color variation on planks)
+  - [ ] Wood stain — dark (espresso) for plywood backing
 - [ ] **3D Printing supplies**
   - [ ] Black PLA filament (1-2 spools)
   - [x] Printable vinyl sticker paper (matte, waterproof, 25-pack)
