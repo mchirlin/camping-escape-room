@@ -310,6 +310,10 @@ async function main(): Promise<void> {
 
   // Track which map quadrants the player has stepped into (per display level)
   const discoveredQuadrants = new Map<number, Set<string>>();
+  // Initialize empty sets so quadrants are hidden until discovered (null = show all)
+  for (const cfg of MAP_LEVEL_CONFIG) {
+    discoveredQuadrants.set(cfg.display, new Set());
+  }
 
   // Map level: display level 0=128m, 1=256m, 2=512m
   // Maps to internal terrain grid level and a visible area fraction

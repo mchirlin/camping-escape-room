@@ -8,5 +8,10 @@
     "id": "depaul-dr",
     "name": "2632 Depaul Dr",
     "file": "terrain-depaul.json"
+  },
+  {
+    "id": "appian-hq",
+    "name": "Appian HQ",
+    "file": "terrain-appian.json"
   }
 ]
