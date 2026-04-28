@@ -24,6 +24,9 @@ Do this NOW so shipping doesn't block you later.
 - [x] 2.5' square of camel pleather
 - [x] 3" strips of dark brown pleather
 - [ ] 1'×1' frosted acrylic
+- [ ] Wood stain — light (natural/golden oak) for lighter wood planks
+- [ ] Wood stain — medium (early American/provincial) for darker wood planks
+- [ ] Wood stain — dark (dark walnut/espresso) for plywood backing panels
 
 **3D Printing Supplies:**
 - [ ] Black PLA filament (1-2 spools)
