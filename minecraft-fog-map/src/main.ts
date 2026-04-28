@@ -84,7 +84,7 @@ function getSelectedRegionFile(regions: RegionInfo[]): string {
     }
   } catch { /* ignore */ }
   // Default to first region
-  return regions.length > 0 ? regions[0].file : 'terrain-data.json';
+  return regions.length > 0 ? regions[0].file : 'terrain-lakefairfax.json';
 }
 
 function getSelectedRegionId(regions: RegionInfo[]): string {
