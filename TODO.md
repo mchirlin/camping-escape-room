@@ -21,8 +21,8 @@
   - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
   - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
   - [ ] 1"×1" wood rods, 4' total
-  - [ ] Small piano hinges for doors (3)
-  - [ ] Ball catches for doors (3-6)
+  - [x] Small piano hinges for doors (3)
+  - [x] Ball catches for doors (3-6)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **Crafting Table — Finishing**
   - [x] 2.5' square of camel pleather
@@ -121,7 +121,6 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 - [ ] **Materials**
   - [ ] Servos (3) — SG90 or MG90S (latch needs minimal torque)
-  - [ ] Magnetic reed switches (3) + small neodymium magnets (3)
   - [ ] Jumper wires / servo extension cables
   - [ ] Power supply for servos (5–6V, separate from ESP32)
   - [ ] Piano hinges for doors (3)
