@@ -13,7 +13,6 @@
   - [x] Copper tape (1" wide roll) — ~$5
   - [x] Jumper wires / hookup wire — ~$8
   - [x] SG90 or MG90S micro servos (3) — ~$8
-  - [x] Magnetic reed switches (3) + small neodymium magnets (3) — ~$5
   - [ ] 5V power supply for servos (separate from ESP32) — ~$8
 - [x] **MCompass** — buy pre-assembled from Etsy
 - [ ] **Crafting Table — Lumber & Hardware**
@@ -22,7 +21,8 @@
   - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
   - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
   - [ ] 1"×1" wood rods, 4' total
-  - [ ] Small hinges for servo doors (3 sets)
+  - [ ] Small piano hinges for doors (3)
+  - [ ] Ball catches for doors (3-6)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **Crafting Table — Finishing**
   - [x] 2.5' square of camel pleather
@@ -117,42 +117,39 @@
 
 ## 🚪 Crafting Table — Servo Doors (3 doors)
 
-Each door is a 2"×5"×9" block hinged at the bottom, flush with the table's outer panel. Gravity swings it open when unlatched. Servos are mounted on the inside of the table wall — completely hidden from the outside. A narrow slot in the wall lets the servo's latch tab poke through to hold the door shut. On a successful craft, the servo rotates the tab out of the way and the door drops open, revealing the crafted item prop on a shelf inside. A magnetic reed switch detects when the door is pushed closed and the servo re-latches automatically.
+Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held closed by a ball catch. Servos are mounted inside the table. On a successful craft, the servo arm pushes the door open past the ball catch. To close, just push the door shut — the ball catch clicks it back into place. No reed switches or re-latching logic needed.
 
 - [ ] **Materials**
   - [ ] Servos (3) — SG90 or MG90S (latch needs minimal torque)
   - [ ] Magnetic reed switches (3) + small neodymium magnets (3)
   - [ ] Jumper wires / servo extension cables
   - [ ] Power supply for servos (5–6V, separate from ESP32)
-  - [ ] Small hinges for door blocks (3 sets — piano hinge or butt hinges)
+  - [ ] Piano hinges for doors (3)
+  - [ ] Ball catches for doors (3-6)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **3D Printing**
-  - [ ] Servo mounting brackets (mount servo to inside of table wall, horn axis perpendicular to wall)
-  - [ ] Latch tab (flat arm that screws onto servo horn, extends through slot to catch door)
-  - [ ] Print 3 sets of brackets + tabs
+  - [ ] Servo mounting brackets (3)
+  - [ ] Servo arm push extensions (3)
+  - [ ] Print 3 sets
 - [ ] **Table Modifications**
-  - [ ] Cut narrow slot in table wall behind each door (just wide enough for latch tab)
-  - [ ] Attach small catch ledge (screw head or wood strip) to inside face of each door for tab to engage
-  - [ ] Install hinges at bottom edge of each door opening
+  - [ ] Install piano hinges at bottom edge of each door opening
+  - [ ] Install ball catches to hold doors closed
+  - [ ] Mount servos inside table with 3D-printed brackets
   - [ ] Build prop shelf behind each door (holds pickaxe, fishing rod, etc.)
   - [ ] Ensure door face sits flush with table outer panel — all hardware hidden inside
 - [ ] **Electronics**
   - [ ] Wire 3 servos directly to ESP32 GPIO pins
-  - [ ] Wire 3 reed switches to ESP32 GPIO pins (digital input, pull-up)
-  - [ ] Glue magnets to inside of each door block
-  - [ ] Mount reed switches on inside of table wall, aligned with magnets when door is closed
   - [ ] Route all wiring inside the table
 - [ ] **Firmware**
   - [ ] Map each recipe to a door (door 1 = pickaxe, door 2 = fishing rod, etc.)
-  - [ ] On successful craft: rotate servo 90° to retract latch tab, door drops open by gravity
-  - [ ] Reed switch detects door pushed closed → servo rotates back to latch position
-  - [ ] Fallback: auto re-latch after 15 second timeout
+  - [ ] On successful craft: servo pushes door open past ball catch
+  - [ ] Servo returns to rest position after push
   - [ ] "Reset all doors" command for between-run resets
 - [ ] **Testing**
-  - [ ] Verify latch holds door securely (no rattle)
-  - [ ] Verify door drops open cleanly when unlatched
-  - [ ] Verify reed switch triggers reliably when door is pushed shut
-  - [ ] Test full cycle: craft → door opens → grab prop → push door shut → re-latches
+  - [ ] Verify ball catch holds door securely
+  - [ ] Verify servo pushes door open cleanly
+  - [ ] Verify door clicks shut when pushed closed
+  - [ ] Test full cycle: craft → door opens → grab prop → push door shut
 
 ## 🧭 MCompass Setup
 
