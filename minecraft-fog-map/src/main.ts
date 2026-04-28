@@ -308,13 +308,6 @@ async function main(): Promise<void> {
     }
   }) as EventListener);
 
-  // Track which map quadrants the player has stepped into (per display level)
-  const discoveredQuadrants = new Map<number, Set<string>>();
-  // Initialize empty sets so quadrants are hidden until discovered (null = show all)
-  for (const cfg of MAP_LEVEL_CONFIG) {
-    discoveredQuadrants.set(cfg.display, new Set());
-  }
-
   // Map level: display level 0=128m, 1=256m, 2=512m
   // Maps to internal terrain grid level and a visible area fraction
   const MAP_LEVEL_CONFIG = [
@@ -322,6 +315,13 @@ async function main(): Promise<void> {
     { display: 1, internal: 3, sizeFraction: 0.5 },   // 256m = 1/2 of 512m
     { display: 2, internal: 2, sizeFraction: 1.0 },   // 512m = full map
   ];
+
+  // Track which map quadrants the player has stepped into (per display level)
+  const discoveredQuadrants = new Map<number, Set<string>>();
+  // Initialize empty sets so quadrants are hidden until discovered (null = show all)
+  for (const cfg of MAP_LEVEL_CONFIG) {
+    discoveredQuadrants.set(cfg.display, new Set());
+  }
 
   // Position update handler shared by GPS and simulation
   const onPosition = (pos: GeoPosition): void => {

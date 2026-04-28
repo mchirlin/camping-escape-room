@@ -80,6 +80,7 @@ export class UIOverlayImpl implements UIOverlay {
     this.createZoomButtons();
     this.createGPSStatus();
     this.createSimulationBanner();
+    this.createSimulationHints();
     this.createRegionSelector();
     this.createResetFogButton();
     this.createRevealAllButton();
@@ -195,6 +196,7 @@ export class UIOverlayImpl implements UIOverlay {
     this.container!.appendChild(btn);
     this.compassEl = btn;
     this.compassArrow = btn.querySelector('.ui-compass-arrow') as HTMLElement;
+    if (this.compassArrow) this.compassArrow.style.transform = 'rotate(0deg)';
   }
 
   private headingHandler: ((e: DeviceOrientationEvent) => void) | null = null;
