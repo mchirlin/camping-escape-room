@@ -185,12 +185,12 @@ describe('MapInteraction', () => {
 
     it('clamps zoom level to MIN_ZOOM_LEVEL', () => {
       interaction.setZoomLevel(-10);
-      expect(interaction.getViewport().zoomLevel).toBe(-5);
+      expect(interaction.getViewport().zoomLevel).toBe(-3);
     });
 
     it('clamps zoom level to MAX_ZOOM_LEVEL', () => {
       interaction.setZoomLevel(10);
-      expect(interaction.getViewport().zoomLevel).toBe(10);
+      expect(interaction.getViewport().zoomLevel).toBe(6);
     });
 
     it('accepts fractional zoom levels (continuous zoom)', () => {

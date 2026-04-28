@@ -119,6 +119,9 @@ export class UIOverlayImpl implements UIOverlay {
     if (this.simBanner) {
       this.simBanner.style.display = visible ? 'block' : 'none';
     }
+    if (this.simHints) {
+      this.simHints.style.display = visible ? 'block' : 'none';
+    }
     if (this.toggleMapBtn) {
       this.toggleMapBtn.style.display = visible ? 'flex' : 'none';
     }

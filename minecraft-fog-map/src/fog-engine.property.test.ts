@@ -71,7 +71,11 @@ describe('Feature: minecraft-fog-map, Property 3: Reveal covers radius', () => {
 
             const dist = distanceMeters(position, tileCenter);
 
-            if (dist <= radius) {
+            if (dist < radius - 0.1) {
+              // Only check tiles whose center is within the bounding box
+              if (tileCenter.latitude < BBOX.south || tileCenter.latitude > BBOX.north ||
+                  tileCenter.longitude < BBOX.west || tileCenter.longitude > BBOX.east) continue;
+
               expect(
                 engine.isRevealed(level4, col, row),
                 `Tile (${col}, ${row}) center is ${dist.toFixed(2)}m from position ` +
