@@ -441,33 +441,9 @@ async function main(): Promise<void> {
       };
     }
 
-    // Wire keyboard for simulation
+    // Wire keyboard for simulation (zoom only)
     window.addEventListener('keydown', (e) => {
       switch (e.key) {
-        case 'ArrowUp':
-        case 'w':
-        case 'W':
-          simulation!.handleKeyboard('up', simHeading);
-          if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
-          break;
-        case 'ArrowDown':
-        case 's':
-        case 'S':
-          simulation!.handleKeyboard('down', simHeading);
-          if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
-          break;
-        case 'ArrowLeft':
-        case 'a':
-        case 'A':
-          simulation!.handleKeyboard('left', simHeading);
-          if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
-          break;
-        case 'ArrowRight':
-        case 'd':
-        case 'D':
-          simulation!.handleKeyboard('right', simHeading);
-          if (playerWorldPos) mapInteraction.centerOn(worldToGeo(playerWorldPos, bbox, level4Grid, TILE_SCREEN_SIZE), false);
-          break;
         case '=':
         case '+':
           mapInteraction.setZoomLevel(mapInteraction.getViewport().zoomLevel + 0.5);
@@ -475,16 +451,6 @@ async function main(): Promise<void> {
         case '-':
         case '_':
           mapInteraction.setZoomLevel(mapInteraction.getViewport().zoomLevel - 0.5);
-          break;
-        case 'q':
-        case 'Q':
-          simHeading = (simHeading - 15 + 360) % 360;
-          uiOverlay.setCompassHeading(simHeading);
-          break;
-        case 'e':
-        case 'E':
-          simHeading = (simHeading + 15) % 360;
-          uiOverlay.setCompassHeading(simHeading);
           break;
       }
     });

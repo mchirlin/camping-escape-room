@@ -50,22 +50,18 @@ describe('UIOverlay', () => {
    * Validates: Requirements 5.4
    * Simulation controls are visible only when simulation is active.
    */
-  it('hides simulation banner and hints by default', () => {
+  it('hides simulation banner by default', () => {
     const banner = container.querySelector('[data-testid="sim-banner"]') as HTMLElement;
-    const hints = container.querySelector('[data-testid="sim-hints"]') as HTMLElement;
 
     expect(banner.style.display).toBe('none');
-    expect(hints.style.display).toBe('none');
   });
 
-  it('shows simulation banner and hints when setSimulationVisible(true)', () => {
+  it('shows simulation banner when setSimulationVisible(true)', () => {
     overlay.setSimulationVisible(true);
 
     const banner = container.querySelector('[data-testid="sim-banner"]') as HTMLElement;
-    const hints = container.querySelector('[data-testid="sim-hints"]') as HTMLElement;
 
-    expect(banner.style.display).toBe('block');
-    expect(hints.style.display).toBe('block');
+    expect(banner.style.display).toBe('flex');
   });
 
   it('hides simulation controls again when setSimulationVisible(false)', () => {
@@ -73,10 +69,8 @@ describe('UIOverlay', () => {
     overlay.setSimulationVisible(false);
 
     const banner = container.querySelector('[data-testid="sim-banner"]') as HTMLElement;
-    const hints = container.querySelector('[data-testid="sim-hints"]') as HTMLElement;
 
     expect(banner.style.display).toBe('none');
-    expect(hints.style.display).toBe('none');
   });
 
   /**

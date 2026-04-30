@@ -43,6 +43,46 @@
   pointer-events: auto;
 }
 
+/* --- Corner group containers --- */
+.ui-group {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.ui-group > * {
+  pointer-events: auto;
+}
+
+.ui-group-top-left {
+  top: 12px;
+  left: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ui-group-top-right {
+  top: 12px;
+  right: 12px;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ui-group-bottom-left {
+  bottom: 12px;
+  left: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ui-group-bottom-right {
+  bottom: 12px;
+  right: 12px;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 /* --- Minecraft-style 3D Button --- */
 .ui-btn {
   font-family: var(--mc-font);
@@ -87,11 +127,8 @@
   background: #9E9E9E;
 }
 
-/* --- Compass (top-right) --- */
+/* --- Compass (top-right group) --- */
 .ui-compass {
-  position: absolute;
-  top: 16px;
-  right: 16px;
   width: 44px;
   height: 44px;
   display: flex;
@@ -109,11 +146,8 @@
   transition: transform 0.15s ease;
 }
 
-/* --- Map Level Indicator (top-right, below compass) --- */
+/* --- Map Level Indicator (top-right group) --- */
 .ui-map-level {
-  position: absolute;
-  top: 70px;
-  right: 16px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -162,11 +196,8 @@
   color: var(--mc-text);
 }
 
-/* --- Toggle Real Map Button (top-right, below map level) --- */
+/* --- Toggle Real Map Button (top-right group) --- */
 .ui-toggle-map {
-  position: absolute;
-  top: 104px;
-  right: 16px;
   width: 38px;
   height: 38px;
   font-size: 16px;
@@ -176,30 +207,23 @@
   padding: 0;
 }
 
-/* --- Center-on-me button (bottom-right) --- */
+/* --- Center-on-me button (bottom-right group) --- */
 .ui-center-btn {
-  position: absolute;
-  bottom: 120px;
-  right: 16px;
   width: 44px;
   height: 44px;
   font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 !important;
+  padding: 0 0 2px 0 !important;
   text-shadow: none;
   line-height: 1;
   box-shadow:
     inset -2px -4px 0 0 var(--mc-btn-shadow),
     inset 2px 2px 0 0 var(--mc-btn-highlight);
-  /* Offset content to visually center within the asymmetric shadow */
-  padding: 0 0 2px 0 !important;
 }
+
 .ui-zoom-controls {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -220,11 +244,8 @@
     inset 2px 2px 0 0 var(--mc-btn-highlight);
 }
 
-/* --- GPS Status Indicator (top-left) --- */
+/* --- GPS Status Indicator (top-left group) --- */
 .ui-gps-status {
-  position: absolute;
-  top: 16px;
-  left: 16px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -260,12 +281,8 @@
   color: var(--mc-green);
 }
 
-/* --- Simulation Mode Banner (top-center) --- */
+/* --- Simulation Mode Banner (top-left group) --- */
 .ui-sim-banner {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
   font-size: 10px;
   color: var(--mc-green);
   background: rgba(0, 0, 0, 0.7);
@@ -294,39 +311,41 @@
   background: rgba(85, 255, 85, 0.3);
 }
 
-/* --- Simulation Arrow Key Hints (bottom-left) --- */
-.ui-sim-hints {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
+/* --- Action Buttons Row (bottom-left group) --- */
+.ui-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ui-action-btn {
+  font-size: 7px !important;
+  padding: 5px 8px !important;
+}
+
+/* --- Region Selector (bottom-left group) --- */
+.ui-region-select {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 8px;
   background: rgba(0, 0, 0, 0.6);
   padding: 6px 10px;
   border: 2px solid var(--mc-btn-shadow);
 }
 
-.ui-sim-hint-key {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  font-size: 10px;
-  background: var(--mc-btn-face);
-  box-shadow:
-    inset -1px -2px 0 0 var(--mc-btn-shadow),
-    inset 1px 1px 0 0 var(--mc-btn-highlight);
-  outline: 1px solid #000;
-  outline-offset: -1px;
+.ui-region-label {
+  font-size: 12px;
 }
 
-.ui-sim-hint-label {
+.ui-region-select select {
+  font-family: var(--mc-font);
   font-size: 8px;
-  margin-left: 4px;
-  color: var(--mc-btn-highlight);
+  color: var(--mc-text);
+  background: var(--mc-btn-face);
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
 }
 
 /* --- Toast Notifications --- */
@@ -371,75 +390,8 @@
   image-rendering: -moz-crisp-edges;
 }
 
-/* --- Reset Fog Button (bottom-left, above sim hints) --- */
-.ui-reset-fog {
-  position: absolute;
-  bottom: 60px;
-  left: 16px;
-  font-size: 8px;
-  padding: 6px 10px !important;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* --- Reveal All Button (bottom-left, next to reset fog) --- */
-.ui-reveal-all {
-  position: absolute;
-  bottom: 60px;
-  left: 120px;
-  font-size: 8px;
-  padding: 6px 10px !important;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* --- Remove All Items Button --- */
-.ui-remove-all-items {
-  position: absolute;
-  bottom: 60px;
-  left: 228px;
-  font-size: 8px;
-  padding: 6px 10px !important;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* --- Region Selector (bottom-left, above reset/reveal) --- */
-.ui-region-select {
-  position: absolute;
-  bottom: 100px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 8px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 6px 10px;
-  border: 2px solid var(--mc-btn-shadow);
-}
-
-.ui-region-label {
-  font-size: 12px;
-}
-
-.ui-region-select select {
-  font-family: var(--mc-font);
-  font-size: 8px;
-  color: var(--mc-text);
-  background: var(--mc-btn-face);
-  border: none;
-  padding: 4px 6px;
-  cursor: pointer;
-}
-
-/* --- Fullscreen Button (bottom-left) --- */
+/* --- Fullscreen Button (bottom-left group) --- */
 .ui-fullscreen {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
   width: 38px;
   height: 38px;
   display: flex;
@@ -451,4 +403,46 @@
   box-shadow:
     inset -2px -4px 0 0 var(--mc-btn-shadow),
     inset 2px 2px 0 0 var(--mc-btn-highlight);
+}
+
+/* --- Mobile adjustments --- */
+@media (max-width: 480px) {
+  .ui-group-top-left,
+  .ui-group-top-right,
+  .ui-group-bottom-left,
+  .ui-group-bottom-right {
+    gap: 6px;
+  }
+
+  .ui-group-top-left {
+    max-width: 55%;
+  }
+
+  .ui-sim-banner {
+    font-size: 7px;
+    padding: 4px 8px;
+    gap: 8px;
+    letter-spacing: 1px;
+  }
+
+  .ui-sim-exit-btn {
+    font-size: 6px;
+    padding: 3px 6px;
+  }
+
+  .ui-action-btn {
+    font-size: 6px !important;
+    padding: 4px 6px !important;
+  }
+
+  .ui-compass,
+  .ui-center-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .ui-zoom-controls .ui-btn {
+    width: 38px;
+    height: 38px;
+  }
 }

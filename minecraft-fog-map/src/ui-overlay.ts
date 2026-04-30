@@ -62,31 +62,59 @@ export class UIOverlayImpl implements UIOverlay {
   private gpsIconEl: HTMLElement | null = null;
   private gpsTextEl: HTMLElement | null = null;
   private simBanner: HTMLElement | null = null;
-  private simHints: HTMLElement | null = null;
   private resetFogBtn: HTMLElement | null = null;
   private revealAllBtn: HTMLElement | null = null;
+  private removeAllItemsBtn: HTMLElement | null = null;
+  private actionRow: HTMLElement | null = null;
   private fullscreenBtn: HTMLElement | null = null;
   private toastContainer: HTMLElement | null = null;
   private toggleMapBtn: HTMLElement | null = null;
   private regionSelect: HTMLElement | null = null;
 
+  private topLeftGroup: HTMLElement | null = null;
+  private topRightGroup: HTMLElement | null = null;
+  private bottomLeftGroup: HTMLElement | null = null;
+  private bottomRightGroup: HTMLElement | null = null;
+
   init(container: HTMLElement): void {
     this.container = container;
     container.classList.add('ui-overlay');
 
+    // Create corner groups for flexbox layout
+    this.topLeftGroup = document.createElement('div');
+    this.topLeftGroup.classList.add('ui-group', 'ui-group-top-left');
+    container.appendChild(this.topLeftGroup);
+
+    this.topRightGroup = document.createElement('div');
+    this.topRightGroup.classList.add('ui-group', 'ui-group-top-right');
+    container.appendChild(this.topRightGroup);
+
+    this.bottomLeftGroup = document.createElement('div');
+    this.bottomLeftGroup.classList.add('ui-group', 'ui-group-bottom-left');
+    container.appendChild(this.bottomLeftGroup);
+
+    this.bottomRightGroup = document.createElement('div');
+    this.bottomRightGroup.classList.add('ui-group', 'ui-group-bottom-right');
+    container.appendChild(this.bottomRightGroup);
+
+    // Top-left: GPS status, simulation banner
+    this.createGPSStatus();
+    this.createSimulationBanner();
+
+    // Top-right: compass, map level, toggle map
     this.createCompass();
     this.createMapLevel();
     this.createToggleMapButton();
+
+    // Bottom-left: region selector, action buttons row, fullscreen
+    this.createRegionSelector();
+    this.createActionButtonsRow();
+    this.createFullscreenButton();
+
+    // Bottom-right: center button, zoom controls
     this.createCenterButton();
     this.createZoomButtons();
-    this.createGPSStatus();
-    this.createSimulationBanner();
-    this.createSimulationHints();
-    this.createRegionSelector();
-    this.createResetFogButton();
-    this.createRevealAllButton();
-    this.createRemoveAllItemsButton();
-    this.createFullscreenButton();
+
     this.createToastContainer();
   }
 
@@ -118,22 +146,13 @@ export class UIOverlayImpl implements UIOverlay {
 
   setSimulationVisible(visible: boolean): void {
     if (this.simBanner) {
-      this.simBanner.style.display = visible ? 'block' : 'none';
-    }
-    if (this.simHints) {
-      this.simHints.style.display = visible ? 'block' : 'none';
+      this.simBanner.style.display = visible ? 'flex' : 'none';
     }
     if (this.toggleMapBtn) {
       this.toggleMapBtn.style.display = visible ? 'flex' : 'none';
     }
-    if (this.resetFogBtn) {
-      this.resetFogBtn.style.display = visible ? 'flex' : 'none';
-    }
-    if (this.revealAllBtn) {
-      this.revealAllBtn.style.display = visible ? 'flex' : 'none';
-    }
-    if (this.removeAllItemsBtn) {
-      this.removeAllItemsBtn.style.display = visible ? 'flex' : 'none';
+    if (this.actionRow) {
+      this.actionRow.style.display = visible ? 'flex' : 'none';
     }
     if (this.regionSelect) {
       this.regionSelect.style.display = visible ? 'flex' : 'none';
@@ -197,7 +216,7 @@ export class UIOverlayImpl implements UIOverlay {
       }
     });
 
-    this.container!.appendChild(btn);
+    this.topRightGroup!.appendChild(btn);
     this.compassEl = btn;
     this.compassArrow = btn.querySelector('.ui-compass-arrow') as HTMLElement;
     if (this.compassArrow) this.compassArrow.style.transform = 'rotate(0deg)';
@@ -256,7 +275,7 @@ export class UIOverlayImpl implements UIOverlay {
 
     wrapper.appendChild(icon);
     wrapper.appendChild(select);
-    this.container!.appendChild(wrapper);
+    this.topRightGroup!.appendChild(wrapper);
 
     this.mapLevelEl = wrapper;
     this.mapLevelSelect = select;
@@ -271,7 +290,7 @@ export class UIOverlayImpl implements UIOverlay {
     btn.style.display = 'none';
     btn.addEventListener('click', () => this.onToggleRealMap());
 
-    this.container!.appendChild(btn);
+    this.topRightGroup!.appendChild(btn);
     this.toggleMapBtn = btn;
   }
 
@@ -283,7 +302,7 @@ export class UIOverlayImpl implements UIOverlay {
     btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 20 20" fill="white" shape-rendering="crispEdges"><rect x="9" y="1" width="2" height="5"/><rect x="9" y="14" width="2" height="5"/><rect x="1" y="9" width="5" height="2"/><rect x="14" y="9" width="5" height="2"/><rect x="8" y="8" width="4" height="4"/><rect x="9" y="9" width="2" height="2" fill="#8B8B8B"/></svg>';
     btn.addEventListener('click', () => this.onCenterOnMe());
 
-    this.container!.appendChild(btn);
+    this.bottomRightGroup!.appendChild(btn);
     this.centerBtn = btn;
   }
 
@@ -308,7 +327,7 @@ export class UIOverlayImpl implements UIOverlay {
 
     wrapper.appendChild(zoomIn);
     wrapper.appendChild(zoomOut);
-    this.container!.appendChild(wrapper);
+    this.bottomRightGroup!.appendChild(wrapper);
   }
 
   private createGPSStatus(): void {
@@ -329,7 +348,7 @@ export class UIOverlayImpl implements UIOverlay {
 
     status.appendChild(icon);
     status.appendChild(text);
-    this.container!.appendChild(status);
+    this.topLeftGroup!.appendChild(status);
 
     this.gpsStatusEl = status;
     this.gpsIconEl = icon;
@@ -354,26 +373,12 @@ export class UIOverlayImpl implements UIOverlay {
     btn.addEventListener('click', () => this.onExitSimulation());
     banner.appendChild(btn);
 
-    this.container!.appendChild(banner);
+    this.topLeftGroup!.appendChild(banner);
     this.simBanner = banner;
   }
 
   private createSimulationHints(): void {
-    const hints = document.createElement('div');
-    hints.classList.add('ui-sim-hints');
-    hints.setAttribute('data-testid', 'sim-hints');
-    hints.style.display = 'none';
-
-    hints.innerHTML = [
-      '<span class="ui-sim-hint-key">W</span>',
-      '<span class="ui-sim-hint-key">S</span>',
-      '<span class="ui-sim-hint-key">A</span>',
-      '<span class="ui-sim-hint-key">D</span>',
-      '<span class="ui-sim-hint-label">Move</span>',
-    ].join('');
-
-    this.container!.appendChild(hints);
-    this.simHints = hints;
+    // Removed — WASD hints no longer needed
   }
 
   private createRegionSelector(): void {
@@ -394,7 +399,7 @@ export class UIOverlayImpl implements UIOverlay {
     });
     wrapper.appendChild(select);
 
-    this.container!.appendChild(wrapper);
+    this.bottomLeftGroup!.appendChild(wrapper);
     this.regionSelect = wrapper;
   }
 
@@ -411,57 +416,46 @@ export class UIOverlayImpl implements UIOverlay {
     }
   }
 
-  private createResetFogButton(): void {
-    const btn = document.createElement('button');
-    btn.classList.add('ui-btn', 'ui-reset-fog');
-    btn.setAttribute('data-testid', 'reset-fog');
-    btn.setAttribute('aria-label', 'Reset fog of war');
-    btn.textContent = '🔄 Reset Fog';
-    btn.style.display = 'none';
-    btn.addEventListener('click', () => {
-      if (confirm('Reset all fog of war? This clears all explored areas.')) {
-        this.onResetFog();
-      }
+  private createActionButtonsRow(): void {
+    const row = document.createElement('div');
+    row.classList.add('ui-action-row');
+    row.style.display = 'none';
+
+    const resetBtn = document.createElement('button');
+    resetBtn.classList.add('ui-btn', 'ui-action-btn');
+    resetBtn.setAttribute('data-testid', 'reset-fog');
+    resetBtn.setAttribute('aria-label', 'Reset fog of war');
+    resetBtn.textContent = '🔄 Reset';
+    resetBtn.addEventListener('click', () => {
+      if (confirm('Reset all fog of war? This clears all explored areas.')) this.onResetFog();
     });
+    row.appendChild(resetBtn);
+    this.resetFogBtn = resetBtn;
 
-    this.container!.appendChild(btn);
-    this.resetFogBtn = btn;
-  }
-
-  private createRevealAllButton(): void {
-    const btn = document.createElement('button');
-    btn.classList.add('ui-btn', 'ui-reveal-all');
-    btn.setAttribute('data-testid', 'reveal-all');
-    btn.setAttribute('aria-label', 'Reveal entire map');
-    btn.textContent = '👁 Reveal All';
-    btn.style.display = 'none';
-    btn.addEventListener('click', () => {
-      if (confirm('Reveal the entire map? This removes all fog of war.')) {
-        this.onRevealAll();
-      }
+    const revealBtn = document.createElement('button');
+    revealBtn.classList.add('ui-btn', 'ui-action-btn');
+    revealBtn.setAttribute('data-testid', 'reveal-all');
+    revealBtn.setAttribute('aria-label', 'Reveal entire map');
+    revealBtn.textContent = '👁 Reveal';
+    revealBtn.addEventListener('click', () => {
+      if (confirm('Reveal the entire map? This removes all fog of war.')) this.onRevealAll();
     });
+    row.appendChild(revealBtn);
+    this.revealAllBtn = revealBtn;
 
-    this.container!.appendChild(btn);
-    this.revealAllBtn = btn;
-  }
-
-  private removeAllItemsBtn: HTMLElement | null = null;
-
-  private createRemoveAllItemsButton(): void {
-    const btn = document.createElement('button');
-    btn.classList.add('ui-btn', 'ui-remove-all-items');
-    btn.setAttribute('data-testid', 'remove-all-items');
-    btn.setAttribute('aria-label', 'Remove all items');
-    btn.textContent = '🗑 Remove Items';
-    btn.style.display = 'none';
-    btn.addEventListener('click', () => {
-      if (confirm('Remove all placed items from the map?')) {
-        this.onRemoveAllItems();
-      }
+    const removeBtn = document.createElement('button');
+    removeBtn.classList.add('ui-btn', 'ui-action-btn');
+    removeBtn.setAttribute('data-testid', 'remove-all-items');
+    removeBtn.setAttribute('aria-label', 'Remove all items');
+    removeBtn.textContent = '🗑 Items';
+    removeBtn.addEventListener('click', () => {
+      if (confirm('Remove all placed items from the map?')) this.onRemoveAllItems();
     });
+    row.appendChild(removeBtn);
+    this.removeAllItemsBtn = removeBtn;
 
-    this.container!.appendChild(btn);
-    this.removeAllItemsBtn = btn;
+    this.bottomLeftGroup!.appendChild(row);
+    this.actionRow = row;
   }
 
   private createFullscreenButton(): void {
@@ -495,7 +489,7 @@ export class UIOverlayImpl implements UIOverlay {
       }
     });
 
-    this.container!.appendChild(btn);
+    this.bottomLeftGroup!.appendChild(btn);
     this.fullscreenBtn = btn;
   }
 
