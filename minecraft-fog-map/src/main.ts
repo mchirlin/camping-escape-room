@@ -65,6 +65,11 @@ async function loadRegions(): Promise<RegionInfo[]> {
   return res.json() as Promise<RegionInfo[]>;
 }
 
+function hasExplicitRegion(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return !!params.get('region');
+}
+
 function getSelectedRegionFile(regions: RegionInfo[]): string {
   const params = new URLSearchParams(window.location.search);
   const regionId = params.get('region');
@@ -85,6 +90,38 @@ function getSelectedRegionFile(regions: RegionInfo[]): string {
   } catch { /* ignore */ }
   // Default to first region
   return regions.length > 0 ? regions[0].file : 'terrain-lakefairfax.json';
+}
+
+/** Get a one-shot GPS position with a timeout. */
+function getCurrentPosition(timeoutMs = 8000): Promise<GeoPosition | null> {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { resolve(null); return; }
+    const timer = setTimeout(() => resolve(null), timeoutMs);
+    navigator.geolocation.getCurrentPosition(
+      (p) => { clearTimeout(timer); resolve({ latitude: p.coords.latitude, longitude: p.coords.longitude }); },
+      () => { clearTimeout(timer); resolve(null); },
+      { enableHighAccuracy: true, timeout: timeoutMs },
+    );
+  });
+}
+
+/** Find the region whose bounding box center is closest to the given position. */
+async function findClosestRegion(regions: RegionInfo[], pos: GeoPosition): Promise<RegionInfo | null> {
+  let best: RegionInfo | null = null;
+  let bestDist = Infinity;
+  for (const r of regions) {
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}${r.file}`);
+      if (!res.ok) continue;
+      const data = await res.json() as TerrainData;
+      const bb = data.boundingBox;
+      const cLat = (bb.north + bb.south) / 2;
+      const cLng = (bb.east + bb.west) / 2;
+      const d = (pos.latitude - cLat) ** 2 + (pos.longitude - cLng) ** 2;
+      if (d < bestDist) { bestDist = d; best = r; }
+    } catch { /* skip */ }
+  }
+  return best;
 }
 
 function getSelectedRegionId(regions: RegionInfo[]): string {
@@ -143,7 +180,28 @@ async function main(): Promise<void> {
 
   try {
     regions = await loadRegions();
-    const terrainFile = getSelectedRegionFile(regions);
+    let terrainFile: string;
+
+    // If no explicit region and using real GPS, auto-select closest region
+    if (!hasExplicitRegion() && !shouldActivateSimulation() && regions.length > 1) {
+      showLoading('Finding nearest region...');
+      const gpsPos = await getCurrentPosition();
+      if (gpsPos) {
+        const closest = await findClosestRegion(regions, gpsPos);
+        if (closest) {
+          try { localStorage.setItem('fogmap:region', closest.id); } catch { /* ignore */ }
+          terrainFile = closest.file;
+        } else {
+          terrainFile = getSelectedRegionFile(regions);
+        }
+      } else {
+        terrainFile = getSelectedRegionFile(regions);
+      }
+    } else {
+      terrainFile = getSelectedRegionFile(regions);
+    }
+
+    showLoading('Loading map data...');
     [terrainData, atlasManifest, atlasImage] = await Promise.all([
       loadTerrainData(terrainFile),
       loadAtlasManifest(),
@@ -362,6 +420,13 @@ async function main(): Promise<void> {
     simulation.activate(mapCenterGeo);
     uiOverlay.setGPSStatus('simulation');
     uiOverlay.setSimulationVisible(true);
+
+    // Wire exit-simulation button to reload without simulate param
+    uiOverlay.onExitSimulation = () => {
+      const params = new URLSearchParams(window.location.search);
+      params.delete('simulate');
+      window.location.search = params.toString();
+    };
 
     // Populate region selector
     if (regions.length > 1) {

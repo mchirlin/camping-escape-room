@@ -274,6 +274,24 @@
   letter-spacing: 2px;
   text-shadow: 0 0 8px rgba(85, 255, 85, 0.5);
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ui-sim-exit-btn {
+  font-family: var(--mc-font);
+  font-size: 8px;
+  padding: 4px 8px;
+  background: rgba(85, 255, 85, 0.15);
+  color: var(--mc-green);
+  border: 1px solid var(--mc-green);
+  cursor: pointer;
+  letter-spacing: 0;
+}
+
+.ui-sim-exit-btn:hover {
+  background: rgba(85, 255, 85, 0.3);
 }
 
 /* --- Simulation Arrow Key Hints (bottom-left) --- */

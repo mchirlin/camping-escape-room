@@ -49,6 +49,7 @@ export class UIOverlayImpl implements UIOverlay {
   onRemoveAllItems: () => void = () => {};
   onHeadingChange: (degrees: number) => void = () => {};
   onRegionChange: (regionId: string) => void = () => {};
+  onExitSimulation: () => void = () => {};
 
   // DOM element references
   private container: HTMLElement | null = null;
@@ -339,8 +340,19 @@ export class UIOverlayImpl implements UIOverlay {
     const banner = document.createElement('div');
     banner.classList.add('ui-sim-banner');
     banner.setAttribute('data-testid', 'sim-banner');
-    banner.textContent = 'SIMULATION MODE';
     banner.style.display = 'none';
+
+    const text = document.createElement('span');
+    text.textContent = 'SIMULATION MODE';
+    banner.appendChild(text);
+
+    const btn = document.createElement('button');
+    btn.classList.add('ui-sim-exit-btn');
+    btn.setAttribute('data-testid', 'exit-simulation');
+    btn.setAttribute('aria-label', 'Switch to real GPS mode');
+    btn.textContent = '📡 Go Real';
+    btn.addEventListener('click', () => this.onExitSimulation());
+    banner.appendChild(btn);
 
     this.container!.appendChild(banner);
     this.simBanner = banner;
