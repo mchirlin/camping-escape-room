@@ -170,6 +170,18 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
 // ---- Main bootstrap ----
 
 async function main(): Promise<void> {
+  // Swap favicons for simulation mode so iPhone home screen icon differs
+  if (shouldActivateSimulation()) {
+    document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]').forEach((el) => {
+      el.href = el.href.replace(/favicon(-16)?\.png/, 'favicon-sim$1.png');
+    });
+    document.querySelectorAll<HTMLLinkElement>('link[rel="apple-touch-icon"]').forEach((el) => {
+      el.href = el.href.replace('apple-touch-icon.png', 'apple-touch-icon-sim.png');
+    });
+    const titleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (titleMeta) titleMeta.setAttribute('content', 'Fog Map (Sim)');
+  }
+
   showLoading('Loading map data...');
 
   // 1. Load assets
