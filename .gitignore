@@ -11,6 +11,12 @@ minecraft-fog-map/node_modules/
 # Build output
 minecraft-fog-map/dist/
 
+# Python
+__pycache__/
+
+# KiCad history (embedded git repos)
+.history/
+
 # OS files
 .DS_Store
 
