@@ -12,7 +12,9 @@ Created: 2026-04-18
 ### RFID Readers
 - **9x PN532 modules** (one per grid slot)
 - ~5–7cm read range — comfortable margin through table surface + block
-- I2C multiplexer (TCA9548A) to run 9 readers off one ESP32
+- **2x PCA9548A I2C multiplexers** to run 9 readers off one ESP32
+  - U1 (addr 0x70): channels 0-7 → slots 0-7
+  - U2 (addr 0x71): channel 0 → slot 8
 - **Sequential scanning only** — one reader active at a time to prevent interference
 - **Copper tape between grid slot walls** as RF shielding — belt-and-suspenders with sequential scanning
 - Embed NFC tag near the bottom of each block (pause print early) to minimize read distance
@@ -62,13 +64,13 @@ Created: 2026-04-18
 |---|---|
 | 10x PN532 readers (Amazon pack) | ~$32 |
 | ESP32 | ~$10 (or already owned) |
-| TCA9548A multiplexer | ~$5 |
+| PCA9548A multiplexer (x2) | ~$10 |
 | 9x NeoPixel 24-LED rings (2x 5-packs) | ~$38 |
 | Speaker module | ~$10 |
 | NFC stickers (50-pack) | ~$15 |
 | Copper tape | ~$5 |
 | Misc (wiring, button, connectors) | ~$15 |
-| **Total electronics** | **~$120** |
+| **Total electronics** | **~$125** |
 
 ### Shopping Links
 - PN532 (10-pack): https://www.amazon.com/Module-Communication-Arduino-Raspberry-Android/dp/B0DDKX2JCD/
