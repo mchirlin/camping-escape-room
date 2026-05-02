@@ -6,7 +6,7 @@
   - [x] PN532 NFC/RFID modules (10-pack) — $32
   - [x] NeoPixel WS2812B 24-LED rings (2x 5-pack) — $38
   - [x] NTAG215 NFC coin tags (50-pack, 25mm) — ~$10
-  - [x] d I2C multiplexer (2-pack) — ~$7
+  - [x] PCA9548A I2C multiplexer (2-pack) — ~$7
   - [x] ESP32 dev board (or confirm you have one)
   - [x] DFPlayer Mini MP3 module + speaker — ~$9
   - [x] Micro SD card for DFPlayer
@@ -82,7 +82,7 @@
 
 ## ⚡ Crafting Table — Electronics
 
-- [ ] Wire 9x PN532 readers to TCA9548A multiplexer to ESP32
+- [ ] Wire 9x PN532 readers to PCA9548A multiplexer to ESP32
 - [ ] Wire 9x NeoPixel rings (daisy-chained, single GPIO)
 - [ ] Wire DFPlayer Mini + speaker
 - [ ] Install copper tape shielding between grid slots
@@ -289,6 +289,34 @@ Tap a block's NFC tag to your phone while hiding it → map automatically places
 - [ ] Auto-place marker at current GPS position when tag is scanned
 - [ ] iOS fallback: encode block type as URL in NFC tag, Safari opens map with `?addBlock=wood_plank` parameter
 - [ ] Add "Setup Mode" toggle in simulation UI to enable NFC scanning
+
+### Block Placement Sound Effects via RFID
+When a block is placed on any grid slot, the PN532 detects the new tag and the DFPlayer plays a Minecraft "block place" sound. Already have the hardware — just needs a firmware trigger on tag-detected events.
+- [ ] Add block-place sound file to DFPlayer SD card
+- [ ] Firmware: trigger DFPlayer on any new tag detection (not just recipe match)
+- [ ] Optional: different sounds for blocks vs items
+
+### Capacitive Touch — Game Master Door Override
+Copper tape hidden on the table acts as a capacitive touch sensor using ESP32's built-in touch pins. Tap it to pop all three servo doors open — a quick way for the game master to open doors for testing, resetting, or loading props without needing blocks on the table.
+- [ ] Install small copper tape pad in a hidden spot (underside of table edge, back panel, etc.)
+- [ ] Wire copper tape to ESP32 touch-capable GPIO (e.g., GPIO 27 / Touch7)
+- [ ] Firmware: on touch event → trigger all 3 servos (no recipe check needed)
+- [ ] Calibrate touch threshold (avoid false triggers from bumps)
+
+### Vibration Motor — Tactile Craft Feedback
+Small coin vibration motor mounted under the table buzzes on successful craft. Kids feel the table rumble.
+- [ ] Buy coin vibration motor + N-channel MOSFET (or motor driver) — ~$2-3
+- [ ] Wire motor to 5V via MOSFET, gate on a free GPIO (e.g., GPIO 26)
+- [ ] Firmware: buzz pattern on successful recipe match (short pulse, not continuous)
+- [ ] Mount motor to underside of table surface for maximum vibration transfer
+
+### Cabinet Lights — Illuminate Props on Door Open
+Small NeoPixels inside each of the 3 door compartments that light up when the servo opens the door. Extends the existing daisy-chained NeoPixel strip — no extra GPIO.
+- [ ] Add 1-2 WS2812B LEDs per compartment (3-6 LEDs total) at the end of the existing NeoPixel chain
+- [ ] Mount LEDs to the ceiling or back wall of each compartment, angled down at the prop shelf
+- [ ] Run thin wire from the last NeoPixel ring's DOUT into the compartment area
+- [ ] Firmware: light the compartment LEDs warm white when the corresponding servo fires
+- [ ] Turn off when doors are reset
 
 ### Crafting Table ↔ Map Integration
 When a block is placed on the crafting table, remove its marker from the map in real time.

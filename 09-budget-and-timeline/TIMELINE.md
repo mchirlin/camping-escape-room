@@ -79,7 +79,7 @@ This is the biggest single build. Start as soon as lumber arrives.
 - [ ] Mount 9× PN532 readers under grid slots
 - [ ] Mount 9× NeoPixel rings under grid slots
 - [ ] Install copper tape shielding between slots
-- [ ] Wire PN532 readers to TCA9548A I2C multiplexer
+- [ ] Wire PN532 readers to PCA9548A I2C multiplexer
 - [ ] Wire NeoPixel rings (daisy-chained, single GPIO)
 - [ ] Wire DFPlayer Mini + speaker
 - [ ] Wire all to ESP32
