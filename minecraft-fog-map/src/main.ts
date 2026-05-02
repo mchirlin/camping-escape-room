@@ -14,6 +14,7 @@ import { createSimulationMode, shouldActivateSimulation } from './simulation-mod
 import { geoToWorld, worldToGeo } from './coords';
 import { MarkerStore, MARKER_TAGS, preloadMarkerImages, getMarkerImage } from './markers';
 import type { MarkerTag } from './markers';
+import { CraftingTableLink, collectNearestMarker } from './crafting-link';
 
 // ---- Loading screen helpers ----
 
@@ -377,6 +378,34 @@ async function main(): Promise<void> {
       delete leafletMarkerLayers[id];
     }
   }) as EventListener);
+
+  // ---- Crafting Table WiFi Link ----
+  // Connect to ESP32 crafting table if ?craft=<ip> is in the URL
+  // Example: ?craft=192.168.4.1 or ?craft=crafting-table.local
+  const craftHost = new URLSearchParams(window.location.search).get('craft');
+  if (craftHost) {
+    const craftLink = new CraftingTableLink({ host: craftHost, pollInterval: 2500 });
+
+    craftLink.onConnectionChange = (connected) => {
+      ui.showToast(connected ? '⚡ Crafting table connected' : '❌ Crafting table disconnected');
+    };
+
+    craftLink.onCraft = (_recipe, displayName) => {
+      ui.showToast(`✨ Crafted: ${displayName}`);
+    };
+
+    craftLink.onBlockPlaced = (_blockType, markerTag) => {
+      if (markerTag) {
+        const id = collectNearestMarker(markerStore, markerTag, lastGeoPos);
+        if (id && leafletMarkerLayers[id] && leafletMap) {
+          leafletMap.removeLayer(leafletMarkerLayers[id]);
+          delete leafletMarkerLayers[id];
+        }
+      }
+    };
+
+    craftLink.start();
+  }
 
   // Map level: display level 0=128m, 1=256m, 2=512m
   // Maps to internal terrain grid level and a visible area fraction
