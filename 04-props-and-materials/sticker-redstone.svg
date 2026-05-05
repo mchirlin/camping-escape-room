@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="8.5in" height="11in" viewBox="0 0 612.0 792.0">
+<rect width="100%" height="100%" fill="white"/>
+
+<!-- redstone sticker sheet -->
+<!-- pixel = 0.2500" = 18.00pt, grid = 216.0pt = 3.0" -->
+
+<text x="306.0" y="36.0" font-size="12" fill="#333" text-anchor="middle" font-family="sans-serif" font-weight="bold">redstone — Item Stickers (cut along outline)</text>
+
+<g transform="translate(36.0,56.0)">
+  <rect x="0.00" y="99.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="18.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="18.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="18.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="18.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="18.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="36.00" y="63.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="36.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="36.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="36.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="36.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="54.00" y="45.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="54.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="135.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="54.00" y="153.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="72.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="72.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="117.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="153.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="72.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="90.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="90.00" y="27.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="45.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="81.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="135.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="108.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="27.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="63.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="108.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="153.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="126.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="126.00" y="45.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="126.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="126.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="126.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="126.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="45.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="63.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="144.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="63.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="162.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="162.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="153.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="162.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="81.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="99.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="180.00" y="135.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="99.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="117.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <line x1="0.00" y1="99.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="99.00" x2="0.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="117.00" x2="0.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="153.00" x2="18.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="135.00" x2="0.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="171.00" x2="36.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="153.00" x2="18.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="189.00" x2="54.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="171.00" x2="36.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="189.00" x2="72.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="207.00" x2="90.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="189.00" x2="72.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="108.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="207.00" x2="108.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="9.00" x2="126.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="9.00" x2="126.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="207.00" x2="126.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="27.00" x2="144.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="27.00" x2="144.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="207.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="45.00" x2="162.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="45.00" x2="162.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="162.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="63.00" x2="180.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="63.00" x2="180.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="189.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="81.00" x2="198.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="81.00" x2="198.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="99.00" x2="216.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="99.00" x2="216.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="117.00" x2="216.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="135.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+</g>
+
+<g transform="translate(270.0,56.0)">
+  <rect x="0.00" y="99.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="18.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="18.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="18.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="18.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="18.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="36.00" y="63.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="36.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="36.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="36.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="36.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="54.00" y="45.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="54.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="135.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="54.00" y="153.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="72.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="72.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="117.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="153.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="72.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="90.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="90.00" y="27.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="45.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="81.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="135.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="108.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="27.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="63.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="108.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="153.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="126.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="126.00" y="45.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="126.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="126.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="126.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="126.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="45.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="63.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="144.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="63.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="162.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="162.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="153.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="162.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="81.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="99.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="180.00" y="135.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="99.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="117.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <line x1="0.00" y1="99.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="99.00" x2="0.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="117.00" x2="0.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="153.00" x2="18.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="135.00" x2="0.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="171.00" x2="36.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="153.00" x2="18.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="189.00" x2="54.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="171.00" x2="36.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="189.00" x2="72.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="207.00" x2="90.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="189.00" x2="72.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="108.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="207.00" x2="108.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="9.00" x2="126.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="9.00" x2="126.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="207.00" x2="126.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="27.00" x2="144.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="27.00" x2="144.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="207.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="45.00" x2="162.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="45.00" x2="162.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="162.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="63.00" x2="180.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="63.00" x2="180.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="189.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="81.00" x2="198.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="81.00" x2="198.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="99.00" x2="216.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="99.00" x2="216.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="117.00" x2="216.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="135.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+</g>
+
+<g transform="translate(36.0,290.0)">
+  <rect x="0.00" y="99.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="18.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="18.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="18.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="18.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="18.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="36.00" y="63.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="36.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="36.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="36.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="36.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="54.00" y="45.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="54.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="135.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="54.00" y="153.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="72.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="72.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="117.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="153.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="72.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="90.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="90.00" y="27.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="45.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="81.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="135.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="108.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="27.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="63.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="108.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="153.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="126.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="126.00" y="45.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="126.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="126.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="126.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="126.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="45.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="63.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="144.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="63.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="162.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="162.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="153.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="162.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="81.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="99.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="180.00" y="135.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="99.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="117.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <line x1="0.00" y1="99.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="99.00" x2="0.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="117.00" x2="0.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="153.00" x2="18.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="135.00" x2="0.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="171.00" x2="36.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="153.00" x2="18.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="189.00" x2="54.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="171.00" x2="36.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="189.00" x2="72.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="207.00" x2="90.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="189.00" x2="72.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="108.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="207.00" x2="108.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="9.00" x2="126.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="9.00" x2="126.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="207.00" x2="126.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="27.00" x2="144.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="27.00" x2="144.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="207.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="45.00" x2="162.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="45.00" x2="162.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="162.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="63.00" x2="180.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="63.00" x2="180.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="189.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="81.00" x2="198.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="81.00" x2="198.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="99.00" x2="216.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="99.00" x2="216.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="117.00" x2="216.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="135.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+</g>
+
+<g transform="translate(270.0,290.0)">
+  <rect x="0.00" y="99.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="0.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="18.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="18.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="18.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="18.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="18.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="36.00" y="63.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="36.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="36.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="36.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="36.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="36.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="54.00" y="45.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="54.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="135.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="54.00" y="153.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="54.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="72.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="72.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="117.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="72.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="72.00" y="153.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="72.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="72.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="90.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="90.00" y="27.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="45.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="63.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="81.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="90.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="117.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="90.00" y="135.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="90.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="90.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="108.00" y="9.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="27.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="45.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="63.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="81.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="108.00" y="99.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="108.00" y="117.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="108.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="153.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="108.00" y="171.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="108.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="126.00" y="27.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="126.00" y="45.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="63.00" width="18.00" height="18.00" fill="#FF0000"/>
+  <rect x="126.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="99.00" width="18.00" height="18.00" fill="#720000"/>
+  <rect x="126.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="135.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="126.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="126.00" y="171.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="126.00" y="189.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="45.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="144.00" y="63.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="81.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="144.00" y="99.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="153.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="144.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="63.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="162.00" y="81.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="99.00" width="18.00" height="18.00" fill="#AA0F01"/>
+  <rect x="162.00" y="117.00" width="18.00" height="18.00" fill="#5C0700"/>
+  <rect x="162.00" y="135.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="162.00" y="153.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="162.00" y="171.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="81.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="180.00" y="99.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="117.00" width="18.00" height="18.00" fill="#410500"/>
+  <rect x="180.00" y="135.00" width="18.00" height="18.00" fill="#340605"/>
+  <rect x="180.00" y="153.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="99.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="117.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <rect x="198.00" y="135.00" width="18.00" height="18.00" fill="#2D0000"/>
+  <line x1="0.00" y1="99.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="99.00" x2="0.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="117.00" x2="0.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="153.00" x2="18.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="0.00" y1="135.00" x2="0.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="81.00" x2="18.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="171.00" x2="36.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="18.00" y1="153.00" x2="18.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="63.00" x2="36.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="189.00" x2="54.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="36.00" y1="171.00" x2="36.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="45.00" x2="54.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="54.00" y1="189.00" x2="72.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="27.00" x2="72.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="207.00" x2="90.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="72.00" y1="189.00" x2="72.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="108.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="9.00" x2="90.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="90.00" y1="207.00" x2="108.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="9.00" x2="126.00" y2="9.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="9.00" x2="126.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="108.00" y1="207.00" x2="126.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="27.00" x2="144.00" y2="27.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="27.00" x2="144.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="126.00" y1="207.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="144.00" y2="207.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="45.00" x2="162.00" y2="45.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="45.00" x2="162.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="144.00" y1="189.00" x2="162.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="63.00" x2="180.00" y2="63.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="63.00" x2="180.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="162.00" y1="189.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="180.00" y2="189.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="81.00" x2="198.00" y2="81.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="81.00" x2="198.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="180.00" y1="171.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="198.00" y2="171.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="99.00" x2="216.00" y2="99.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="99.00" x2="216.00" y2="117.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="117.00" x2="216.00" y2="135.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="198.00" y1="153.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+  <line x1="216.00" y1="135.00" x2="216.00" y2="153.00" stroke="#333" stroke-width="0.75"/>
+</g>
+<text x="36.0" y="768.0" font-size="8" fill="#999" font-family="sans-serif">redstone — 1 pixel = 0.2500" — print at 100% on vinyl sticker paper</text>
+</svg>

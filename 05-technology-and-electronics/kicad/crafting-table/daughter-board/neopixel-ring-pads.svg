@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="80mm" height="80mm" viewBox="-40 -40 80 80">
+  <!-- Print at 100% scale for 1:1 overlay -->
+  <!-- Origin is center of ring. All dimensions in mm. -->
+  <!-- Ring outer diameter: 66mm (radius 33mm) -->
+  <!-- Pad radius from center: 32mm (1mm from outer edge) -->
+  <!-- Pads are 30° apart along the circle -->
+
+  <!-- Reference circles -->
+  <circle cx="0" cy="0" r="33" fill="none" stroke="#ccc" stroke-width="0.3"/>
+  <circle cx="0" cy="0" r="32" fill="none" stroke="#999" stroke-width="0.2" stroke-dasharray="1,1"/>
+  <circle cx="0" cy="0" r="23" fill="none" stroke="#ccc" stroke-width="0.3"/>
+  <!-- Center crosshair -->
+  <line x1="-2" y1="0" x2="2" y2="0" stroke="#ccc" stroke-width="0.2"/>
+  <line x1="0" y1="-2" x2="0" y2="2" stroke="#ccc" stroke-width="0.2"/>
+
+  <!-- 
+    Pad positions on 32mm radius circle, 30° apart.
+    
+    Power group (right side, centered at 0°):
+      5V_IN:   -45°
+      5V_OUT:  -15°
+      GND_IN:  +15°
+      GND_OUT: +45°
+    
+    Data group (left side, centered at 180°):
+      DIN:  165°
+      DOUT: 195°
+    
+    Coordinates: x = r*cos(angle), y = r*sin(angle)
+    (KiCad Y-axis is inverted, but we'll note that below)
+    
+    Math (standard trig, Y+ = up):
+      -45°: (22.63, -22.63)
+      -15°: (30.90,  -8.28)
+      +15°: (30.90,   8.28)
+      +45°: (22.63,  22.63)
+      165°: (-30.90,  8.28)
+      195°: (-30.90, -8.28)
+      
+    Wait - let's use SVG coords where Y+ is down:
+      -45°: x=32*cos(-45)=22.63, y=32*sin(-45)=-22.63 → SVG y=-22.63 (up)
+      
+    Let me just place them correctly in SVG space (Y down = positive):
+      Angle measured clockwise from right (0° = right, 90° = down):
+      -45° (= 315° CW): x=22.63, y=-22.63
+      -15° (= 345° CW): x=30.90, y=-8.28
+      +15° (= 15° CW):  x=30.90, y=8.28
+      +45° (= 45° CW):  x=22.63, y=22.63
+      165° CW:           x=-30.90, y=8.28
+      195° CW:           x=-30.90, y=-8.28
+  -->
+
+  <!-- Power group (right side) -->
+  <!-- 5V_IN at -45° -->
+  <circle cx="22.63" cy="-22.63" r="0.8" fill="red" stroke="darkred" stroke-width="0.2"/>
+  <text x="17" y="-24" font-size="2.2" fill="red" font-family="sans-serif">5V_IN (J3)</text>
+
+  <!-- 5V_OUT at -15° -->
+  <circle cx="30.90" cy="-8.28" r="0.8" fill="red" stroke="darkred" stroke-width="0.2"/>
+  <text x="24" y="-9.5" font-size="2.2" fill="red" font-family="sans-serif">5V_OUT (J9)</text>
+
+  <!-- GND_IN at +15° -->
+  <circle cx="30.90" cy="8.28" r="0.8" fill="black" stroke="gray" stroke-width="0.2"/>
+  <text x="24" y="10.5" font-size="2.2" fill="black" font-family="sans-serif">GND_IN (J6)</text>
+
+  <!-- GND_OUT at +45° -->
+  <circle cx="22.63" cy="22.63" r="0.8" fill="black" stroke="gray" stroke-width="0.2"/>
+  <text x="17" y="25" font-size="2.2" fill="black" font-family="sans-serif">GND_OUT (J10)</text>
+
+  <!-- Data group (left side) -->
+  <!-- DIN at 165° -->
+  <circle cx="-30.90" cy="8.28" r="0.8" fill="green" stroke="darkgreen" stroke-width="0.2"/>
+  <text x="-38" y="6" font-size="2.2" fill="green" font-family="sans-serif">DIN (J7)</text>
+
+  <!-- DOUT at 195° -->
+  <circle cx="-30.90" cy="-8.28" r="0.8" fill="blue" stroke="darkblue" stroke-width="0.2"/>
+  <text x="-38" y="-9.5" font-size="2.2" fill="blue" font-family="sans-serif">DOUT (J8)</text>
+
+  <!-- Dimension annotations -->
+  <line x1="22.63" y1="-22.63" x2="30.90" y2="-8.28" stroke="orange" stroke-width="0.15" stroke-dasharray="0.5,0.5"/>
+  <text x="28.5" y="-17" font-size="1.8" fill="orange" font-family="sans-serif">30°</text>
+
+  <line x1="30.90" y1="-8.28" x2="30.90" y2="8.28" stroke="orange" stroke-width="0.15" stroke-dasharray="0.5,0.5"/>
+  <text x="32" y="1" font-size="1.8" fill="orange" font-family="sans-serif">30°</text>
+
+  <line x1="-30.90" y1="8.28" x2="-30.90" y2="-8.28" stroke="orange" stroke-width="0.15" stroke-dasharray="0.5,0.5"/>
+  <text x="-38" y="1" font-size="1.8" fill="orange" font-family="sans-serif">30°</text>
+
+  <!-- Title -->
+  <text x="-38" y="-36" font-size="3" fill="#333" font-family="sans-serif" font-weight="bold">NeoPixel 24-LED Ring Pad Layout</text>
+  <text x="-38" y="-32.5" font-size="2" fill="#666" font-family="sans-serif">OD: 66mm | Pad radius: 32mm | Pads 30° apart | Print at 100%</text>
+
+  <!-- Coordinate table for KiCad (Y inverted: KiCad Y+ = down) -->
+  <text x="-38" y="30" font-size="2" fill="#333" font-family="sans-serif" font-weight="bold">KiCad coordinates (from board center):</text>
+  <text x="-38" y="33" font-size="1.8" fill="red" font-family="monospace">J3  5V_IN:   X= 22.63  Y= 22.63</text>
+  <text x="-38" y="35" font-size="1.8" fill="red" font-family="monospace">J9  5V_OUT:  X= 30.90  Y=  8.28</text>
+  <text x="-38" y="37" font-size="1.8" fill="black" font-family="monospace">J6  GND_IN:  X= 30.90  Y= -8.28</text>
+  <text x="-2" y="33" font-size="1.8" fill="black" font-family="monospace">J10 GND_OUT: X= 22.63  Y=-22.63</text>
+  <text x="-2" y="35" font-size="1.8" fill="green" font-family="monospace">J7  DIN:     X=-30.90  Y= -8.28</text>
+  <text x="-2" y="37" font-size="1.8" fill="blue" font-family="monospace">J8  DOUT:    X=-30.90  Y=  8.28</text>
+</svg>

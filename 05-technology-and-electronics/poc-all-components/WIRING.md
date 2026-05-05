@@ -1,23 +1,41 @@
-# POC Wiring Guide — ESP32 + PCA9548A + 2x PN532 + 2x NeoPixel + MG90S
+# POC Wiring Guide — ESP32 + PCA9548A + PN532 + NeoPixel + MG90S
 
-## Overview
+## Overview — ESP32 DevKit 30-pin (15 per side)
+
+Orientation: USB port at bottom, antenna at top.
 
 ```
-                         ┌──────────────┐
-                         │   ESP32 Dev  │
-                         │              │
-                    3V3 ─┤ 3V3     GND  ├─ GND bus
-                         │              │
-              I2C SDA  ──┤ GPIO 21      │
-              I2C SCL  ──┤ GPIO 22      │
-                         │              │
-         NeoPixel DIN ──┤ GPIO 18      │
-                         │              │
-          Servo signal ──┤ GPIO 4       │
-                         │              │
-                    5V  ─┤ VIN          │  ← USB power (or external 5V)
-                         └──────────────┘
+                  ┌───────────────┐
+              EN ─┤ EN         D23├
+              VP ─┤ VP         D22├── I2C SCL
+              VN ─┤ VN         TX0├
+             D34─┤ D34        RX0├
+             D35─┤ D35        D21├── I2C SDA
+             D32─┤ D32        D19├
+             D33─┤ D33        D18├── NeoPixel DIN
+             D25─┤ D25         D5├
+             D26─┤ D26        TX2├
+             D27─┤ D27        RX2├
+             D14─┤ D14         D4├── Servo signal
+             D12─┤ D12         D2├
+             D13─┤ D13        D15├
+             GND─┤ GND        GND├─ GND
+             VIN─┤ VIN        3V3├─ 3.3V out
+                  └───────────────┘
+                      [USB]
 ```
+
+**Pins used by this POC:**
+
+| Function | Pin | Side |
+|----------|-----|------|
+| I2C SDA | D21 (GPIO 21) | Right |
+| I2C SCL | D22 (GPIO 22) | Right |
+| NeoPixel data | D18 (GPIO 18) | Right |
+| Servo signal | D4 (GPIO 4) | Right |
+| 3.3V out | 3V3 | Right (bottom) |
+| 5V in/out | VIN | Left (bottom) |
+| Ground | GND | Both sides (bottom) |
 
 ## Power Rails
 
@@ -88,12 +106,48 @@ Add a 100-1000µF capacitor across the 5V/GND rail near the first ring.
 
 | Servo Wire | Connect To |
 |------------|------------|
-| Orange (signal) | ESP32 GPIO 4 |
+| Orange/Yellow (signal) | ESP32 GPIO 4 |
 | Red (VCC) | 5V rail |
 | Brown (GND) | GND |
 
 **Note:** The MG90S draws ~500mA under load. Fine on USB for one servo, but the full
 3-servo build needs a dedicated 5V supply with a shared ground to the ESP32.
+
+**Final PCB servo assignments:**
+| Servo | GPIO | PCB Connector |
+|-------|------|---------------|
+| Servo 0 | GPIO 17 (TX2) | J14 |
+| Servo 1 | GPIO 16 (RX2) | J15 |
+| Servo 2 | GPIO 4 (D4) | J16 |
+
+For POC testing, one servo on GPIO 4 is fine.
+
+## DFPlayer Mini + Speaker
+
+| DFPlayer Pin | Connect To |
+|--------------|------------|
+| VCC (pin 1, left) | 5V rail |
+| GND (pin 7, left) | GND |
+| RX (pin 2, left) | ESP32 GPIO 25 (via 1kΩ resistor) |
+| SPK1 (pin 6, left) | Speaker + |
+| SPK2 (pin 8, left) | Speaker - |
+
+**Note:** The 1kΩ resistor between ESP32 GPIO 25 and DFPlayer RX is recommended
+but not strictly required for testing. It protects the data line.
+
+Put at least one MP3 file on the micro SD card named `0001.mp3` in a folder called `mp3/`
+(or just in the root as `001.mp3` depending on your library version).
+
+## Capacitive Touch Pads
+
+| Pad | Connect To |
+|-----|------------|
+| Touch pad 1 | ESP32 GPIO 27 (Touch7) |
+| Touch pad 2 | ESP32 GPIO 33 (Touch8) |
+
+Wire a short piece of copper tape or aluminum foil directly to the GPIO pin.
+No external components needed — ESP32 touch sensing is built in.
+Keep wires short to reduce noise.
 
 ## Breadboard Layout Suggestion
 
@@ -117,7 +171,7 @@ Add a 100-1000µF capacitor across the 5V/GND rail near the first ring.
 │  (5V + GND from right rail, DIN from GPIO 18)               │
 │                                                             │
 │  [MG90S Servo]                                              │
-│  (5V + GND from right rail, signal from GPIO 27)            │
+│  (5V + GND from right rail, signal from GPIO 4)             │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```

@@ -1,6 +1,6 @@
 # Build Timeline — Target: Mid-July 2026
 
-~11 weeks from late April. Assumes evenings/weekends, ~5-10 hrs/week.
+~10 weeks from early May. Assumes evenings/weekends, ~5-10 hrs/week.
 
 ## Phase 1: Order Everything (Week 1 — Apr 28)
 
@@ -8,7 +8,29 @@ Do this NOW so shipping doesn't block you later.
 
 **Electronics:**
 - [x] 3 servos (SG90)
-- [ ] 5V power supply for servos
+- [x] 5V 10A buck converter (DeWalt 20V → 5V)
+- [x] DeWalt 20V battery adapter with terminals
+- [x] IRFZ44N MOSFET TO-220
+- [x] JST-XH connectors (4-pin headers x9, 3-pin headers x4)
+- [x] Screw terminals (2-pin 5.08mm x3)
+- [x] Pin sockets (1x15 x2, 1x12 x4, 1x8 x2)
+- [ ] Barrel jack (PJ-002A, 5.5x2.1mm horizontal THT)
+- [ ] 1000µF 10V electrolytic cap (Rubycon 10ZLH1000MEFC10X12.5)
+- [x] Resistor kit (10kΩ, 4.7kΩ x2, 300Ω, 1kΩ — axial through-hole)
+- [x] 1N5819 Schottky diode DO-41
+- [x] Pin header 1x9
+- [x] JST-XH housings + crimp contacts (for making cables)
+- [x] Power toggle switch (SPST, 5V/3A)
+- [x] Vibration motor
+
+**PCBs:**
+- [ ] Generate Gerbers — motherboard
+- [ ] Generate Gerbers — daughter board
+- [ ] Order from JLCPCB (5 motherboards, 10 daughter boards)
+
+**Remaining parts (Mouser cart — order after breadboard testing):**
+- https://www.mouser.com/account/projects
+- Barrel jack, 1000µF cap, resistors, 1N5819 diode, pin header 1x9, JST-XH housings + crimp contacts
 
 **Crafting Table Lumber & Hardware:**
 - [ ] 2×6 lumber × 4' (16 pieces)
@@ -16,8 +38,8 @@ Do this NOW so shipping doesn't block you later.
 - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
 - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
 - [ ] 1"×1" wood rods, 4' total
-- [ ] 3 piano hinges (for doors)
-- [ ] 3-6 ball catches (for doors)
+- [x] 3 piano hinges (for doors)
+- [x] 3-6 ball catches (for doors)
 - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 
 **Crafting Table Finishing:**
@@ -49,25 +71,54 @@ Do this NOW so shipping doesn't block you later.
 **Other:**
 - [x] Get a working ESP32 dev board
 - [ ] Get a map device (iPad mini 4+ or use phones)
-- [ ] Source foam gold sword (ask friends, Amazon backup)
+- [x] Source foam gold sword (ask friends, Amazon backup)
 
-## Phase 2: 3D Print Test + Block Design (Weeks 2-3 — May 5-16)
+## Phase 2: PCB Design + 3D Print Test (Weeks 2-3 — May 5-16)
 
-Get the printing pipeline working before committing to 44 blocks.
+**PCB Design (DONE):**
+- [x] Design motherboard schematic in KiCad
+- [x] Route motherboard traces
+- [x] Design daughter board schematic in KiCad
+- [x] Route daughter board traces
+- [x] All through-hole design (no SMD)
+- [x] NeoPixel ring pad placement (6x 1x1 pins, 30° apart on 32mm radius)
 
+**Breadboard Testing (while waiting for PCBs):**
+- [x] Test NeoPixel ring — working (red/green/blue/white cycle)
+- [x] Test servo — working (sweep 0°-180° on GPIO 4)
+- [x] Test DFPlayer + speaker — working (plays MP3 from SD card)
+- [x] Test PCA9548A + PN532 — working (I2C scan + tag read via multiplexer)
+- [x] Test capacitive touch — working (touchRead on GPIO 27/33)
+- [x] Fixed SDA/SCL swap in KiCad schematic
+- [ ] Test vibration motor circuit (IRFZ44N + 1N5819 + motor) — waiting for parts
+- [ ] Wire DeWalt → buck converter → verify 5V output under load
+
+**3D Print Pipeline:**
 - [ ] Design block model (3"×3"×3" cube with NTAG215 cavity)
-- [ ] Design item model (3"×3"×1.5" slab with NTAG215 cavity)
+- [x] Design item model (3"×3"×1.5" slab with NTAG215 cavity)
 - [ ] Test print 1 block with embedded NFC tag
-- [ ] Test print 1 item with embedded NFC tag
+- [x] Test print 1 item with embedded NFC tag
 - [ ] Test NFC read range through the printed plastic
-- [ ] Design texture sheets for each block type
-- [ ] Test print textures on vinyl sticker paper
-- [ ] Apply stickers to test block
+- [x] Design texture sheets for each block type
+- [x] Test print textures on vinyl sticker paper
+- [x] Apply stickers to test block
 - [ ] Clear coat test — verify stickers hold up
 
-## Phase 3: Crafting Table Build (Weeks 3-6 — May 12 - Jun 8)
+## Phase 3: PCB Assembly + Crafting Table Build (Weeks 3-6 — May 12 - Jun 8)
 
-This is the biggest single build. Start as soon as lumber arrives.
+This is the biggest single build. PCBs should arrive ~May 18.
+
+**PCB Assembly (when boards arrive):**
+- [ ] Solder all sockets, resistors, cap, connectors to motherboard
+- [ ] Solder JST connectors and NeoPixel ring pads to 9 daughter boards
+- [ ] Solder PN532 modules directly to daughter boards
+- [ ] Plug in ESP32, PCA9548A breakouts, DFPlayer to motherboard
+- [ ] Test motherboard — power, I2C bus, NeoPixel, DFPlayer, servos
+- [ ] Test each daughter board individually
+- [ ] Make 9x JST-XH 4-pin I2C cables
+- [ ] Make 3x JST-XH 3-pin servo extension cables
+- [ ] Make 1x JST-XH 3-pin NeoPixel data cable
+- [ ] Run 18AWG power bus wires for NeoPixel rings (direct from buck converter)
 
 **Frame & Surface:**
 - [ ] Design table dimensions (kid height, nightstand-sized)
@@ -76,13 +127,15 @@ This is the biggest single build. Start as soon as lumber arrives.
 - [ ] Cut frosted acrylic for grid surface
 
 **Electronics Mounting:**
-- [ ] Mount 9× PN532 readers under grid slots
-- [ ] Mount 9× NeoPixel rings under grid slots
+- [ ] Mount motherboard PCB inside table
+- [ ] Mount 9× daughter boards under grid slots (PN532 + NeoPixel ring per slot)
 - [ ] Install copper tape shielding between slots
-- [ ] Wire PN532 readers to PCA9548A I2C multiplexer
-- [ ] Wire NeoPixel rings (daisy-chained, single GPIO)
-- [ ] Wire DFPlayer Mini + speaker
-- [ ] Wire all to ESP32
+- [ ] Connect I2C cables from motherboard to daughter boards
+- [ ] Connect NeoPixel data cable from motherboard to first ring
+- [ ] Run NeoPixel power bus (18AWG from buck converter to rings)
+- [ ] Wire DFPlayer speaker output to speaker
+- [ ] Wire servo extension cables to servos
+- [ ] Wire DeWalt adapter → buck converter → motherboard barrel jack + NeoPixel bus
 - [ ] Test NFC read range through acrylic
 
 **Doors:**
@@ -240,7 +293,7 @@ Everything comes together.
 
 ## Phase 10: Pre-Trip Prep (Week 10 — Jun 29 - Jul 6)
 
-- [ ] Pack crafting table + power bank
+- [ ] Pack crafting table + DeWalt battery + buck converter
 - [ ] Pack all 44 blocks/items (in labeled bags by biome/step)
 - [ ] Pack 6 recipe cards
 - [ ] Pack fishing rod + gold target
@@ -304,11 +357,13 @@ Everything comes together.
 
 ## Critical Path (things that block other things)
 
-1. **Working ESP32** → blocks all firmware + electronics work
-2. **NFC test print** → blocks mass printing (need to verify read range first)
-3. **Table frame** → blocks electronics mounting, door installation
-4. **Firmware** → blocks recipe testing, door testing
-5. **All blocks printed + tagged** → blocks full integration test
+1. **PCB order** → blocks all electronics assembly (1-2 week lead time from JLCPCB)
+2. **DigiKey parts order** → blocks PCB soldering (barrel jack, cap, resistors, diode)
+3. **NFC test print** → blocks mass printing (need to verify read range first)
+4. **Table frame** → blocks electronics mounting, door installation
+5. **PCB assembly + testing** → blocks electronics installation in table
+6. **Firmware** → blocks recipe testing, door testing
+7. **All blocks printed + tagged** → blocks full integration test
 
 ## What Can Run in Parallel
 

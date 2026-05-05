@@ -310,6 +310,8 @@ async function main(): Promise<void> {
 
   // Track current player world position for rendering
   let playerWorldPos: WorldPosition | null = null;
+  // Track current player geo position for crafting-link marker collection
+  let lastGeoPos: GeoPosition | null = null;
 
   // Marker store for user-placed points of interest
   const markerStore = new MarkerStore();
@@ -385,13 +387,15 @@ async function main(): Promise<void> {
   const craftHost = new URLSearchParams(window.location.search).get('craft');
   if (craftHost) {
     const craftLink = new CraftingTableLink({ host: craftHost, pollInterval: 2500 });
+    uiOverlay.setCraftingStatus('connecting');
 
     craftLink.onConnectionChange = (connected) => {
-      ui.showToast(connected ? '⚡ Crafting table connected' : '❌ Crafting table disconnected');
+      uiOverlay.setCraftingStatus(connected ? 'connected' : 'disconnected');
+      uiOverlay.showToast(connected ? '⚡ Crafting table connected' : '❌ Crafting table disconnected');
     };
 
     craftLink.onCraft = (_recipe, displayName) => {
-      ui.showToast(`✨ Crafted: ${displayName}`);
+      uiOverlay.showToast(`✨ Crafted: ${displayName}`);
     };
 
     craftLink.onBlockPlaced = (_blockType, markerTag) => {
@@ -426,6 +430,7 @@ async function main(): Promise<void> {
   const onPosition = (pos: GeoPosition): void => {
     fogEngine.reveal(pos, 15);
     playerWorldPos = geoToWorld(pos, bbox, level4Grid, TILE_SCREEN_SIZE);
+    lastGeoPos = pos;
 
     // Mark the player's current quadrant as discovered for each display level
     for (const cfg of MAP_LEVEL_CONFIG) {

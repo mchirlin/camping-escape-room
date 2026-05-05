@@ -508,7 +508,7 @@
     "last_paths": {
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "motherboard-drill/",
       "specctra_dsn": "",
       "vrml": ""
     },
@@ -632,7 +632,7 @@
         "uuid": "6b5073cf-492f-4fe8-bc74-85e7af65e5e3"
       }
     ],
-    "used_designators": "SW1-2,H1-4,U3,C1,#PWR1-3,J15-23",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [

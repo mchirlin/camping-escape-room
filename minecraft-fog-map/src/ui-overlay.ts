@@ -10,6 +10,7 @@ export type GPSStatus = 'active' | 'lost' | 'denied' | 'simulation';
 export interface UIOverlay {
   init(container: HTMLElement): void;
   setGPSStatus(status: GPSStatus): void;
+  setCraftingStatus(status: 'hidden' | 'connecting' | 'connected' | 'disconnected'): void;
   setCompassHeading(degrees: number): void;
   setSimulationVisible(visible: boolean): void;
   setMapLevel(level: number): void;
@@ -61,6 +62,7 @@ export class UIOverlayImpl implements UIOverlay {
   private gpsStatusEl: HTMLElement | null = null;
   private gpsIconEl: HTMLElement | null = null;
   private gpsTextEl: HTMLElement | null = null;
+  private craftingStatusEl: HTMLElement | null = null;
   private simBanner: HTMLElement | null = null;
   private resetFogBtn: HTMLElement | null = null;
   private revealAllBtn: HTMLElement | null = null;
@@ -97,8 +99,9 @@ export class UIOverlayImpl implements UIOverlay {
     this.bottomRightGroup.classList.add('ui-group', 'ui-group-bottom-right');
     container.appendChild(this.bottomRightGroup);
 
-    // Top-left: GPS status, simulation banner
+    // Top-left: GPS status, crafting status, simulation banner
     this.createGPSStatus();
+    this.createCraftingStatus();
     this.createSimulationBanner();
 
     // Top-right: compass, map level, toggle map
@@ -128,6 +131,19 @@ export class UIOverlayImpl implements UIOverlay {
     if (this.gpsStatusEl) {
       this.gpsStatusEl.setAttribute('data-status', status);
     }
+  }
+
+  setCraftingStatus(status: 'hidden' | 'connecting' | 'connected' | 'disconnected'): void {
+    if (!this.craftingStatusEl) return;
+    if (status === 'hidden') {
+      this.craftingStatusEl.style.display = 'none';
+      return;
+    }
+    this.craftingStatusEl.style.display = 'flex';
+    const icons: Record<string, string> = { connecting: '🔄', connected: '⚡', disconnected: '❌' };
+    const labels: Record<string, string> = { connecting: 'Crafting Table...', connected: 'Crafting Table', disconnected: 'Table Lost' };
+    this.craftingStatusEl.innerHTML = `<span>${icons[status]}</span><span class="ui-gps-text">${labels[status]}</span>`;
+    this.craftingStatusEl.setAttribute('data-status', status === 'connected' ? 'active' : 'lost');
   }
 
   setCompassHeading(degrees: number): void {
@@ -353,6 +369,14 @@ export class UIOverlayImpl implements UIOverlay {
     this.gpsStatusEl = status;
     this.gpsIconEl = icon;
     this.gpsTextEl = text;
+  }
+
+  private createCraftingStatus(): void {
+    const el = document.createElement('div');
+    el.classList.add('ui-gps-status');
+    el.style.display = 'none';  // Hidden until setCraftingStatus is called
+    this.topLeftGroup!.appendChild(el);
+    this.craftingStatusEl = el;
   }
 
   private createSimulationBanner(): void {

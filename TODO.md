@@ -13,7 +13,21 @@
   - [x] Copper tape (1" wide roll) — ~$5
   - [x] Jumper wires / hookup wire — ~$8
   - [x] SG90 or MG90S micro servos (3) — ~$8
-  - [ ] 5V power supply for servos (separate from ESP32) — ~$8
+  - [x] 5V 10A buck converter (DeWalt 20V → 5V) — ~$10
+  - [x] DeWalt 20V battery adapter with terminals — ~$10-20
+  - [ ] Power toggle switch (SPST, 5V/3A) for main power — ~$2
+  - [x] IRFZ44N MOSFET TO-220 (for vibration motor) — already have
+  - [ ] 1N5819 Schottky diode DO-41 (flyback protection) — ~$10 assorted diode kit
+  - [ ] Cylindrical vibration motor with offset weight (3.7V, game-controller style) — ~$5-8
+  - [ ] Resistor kit (10kΩ, 4.7kΩ x2, 300Ω, 1kΩ — all axial through-hole) — ~$5
+  - [ ] 1000µF 10V electrolytic capacitor (Rubycon 10ZLH1000MEFC10X12.5) — ~$2
+  - [ ] Copper/aluminum tape for capacitive touch pads — already have copper tape
+  - [ ] Barrel jack connector (5.5x2.1mm, PJ-002A, horizontal THT) — ~$2
+  - [x] JST-XH connectors (4-pin headers x9, 3-pin headers x4) — ordered
+  - [x] Screw terminals (2-pin 5.08mm, x3: speaker, touch, motor) — ordered
+  - [x] Pin sockets (1x15 x2, 1x12 x4, 1x8 x2) — ordered
+  - [ ] Pin header 1x9 (GPIO breakout) — ~$2
+  - [ ] JST-XH housings + crimp contacts (for making cables) — ~$12 kit
 - [x] **MCompass** — buy pre-assembled from Etsy
 - [ ] **Crafting Table — Lumber & Hardware**
   - [ ] 2×6 lumber × 4' (16 pieces)
@@ -80,12 +94,54 @@
 - [ ] Clear coat spray over stickers
 - [ ] Optional: install magnetic ball bearings (8 per block) for snap-together
 
+## 🔌 Crafting Table — PCB
+
+- [ ] **Breadboard testing (before PCB order)**
+  - [x] POC: ESP32 + PCA9548A + PN532 + NeoPixel + servo — working
+  - [x] Component test: NeoPixel ring — verified (red/green/blue/white cycle)
+  - [x] Component test: Servo — verified (sweep 0°-180°)
+  - [x] Component test: DFPlayer + speaker — verified (plays MP3)
+  - [x] Component test: PCA9548A + PN532 — verified (I2C scan + tag read)
+  - [x] Component test: Capacitive touch — verified (touchRead on GPIO 27/33)
+  - [x] Fixed SDA/SCL swap in KiCad schematic (GPIO 21=SDA, GPIO 22=SCL)
+  - [ ] Test vibration motor circuit (IRFZ44N + diode + motor) — waiting for parts
+  - [ ] Test DeWalt battery → buck converter → 5V output under load
+  - [ ] Test PN532 read range at 50mm (viability check for 4" blocks)
+- [ ] **Motherboard PCB**
+  - [x] Design KiCad schematic (see PCB-DESIGN-GUIDE.md)
+  - [x] Route traces in PCB editor
+  - [x] Design complete — ready for Gerber export
+  - [ ] Generate Gerbers and order from JLCPCB (5 boards)
+  - [ ] Order remaining parts: barrel jack, capacitor, resistors, diode, pin header 1x9
+  - [ ] Solder all sockets, resistors, caps, connectors to motherboard
+  - [ ] Plug in ESP32, PCA9548A breakouts, DFPlayer
+  - [ ] Test all connections before installing in table
+- [ ] **Daughter Board PCB (x9)**
+  - [x] Design KiCad schematic
+  - [x] Route traces
+  - [x] Design complete — ready for Gerber export
+  - [ ] Generate Gerbers and order from JLCPCB (10 boards — 9 + 1 spare)
+  - [ ] Solder JST connectors and NeoPixel ring pads to all 9 boards
+  - [ ] Solder PN532 modules directly to daughter boards
+  - [ ] Test each daughter board individually
+- [ ] **Power supply**
+  - [x] Order DeWalt 20V battery adapter with screw terminals
+  - [x] Order 5V 10A buck converter (12V-24V input)
+  - [ ] Wire: DeWalt battery → adapter → buck converter → barrel jack + NeoPixel bus
+  - [ ] Test runtime on DeWalt 5Ah battery (target: 2+ hours)
+- [ ] **Cables**
+  - [ ] Make 9x JST-XH 4-pin I2C cables (motherboard → daughter boards)
+  - [ ] Make 3x JST-XH 3-pin servo extension cables
+  - [ ] Make 1x JST-XH 3-pin NeoPixel data cable (motherboard → first ring)
+  - [ ] Run 18AWG power bus wires for NeoPixel rings (direct from buck converter)
+
 ## ⚡ Crafting Table — Electronics
 
 - [ ] Wire 9x PN532 readers to PCA9548A multiplexer to ESP32
 - [ ] Wire 9x NeoPixel rings (daisy-chained, single GPIO)
 - [ ] Wire DFPlayer Mini + speaker
 - [ ] Install copper tape shielding between grid slots
+- [ ] Install power toggle switch (inline with 5V power to ESP32)
 - [ ] Write ESP32 firmware:
   - [ ] Sequential I2C scanning of 9 readers
   - [ ] NFC tag reading + block type parsing
@@ -125,7 +181,6 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 - [ ] **Materials**
   - [ ] Servos (3) — SG90 or MG90S (latch needs minimal torque)
   - [ ] Jumper wires / servo extension cables
-  - [ ] Power supply for servos (5–6V, separate from ESP32)
   - [ ] Piano hinges for doors (3)
   - [ ] Ball catches for doors (3-6)
   - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
@@ -224,7 +279,7 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 - [ ] Wife playtest — full walkthrough at home
 - [ ] Pack checklist:
-  - [ ] Crafting table + power bank
+  - [ ] Crafting table + DeWalt battery + buck converter
   - [ ] All 44 blocks/items (in labeled bags by biome/step)
   - [ ] 6 recipe cards
   - [ ] Fishing rod + gold target
