@@ -87,3 +87,15 @@ Created: 2026-04-18
 - Screen/tablet integration — worth the complexity?
 - Arduino code: recipe matching, LED control, sound triggers, button debounce
 - Table surface material — translucent/frosted acrylic for better ring glow, or thin plywood?
+
+## Test Results
+
+### NFC Read Range (PN532 + Elechouse V3 module)
+- **25mm coin NTAG215 tags**: ~3cm (30mm) reliable read distance
+- **10mm × 20mm small RFID tags**: 2.5–3cm (25–30mm) reliable read distance
+- Implication: 3" blocks with tag embedded at midpoint (~38mm from bottom) are borderline.
+  Tag should be embedded as close to the bottom face as possible (pause-at-layer near the bottom).
+- 4" blocks (tag at ~50mm) would likely NOT read reliably without repositioning the tag closer to the bottom face.
+- **Confirmed: PN532 does NOT read at 50mm.** 4" blocks with centered tags are not viable.
+  Options: multiple tags per block, weighted bottom, or tag near bottom face.
+  Decision deferred until table is built and real-scenario testing can be done.

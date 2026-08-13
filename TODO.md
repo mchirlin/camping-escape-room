@@ -15,22 +15,22 @@
   - [x] SG90 or MG90S micro servos (3) — ~$8
   - [x] 5V 10A buck converter (DeWalt 20V → 5V) — ~$10
   - [x] DeWalt 20V battery adapter with terminals — ~$10-20
-  - [ ] Power toggle switch (SPST, 5V/3A) for main power — ~$2
+  - [x] Power toggle switch (SPST, 5V/3A) for main power — ~$2
   - [x] IRFZ44N MOSFET TO-220 (for vibration motor) — already have
-  - [ ] 1N5819 Schottky diode DO-41 (flyback protection) — ~$10 assorted diode kit
-  - [ ] Cylindrical vibration motor with offset weight (3.7V, game-controller style) — ~$5-8
-  - [ ] Resistor kit (10kΩ, 4.7kΩ x2, 300Ω, 1kΩ — all axial through-hole) — ~$5
-  - [ ] 1000µF 10V electrolytic capacitor (Rubycon 10ZLH1000MEFC10X12.5) — ~$2
-  - [ ] Copper/aluminum tape for capacitive touch pads — already have copper tape
-  - [ ] Barrel jack connector (5.5x2.1mm, PJ-002A, horizontal THT) — ~$2
+  - [x] 1N5819 Schottky diode DO-41 (flyback protection) — ~$10 assorted diode kit
+  - [x] Cylindrical vibration motor with offset weight (3.7V, game-controller style) — ~$5-8
+  - [x] Resistor kit (10kΩ, 4.7kΩ x2, 300Ω, 1kΩ — all axial through-hole) — ~$5
+  - [x] 1000µF 10V electrolytic capacitor (Rubycon 10ZLH1000MEFC10X12.5) — ~$2
+  - [x] Copper/aluminum tape for capacitive touch pads — already have copper tape
+  - [x] Barrel jack connector (5.5x2.1mm, PJ-002A, horizontal THT) — ~$2
   - [x] JST-XH connectors (4-pin headers x9, 3-pin headers x4) — ordered
-  - [x] Screw terminals (2-pin 5.08mm, x3: speaker, touch, motor) — ordered
+  - [x] Screw terminals (2-pin 2.54mm, x3: speaker, touch, motor) — ordered
   - [x] Pin sockets (1x15 x2, 1x12 x4, 1x8 x2) — ordered
-  - [ ] Pin header 1x9 (GPIO breakout) — ~$2
-  - [ ] JST-XH housings + crimp contacts (for making cables) — ~$12 kit
+  - [x] Pin header 1x9 (GPIO breakout) — ~$2
+  - [x] JST-XH housings + crimp contacts (for making cables) — ~$12 kit
 - [x] **MCompass** — buy pre-assembled from Etsy
 - [ ] **Crafting Table — Lumber & Hardware**
-  - [ ] 2×6 lumber × 4' (16 pieces)
+  - [ ] 2×8 lumber × 8' (8 pieces)
   - [ ] Plywood 2'×2' × 1/8" (4 pieces)
   - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
   - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
@@ -62,23 +62,23 @@
   - [ ] Candy/treats for finale
   - [ ] Foam board for signs
 - [ ] **Wooden prop materials**
-  - [ ] 1/4" plywood sheet (for sword, pickaxe, shovel, fishing rod cutouts)
-- [ ] **Foam gold sword** — check friends first, Amazon backup
+  - [x] 1/4" plywood sheet (for sword, pickaxe, shovel, fishing rod cutouts)
+- [x] **Foam gold sword** — check friends first, Amazon backup
 - [x] **Printer** — Epson EcoTank ET-2850 (if not already owned)
 
 ## 🧊 3D Printing
 
-- [ ] **Blocks — 3" × 3" × 3" cubes** (21 total)
+- [ ] **Blocks — 3" × 3" × 3" cubes** (13 total)
   - [ ] Wood Plank × 8
-  - [ ] Gold Ingot × 3
-  - [ ] Gunpowder × 5
   - [ ] Sand × 5
-- [ ] **Items — 3" × 3" × 1.5" flat slabs** (23 total)
+- [ ] **Items — 3" × 3" × 1.5" flat slabs** (31 total)
   - [ ] Stick × 10
   - [ ] Iron Ingot × 6
   - [ ] String × 3
   - [ ] Redstone × 2
   - [ ] Diamond × 2
+  - [ ] Gold Ingot × 3
+  - [ ] Gunpowder × 5
 - [ ] Design block model with NTAG215 cavity (pause-at-layer method)
 - [ ] Design item model (half-height) with NTAG215 cavity
 - [ ] Test print one block + one item with embedded NFC tag — verify read range
@@ -104,46 +104,48 @@
   - [x] Component test: PCA9548A + PN532 — verified (I2C scan + tag read)
   - [x] Component test: Capacitive touch — verified (touchRead on GPIO 27/33)
   - [x] Fixed SDA/SCL swap in KiCad schematic (GPIO 21=SDA, GPIO 22=SCL)
-  - [ ] Test vibration motor circuit (IRFZ44N + diode + motor) — waiting for parts
-  - [ ] Test DeWalt battery → buck converter → 5V output under load
-  - [ ] Test PN532 read range at 50mm (viability check for 4" blocks)
+  - [x] Replaced DOA PCA9548A #1 (0x70) board
+  - [x] Test vibration motor circuit (IRFZ44N + diode + motor) — working, MOSFET stays cool
+  - [x] Test DeWalt battery → buck converter → 5V output under load — working (separate servo power path needed)
+  - [x] Test PN532 read range at 50mm — DOES NOT READ at this distance
+  - [ ] Reconfigure block NFC tag placement for reliable reads (test after table is built with real scenarios)
 - [ ] **Motherboard PCB**
   - [x] Design KiCad schematic (see PCB-DESIGN-GUIDE.md)
   - [x] Route traces in PCB editor
   - [x] Design complete — ready for Gerber export
-  - [ ] Generate Gerbers and order from JLCPCB (5 boards)
-  - [ ] Order remaining parts: barrel jack, capacitor, resistors, diode, pin header 1x9
-  - [ ] Solder all sockets, resistors, caps, connectors to motherboard
-  - [ ] Plug in ESP32, PCA9548A breakouts, DFPlayer
-  - [ ] Test all connections before installing in table
+  - [x] Generate Gerbers and order from JLCPCB (5 boards)
+  - [x] Order remaining parts: capacitor (1000µF 10V, 10mm dia, 5mm pitch)
+  - [x] Solder all sockets, resistors, caps, connectors to motherboard
+  - [x] Plug in ESP32, PCA9548A breakouts, DFPlayer
+  - [x] Test all connections before installing in table
 - [ ] **Daughter Board PCB (x9)**
   - [x] Design KiCad schematic
   - [x] Route traces
   - [x] Design complete — ready for Gerber export
-  - [ ] Generate Gerbers and order from JLCPCB (10 boards — 9 + 1 spare)
-  - [ ] Solder JST connectors and NeoPixel ring pads to all 9 boards
-  - [ ] Solder PN532 modules directly to daughter boards
-  - [ ] Test each daughter board individually
+  - [x] Generate Gerbers and order from JLCPCB (10 boards — 9 + 1 spare)
+  - [x] Solder JST connectors and NeoPixel ring pads to all 9 boards
+  - [x] Solder PN532 modules directly to daughter boards
+  - [x] Test each daughter board individually
 - [ ] **Power supply**
   - [x] Order DeWalt 20V battery adapter with screw terminals
   - [x] Order 5V 10A buck converter (12V-24V input)
-  - [ ] Wire: DeWalt battery → adapter → buck converter → barrel jack + NeoPixel bus
-  - [ ] Test runtime on DeWalt 5Ah battery (target: 2+ hours)
+  - [ ] Wire: DeWalt battery → adapter → buck converter → barrel jack + NeoPixel bus (waiting on barrel jack)
+  - [x] Test runtime on DeWalt 5Ah battery (target: 2+ hours)
 - [ ] **Cables**
-  - [ ] Make 9x JST-XH 4-pin I2C cables (motherboard → daughter boards)
-  - [ ] Make 3x JST-XH 3-pin servo extension cables
-  - [ ] Make 1x JST-XH 3-pin NeoPixel data cable (motherboard → first ring)
-  - [ ] Run 18AWG power bus wires for NeoPixel rings (direct from buck converter)
+  - [x] Make 9x JST-XH 4-pin I2C cables (motherboard → daughter boards)
+  - [x] Make 3x JST-XH 3-pin servo extension cables
+  - [x] Make 1x JST-XH 3-pin NeoPixel data cable (motherboard → first ring)
+  - [x] Run 18AWG power bus wires for NeoPixel rings (direct from buck converter)
 
 ## ⚡ Crafting Table — Electronics
 
-- [ ] Wire 9x PN532 readers to PCA9548A multiplexer to ESP32
-- [ ] Wire 9x NeoPixel rings (daisy-chained, single GPIO)
-- [ ] Wire DFPlayer Mini + speaker
+- [x] Wire 9x PN532 readers to PCA9548A multiplexer to ESP32
+- [x] Wire 9x NeoPixel rings (daisy-chained, single GPIO)
+- [x] Wire DFPlayer Mini + speaker
 - [ ] Install copper tape shielding between grid slots
 - [ ] Install power toggle switch (inline with 5V power to ESP32)
 - [ ] Write ESP32 firmware:
-  - [ ] Sequential I2C scanning of 9 readers
+  - [x] Sequential I2C scanning of 9 readers
   - [ ] NFC tag reading + block type parsing
   - [ ] Recipe matching (6 recipes: pickaxe, fishing rod, gold sword, TNT, compass, diamond shovel)
   - [ ] NeoPixel feedback (white=detected, green=valid, rainbow=success)
@@ -157,55 +159,57 @@
 
 ## 🪑 Crafting Table — Physical Build
 
-- [ ] **Materials**
-  - [ ] 2×6 lumber × 4' (16 pieces)
-  - [ ] Plywood 2'×2' × 1/8" (4 pieces)
-  - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
-  - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
-  - [ ] 2.5' square of camel pleather
-  - [ ] 3" strips of dark brown pleather
-  - [ ] 1'×1' frosted acrylic
-  - [ ] 1"×1" wood rods, 4' total
-- [ ] Design table (nightstand-sized, kid height)
-- [ ] Build frame (wood)
-- [ ] Build top surface with 3x3 recessed grid + lip
-- [ ] Mount PN532 + NeoPixel ring units under each slot
-- [ ] Route wiring underneath
-- [ ] Test read range through frosted acrylic
+- [x] **Materials**
+  - [x] 2×6 lumber × 4' (16 pieces)
+  - [x] Plywood 2'×2' × 1/8" (4 pieces)
+  - [x] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
+  - [x] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
+  - [x] 2.5' square of camel pleather
+  - [x] 3" strips of dark brown pleather
+  - [x] 1'×1' frosted acrylic
+  - [x] 1"×1" wood rods, 4' total
+- [x] Design table (nightstand-sized, kid height)
+- [x] Build frame (wood)
+- [x] Build top surface with 3x3 recessed grid + lip
+- [x] Mount PN532 + NeoPixel ring units under each slot
+- [x] Route wiring underneath
+- [x] Test read range through frosted acrylic
 - [ ] Finish/wrap table with pleather
+- [ ] Apply dark brown pleather edging
+- [ ] Paint pixel color variation on planks
 
 ## 🚪 Crafting Table — Servo Doors (3 doors)
 
-Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held closed by a ball catch. Servos are mounted inside the table. On a successful craft, the servo arm pushes the door open past the ball catch. To close, just push the door shut — the ball catch clicks it back into place. No reed switches or re-latching logic needed.
+Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held closed by magnets. Servos are mounted inside the table. On a successful craft, the servo arm pushes the door open past the magnets. To close, just push the door shut — the magnets pull it back into place.
 
-- [ ] **Materials**
-  - [ ] Servos (3) — SG90 or MG90S (latch needs minimal torque)
-  - [ ] Jumper wires / servo extension cables
-  - [ ] Piano hinges for doors (3)
-  - [ ] Ball catches for doors (3-6)
-  - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
-- [ ] **3D Printing**
-  - [ ] Servo mounting brackets (3)
-  - [ ] Servo arm push extensions (3)
-  - [ ] Print 3 sets
-- [ ] **Table Modifications**
-  - [ ] Install piano hinges at bottom edge of each door opening
-  - [ ] Install ball catches to hold doors closed
-  - [ ] Mount servos inside table with 3D-printed brackets
-  - [ ] Build prop shelf behind each door (holds pickaxe, fishing rod, etc.)
-  - [ ] Ensure door face sits flush with table outer panel — all hardware hidden inside
-- [ ] **Electronics**
-  - [ ] Wire 3 servos directly to ESP32 GPIO pins
-  - [ ] Route all wiring inside the table
+- [x] **Materials**
+  - [x] Servos (3) — SG90 or MG90S (latch needs minimal torque)
+  - [x] Jumper wires / servo extension cables
+  - [x] Piano hinges for doors (3)
+  - [x] Magnets for doors (replaced ball catches)
+  - [x] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
+- [x] **3D Printing**
+  - [x] Servo mounting brackets (3)
+  - [x] Servo arm push extensions (3)
+  - [x] Print 3 sets
+- [x] **Table Modifications**
+  - [x] Install piano hinges at bottom edge of each door opening
+  - [x] Install magnets to hold doors closed
+  - [x] Mount servos inside table with 3D-printed brackets
+  - [x] Build prop shelf behind each door (holds pickaxe, fishing rod, etc.)
+  - [x] Ensure door face sits flush with table outer panel — all hardware hidden inside
+- [x] **Electronics**
+  - [x] Wire 3 servos directly to ESP32 GPIO pins
+  - [x] Route all wiring inside the table
 - [ ] **Firmware**
   - [ ] Map each recipe to a door (door 1 = pickaxe, door 2 = fishing rod, etc.)
-  - [ ] On successful craft: servo pushes door open past ball catch
+  - [ ] On successful craft: servo pushes door open past magnets
   - [ ] Servo returns to rest position after push
   - [ ] "Reset all doors" command for between-run resets
-- [ ] **Testing**
-  - [ ] Verify ball catch holds door securely
-  - [ ] Verify servo pushes door open cleanly
-  - [ ] Verify door clicks shut when pushed closed
+- [x] **Testing**
+  - [x] Verify magnets hold door securely
+  - [x] Verify servo pushes door open cleanly
+  - [x] Verify door clicks shut when pushed closed
   - [ ] Test full cycle: craft → door opens → grab prop → push door shut
 
 ## 🧭 MCompass Setup
@@ -360,10 +364,10 @@ Copper tape hidden on the table acts as a capacitive touch sensor using ESP32's 
 
 ### Vibration Motor — Tactile Craft Feedback
 Small coin vibration motor mounted under the table buzzes on successful craft. Kids feel the table rumble.
-- [ ] Buy coin vibration motor + N-channel MOSFET (or motor driver) — ~$2-3
-- [ ] Wire motor to 5V via MOSFET, gate on a free GPIO (e.g., GPIO 26)
+- [x] Buy coin vibration motor + N-channel MOSFET (or motor driver) — ~$2-3
+- [x] Wire motor to 5V via MOSFET, gate on a free GPIO (e.g., GPIO 26)
 - [ ] Firmware: buzz pattern on successful recipe match (short pulse, not continuous)
-- [ ] Mount motor to underside of table surface for maximum vibration transfer
+- [x] Mount motor to underside of table surface for maximum vibration transfer
 
 ### Cabinet Lights — Illuminate Props on Door Open
 Small NeoPixels inside each of the 3 door compartments that light up when the servo opens the door. Extends the existing daisy-chained NeoPixel strip — no extra GPIO.

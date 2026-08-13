@@ -50,9 +50,9 @@ schematic editor, then import the netlist to connect everything.
 | J14-J16 | JST-XH 3-pin | JST_XH_B3B-XH-A | SERVO_0-2 | Servo connectors (locking, custom extension cables) |
 | J17 | Pin socket 1x8 | PinSocket_1x08_P2.54mm | DFPlayer_L | DFPlayer left (socketed — swap without desoldering) |
 | J18 | Pin socket 1x8 | PinSocket_1x08_P2.54mm | DFPlayer_R | DFPlayer right (socketed — swap without desoldering) |
-| J23 | Screw terminal 2-pin | TerminalBlock_P5.08mm | SPEAKER | Speaker output |
-| J24 | Screw terminal 2-pin | TerminalBlock_P5.08mm | TOUCH_PAD | Capacitive touch input (game master door override) |
-| J25 | Screw terminal 2-pin | TerminalBlock_P5.08mm | VIBE_MOTOR | Vibration motor output |
+| J23 | Screw terminal 2-pin | TerminalBlock_P2.54mm | SPEAKER | Speaker output |
+| J24 | Screw terminal 2-pin | TerminalBlock_P2.54mm | TOUCH_PAD | Capacitive touch input (game master door override) |
+| J25 | Screw terminal 2-pin | TerminalBlock_P2.54mm | VIBE_MOTOR | Vibration motor output |
 | Q1 | N-channel MOSFET | TO-92 | 2N7000 | Vibration motor driver (gate from ESP32, drain to motor) |
 | R5 | Resistor axial | R_Axial_DIN0207_L6.3mm | 10kΩ | Q1 gate pull-down (keeps motor off at boot) |
 | D1 | Schottky diode | DO-41 | 1N5819 | Flyback protection across motor |
@@ -72,7 +72,7 @@ assigning footprints to schematic symbols.
 - J4–J12 (JST-XH 4-pin, I2C) — `Connector_JST : JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical`
 - J13 (JST-XH 3-pin, NeoPixel) — `Connector_JST : JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical`
 - J14–J16 (servo 1×3, JST-XH) — `Connector_JST : JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical`
-- J23–J25 (screw terminals 2-pin) — `TerminalBlock_Phoenix : TerminalBlock_Phoenix_MKDS-1,5-2-5.08_1x02_P5.08mm_Horizontal`
+- J23–J25 (screw terminals 2-pin) — `TerminalBlock : TerminalBlock_bornier-2_P2.54mm`
 - J26 (GPIO breakout 1×9 header) — `Connector_PinHeader_2.54mm : PinHeader_1x09_P2.54mm_Vertical`
 
 **Passives:**

@@ -1,16 +1,18 @@
 /*
  * Component Test — One-by-one hardware verification
  * 
- * Tests: NeoPixel, Servo, DFPlayer/Speaker, PCA9548A + PN532, Capacitive Touch
+ * Tests: NeoPixel, Servo, DFPlayer/Speaker, PCA9548A + PN532, Capacitive Touch,
+ *        Vibration Motor (MOSFET)
  * 
  * Pin assignments (from PCB-DESIGN-GUIDE.md):
  *   GPIO 18 — NeoPixel DIN (via 300Ω resistor)
- *   GPIO 17 — Servo 0 signal
+ *   GPIO 4  — Servo 0 signal
  *   GPIO 25 — DFPlayer RX (via 1kΩ resistor)
  *   GPIO 21 — I2C SDA
  *   GPIO 22 — I2C SCL
  *   GPIO 27 — Capacitive touch pad 1 (Touch7)
  *   GPIO 33 — Capacitive touch pad 2 (Touch8)
+ *   GPIO 26 — Vibration motor (via MOSFET gate)
  * 
  * Libraries needed:
  *   - Adafruit NeoPixel
@@ -21,13 +23,14 @@
  * 
  * Usage:
  *   Open Serial Monitor at 115200 baud.
- *   Send a number 1-6 to run each test:
+ *   Send a number 1-7 to run each test:
  *     1 = NeoPixel
  *     2 = Servo
  *     3 = DFPlayer / Speaker
  *     4 = PCA9548A + PN532 (I2C scan + tag read)
  *     5 = Capacitive Touch
- *     6 = Run all tests in sequence
+ *     6 = Vibration Motor (MOSFET)
+ *     7 = Run all tests in sequence
  */
 
 #include <Wire.h>
@@ -45,6 +48,7 @@
 #define I2C_SCL         22
 #define TOUCH_PAD_1     27  // Touch7
 #define TOUCH_PAD_2     33  // Touch8
+#define MOTOR_PIN       26  // MOSFET gate for vibration motor
 
 // --- PCA9548A ---
 #define PCA9548A_ADDR   0x70
@@ -60,14 +64,15 @@ void setup() {
   delay(1000);
   
   Serial.println("=================================");
-  Serial.println("  Component Test — Send 1-6");
+  Serial.println("  Component Test — Send 1-7");
   Serial.println("=================================");
   Serial.println("  1 = NeoPixel (24 LEDs on GPIO 18)");
-  Serial.println("  2 = Servo (GPIO 17)");
+  Serial.println("  2 = Servo (GPIO 4)");
   Serial.println("  3 = DFPlayer / Speaker (GPIO 25)");
   Serial.println("  4 = PCA9548A + PN532 (I2C)");
   Serial.println("  5 = Capacitive Touch (GPIO 27, 33)");
-  Serial.println("  6 = Run ALL tests");
+  Serial.println("  6 = Vibration Motor (GPIO 26)");
+  Serial.println("  7 = Run ALL tests");
   Serial.println("=================================");
   Serial.println();
 
@@ -78,6 +83,10 @@ void setup() {
   strip.begin();
   strip.clear();
   strip.show();
+  
+  // Init motor pin (off by default)
+  pinMode(MOTOR_PIN, OUTPUT);
+  digitalWrite(MOTOR_PIN, LOW);
 }
 
 void loop() {
@@ -92,15 +101,17 @@ void loop() {
       case '3': testDFPlayer(); break;
       case '4': testPCA_PN532(); break;
       case '5': testCapTouch(); break;
-      case '6':
+      case '6': testMotor(); break;
+      case '7':
         testNeoPixel();
         testServo();
         testDFPlayer();
         testPCA_PN532();
         testCapTouch();
+        testMotor();
         break;
       default:
-        Serial.println("Send 1-6");
+        Serial.println("Send 1-7");
         break;
     }
   }
@@ -271,12 +282,12 @@ void testPCA_PN532() {
         
         uint8_t uid[7];
         uint8_t uidLength;
-        Serial.println("    Waiting 5 seconds for a tag...");
+        Serial.println("    Waiting 30 seconds for a tag...");
         
         // Non-blocking wait with timeout
         unsigned long start = millis();
         bool tagFound = false;
-        while (millis() - start < 5000) {
+        while (millis() - start < 30000) {
           if (nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength, 500)) {
             Serial.print("    TAG DETECTED! UID: ");
             for (uint8_t i = 0; i < uidLength; i++) {
@@ -344,4 +355,32 @@ void testCapTouch() {
   }
   
   Serial.println("--- Capacitive Touch DONE ---\n");
+}
+
+// ============================================================
+// TEST 6: Vibration Motor (MOSFET)
+// ============================================================
+void testMotor() {
+  Serial.println("\n--- TEST 6: Vibration Motor ---");
+  Serial.println("GPIO 26 → MOSFET gate → motor");
+  Serial.println("Pulsing: 3 short buzzes, then 1 long buzz");
+  
+  // 3 short pulses
+  for (int i = 0; i < 3; i++) {
+    Serial.print("  Buzz ");
+    Serial.println(i + 1);
+    digitalWrite(MOTOR_PIN, HIGH);
+    delay(150);
+    digitalWrite(MOTOR_PIN, LOW);
+    delay(200);
+  }
+  
+  // 1 long buzz
+  Serial.println("  Long buzz...");
+  digitalWrite(MOTOR_PIN, HIGH);
+  delay(800);
+  digitalWrite(MOTOR_PIN, LOW);
+  
+  Serial.println("  OFF");
+  Serial.println("--- Vibration Motor DONE ---\n");
 }

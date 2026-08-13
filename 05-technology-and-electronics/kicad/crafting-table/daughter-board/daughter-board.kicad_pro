@@ -508,7 +508,7 @@
     "last_paths": {
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "daughterboard_order",
       "specctra_dsn": "",
       "vrml": ""
     },
@@ -632,7 +632,7 @@
         "uuid": "f9b1fd56-0a6e-444d-931e-42cdc1495419"
       }
     ],
-    "used_designators": "",
+    "used_designators": "#PWR9",
     "variants": []
   },
   "sheets": [

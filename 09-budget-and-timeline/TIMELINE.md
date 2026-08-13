@@ -21,16 +21,17 @@ Do this NOW so shipping doesn't block you later.
 - [x] Pin header 1x9
 - [x] JST-XH housings + crimp contacts (for making cables)
 - [x] Power toggle switch (SPST, 5V/3A)
-- [x] Vibration motor
+- [x] Vibration motor (coin type)
 
 **PCBs:**
-- [ ] Generate Gerbers — motherboard
-- [ ] Generate Gerbers — daughter board
-- [ ] Order from JLCPCB (5 motherboards, 10 daughter boards)
+- [x] Generate Gerbers — motherboard
+- [x] Generate Gerbers — daughter board
+- [x] Order from JLCPCB (5 motherboards, 10 daughter boards)
 
-**Remaining parts (Mouser cart — order after breadboard testing):**
+**Remaining parts (Mouser — ordered):**
 - https://www.mouser.com/account/projects
-- Barrel jack, 1000µF cap, resistors, 1N5819 diode, pin header 1x9, JST-XH housings + crimp contacts
+- [x] Barrel jack (PJ-002A)
+- [x] 1000µF 10V electrolytic cap
 
 **Crafting Table Lumber & Hardware:**
 - [ ] 2×6 lumber × 4' (16 pieces)
@@ -90,8 +91,8 @@ Do this NOW so shipping doesn't block you later.
 - [x] Test PCA9548A + PN532 — working (I2C scan + tag read via multiplexer)
 - [x] Test capacitive touch — working (touchRead on GPIO 27/33)
 - [x] Fixed SDA/SCL swap in KiCad schematic
-- [ ] Test vibration motor circuit (IRFZ44N + 1N5819 + motor) — waiting for parts
-- [ ] Wire DeWalt → buck converter → verify 5V output under load
+- [x] Test vibration motor circuit (IRFZ44N + 1N5819 + motor) — working, MOSFET stays cool
+- [x] Wire DeWalt → buck converter → verify 5V output under load — working (needs separate servo power path to avoid brownout)
 
 **3D Print Pipeline:**
 - [ ] Design block model (3"×3"×3" cube with NTAG215 cavity)

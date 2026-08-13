@@ -26,15 +26,15 @@ echo(str("Tag cavity: ", cavity_d, "mm dia × ", cavity_h, "mm deep"));
 echo(str("PAUSE AT: ", DEPTH_MM / 2 + cavity_h / 2, "mm to insert tag"));
 
 module tag_cavity() {
-    cx = (6.5 + 0.5) * PIXEL_MM;
-    cy = (PIXELS - 1 - 6.5 + 0.5) * PIXEL_MM;
+    cx = (8.5 + 0.5) * PIXEL_MM;
+    cy = (PIXELS - 1 - 9.0 + 0.5) * PIXEL_MM;
     translate([cx, cy, DEPTH_MM / 2 - cavity_h / 2])
         cylinder(d = cavity_d, h = cavity_h + 0.1, $fn = 48);
 }
 
 module tag_shelf() {
-    cx = (6.5 + 0.5) * PIXEL_MM;
-    cy = (PIXELS - 1 - 6.5 + 0.5) * PIXEL_MM;
+    cx = (8.5 + 0.5) * PIXEL_MM;
+    cy = (PIXELS - 1 - 9.0 + 0.5) * PIXEL_MM;
     translate([cx, cy, DEPTH_MM / 2 - cavity_h / 2 - 1.0])
         cylinder(d = cavity_d + 4, h = 1.0, $fn = 48);
 }
@@ -44,7 +44,7 @@ echo(str("Footprint: ", PIXELS * PIXEL_MM, "mm = ", GRID_SIZE_IN, " in"));
 echo(str("Depth: ", DEPTH_MM, "mm = ", DEPTH_IN, " in"));
 
 // ============================================================
-// PIXEL MAP — 75 opaque pixels
+// PIXEL MAP — 75 opaque pixels + center fill
 // ============================================================
 
 item_pixels = [
@@ -57,7 +57,12 @@ item_pixels = [
     [8.5,12.0], [8.5,13.0], [9.5,1.0], [9.5,2.0], [9.5,3.0], [9.5,4.0], [9.5,7.0], [9.5,8.0],
     [9.5,9.0], [9.5,10.0], [9.5,12.0], [9.5,13.0], [10.5,4.0], [10.5,5.0], [10.5,8.0], [10.5,9.0],
     [10.5,11.0], [10.5,12.0], [11.5,5.0], [11.5,6.0], [11.5,10.0], [11.5,11.0], [12.5,6.0], [12.5,7.0],
-    [12.5,8.0], [12.5,9.0], [12.5,10.0]
+    [12.5,8.0], [12.5,9.0], [12.5,10.0],
+    // Center fill — solid pixels to support NFC tag cavity
+    [5.5,8.0], [6.5,8.0], [6.5,9.0], [7.5,8.0], [7.5,9.0],
+    [8.5,9.0], [8.5,5.0], [8.5,6.0], [9.5,5.0], [9.5,6.0],
+    [9.5,11.0], [10.5,6.0], [10.5,7.0], [10.5,10.0], [11.5,7.0],
+    [11.5,8.0], [11.5,9.0]
 ];
 
 // ============================================================

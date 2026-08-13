@@ -8,7 +8,7 @@
 // PARAMETERS
 // ============================================================
 
-BLOCK_SIZE_IN   = 2;        // side length in inches
+BLOCK_SIZE_IN   = 2.5;      // side length in inches
 ITEM_HEIGHT_IN  = 1;        // item slab height in inches
 
 WALL_THICKNESS  = 2.5;      // mm — shell wall thickness (all sides)
@@ -113,21 +113,24 @@ module magnet_cavities(sx, sy, sz) {
 }
 
 module block() {
-    translate([0, 0, block_size/2]) {
-        difference() {
-            union() {
-                shell([block_size, block_size, block_size], w);
-                if (TAG_CENTERED) {
-                    tag_shelf(block_size);
-                }
-            }
-            if (TAG_CENTERED) {
-                tag_pocket(block_size);
-            } else {
-                translate([0, 0, w + cavity_h/2 - block_size/2])
-                    tag_pocket(block_size);
-            }
-            magnet_cavities(block_size, block_size, block_size);
+    // Hollow 2.5" cube — closed on all 6 sides.
+    // Large 45° chamfers on all inside edges for clean printing.
+    // Pause at halfway (~31.75mm), drop tag inside, resume print.
+    inner = block_size - 2*w;
+    chamfer = inner / 4;  // large 45° chamfer
+    
+    difference() {
+        rounded_cube([block_size, block_size, block_size], CORNER_RADIUS);
+        // Inner cavity: cube intersected with chamfered cube (rotated 45° via minkowski)
+        intersection() {
+            cube([inner, inner, inner], center=true);
+            // Rotated cube creates 45° chamfers on all 12 edges
+            rotate([0, 0, 45])
+                cube([inner * 0.95, inner * 0.95, inner + 1], center=true);
+            rotate([45, 0, 0])
+                cube([inner + 1, inner * 0.95, inner * 0.95], center=true);
+            rotate([0, 45, 0])
+                cube([inner * 0.95, inner + 1, inner * 0.95], center=true);
         }
     }
 }
@@ -156,13 +159,12 @@ module item() {
 // RENDER — uncomment one, then F6 → F7
 // ============================================================
 
-// block();
+block();
+
 // item();
 
-// Cross-section view (uncomment to see inside):
-
-difference() {
-     item();
-     translate([block_size/2, 0, 0])
-         cube([block_size, block_size*2, block_size*2], center=true);
- }
+// difference() {
+//      block();
+//      translate([block_size/2, 0, 0])
+//          cube([block_size, block_size*2, block_size*2], center=true);
+// }
