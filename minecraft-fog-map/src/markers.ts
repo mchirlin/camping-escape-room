@@ -13,20 +13,26 @@ export interface MapMarker {
 }
 
 export type MarkerTag =
+  // Blocks
   | 'wood'
-  | 'stick'
-  | 'iron'
-  | 'string'
-  | 'gold'
-  | 'diamond'
-  | 'gunpowder'
   | 'sand'
-  | 'redstone'
-  | 'coal'
-  | 'copper_ingot'
-  | 'amethyst_shard'
-  | 'paper'
   | 'cobblestone'
+  // Ingots
+  | 'iron'
+  | 'gold'
+  | 'copper_ingot'
+  // Gems
+  | 'diamond'
+  | 'redstone'
+  | 'amethyst_shard'
+  | 'emerald'
+  | 'coal'
+  // Materials
+  | 'stick'
+  | 'string'
+  | 'paper'
+  | 'gunpowder'
+  // Locations
   | 'creeper'
   | 'crafting'
   | 'mine'
@@ -36,20 +42,26 @@ export type MarkerTag =
 const BASE = import.meta.env.BASE_URL;
 
 export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; texture: string }[] = [
+  // Blocks
   { tag: 'wood',          label: 'Wood Plank',      color: '#8B6914', texture: `${BASE}markers/wood.png` },
-  { tag: 'stick',         label: 'Stick',           color: '#C4A24E', texture: `${BASE}markers/stick.png` },
-  { tag: 'iron',          label: 'Iron Ingot',      color: '#D8D8D8', texture: `${BASE}markers/iron.png` },
-  { tag: 'string',        label: 'String',          color: '#EEEEEE', texture: `${BASE}markers/string.png` },
-  { tag: 'gold',          label: 'Gold Ingot',      color: '#FAEE57', texture: `${BASE}markers/gold.png` },
-  { tag: 'diamond',       label: 'Diamond',         color: '#5CDBD5', texture: `${BASE}markers/diamond.png` },
-  { tag: 'gunpowder',     label: 'Gunpowder',      color: '#444444', texture: `${BASE}markers/gunpowder.png` },
   { tag: 'sand',          label: 'Sand',            color: '#E8D8A0', texture: `${BASE}markers/sand.png` },
-  { tag: 'redstone',      label: 'Redstone',        color: '#FF0000', texture: `${BASE}markers/redstone.png` },
-  { tag: 'coal',          label: 'Coal',            color: '#2A2A2A', texture: `${BASE}markers/coal.png` },
-  { tag: 'copper_ingot',  label: 'Copper Ingot',    color: '#C87533', texture: `${BASE}markers/copper_ingot.png` },
-  { tag: 'amethyst_shard',label: 'Amethyst Shard',  color: '#9B59B6', texture: `${BASE}markers/amethyst_shard.png` },
-  { tag: 'paper',         label: 'Paper',           color: '#F5F5DC', texture: `${BASE}markers/paper.png` },
   { tag: 'cobblestone',   label: 'Cobblestone',     color: '#7A7A7A', texture: `${BASE}markers/cobblestone.png` },
+  // Ingots
+  { tag: 'iron',          label: 'Iron Ingot',      color: '#D8D8D8', texture: `${BASE}markers/iron.png` },
+  { tag: 'gold',          label: 'Gold Ingot',      color: '#FAEE57', texture: `${BASE}markers/gold.png` },
+  { tag: 'copper_ingot',  label: 'Copper Ingot',    color: '#C87533', texture: `${BASE}markers/copper_ingot.png` },
+  // Gems
+  { tag: 'diamond',       label: 'Diamond',         color: '#5CDBD5', texture: `${BASE}markers/diamond.png` },
+  { tag: 'redstone',      label: 'Redstone',        color: '#FF0000', texture: `${BASE}markers/redstone.png` },
+  { tag: 'amethyst_shard',label: 'Amethyst Shard',  color: '#9B59B6', texture: `${BASE}markers/amethyst_shard.png` },
+  { tag: 'emerald',       label: 'Emerald',         color: '#17DD62', texture: `${BASE}markers/emerald.png` },
+  { tag: 'coal',          label: 'Coal',            color: '#2A2A2A', texture: `${BASE}markers/coal.png` },
+  // Materials
+  { tag: 'stick',         label: 'Stick',           color: '#C4A24E', texture: `${BASE}markers/stick.png` },
+  { tag: 'string',        label: 'String',          color: '#EEEEEE', texture: `${BASE}markers/string.png` },
+  { tag: 'paper',         label: 'Paper',           color: '#F5F5DC', texture: `${BASE}markers/paper.png` },
+  { tag: 'gunpowder',     label: 'Gunpowder',      color: '#444444', texture: `${BASE}markers/gunpowder.png` },
+  // Locations
   { tag: 'creeper',       label: 'Creeper',         color: '#55AA33', texture: `${BASE}markers/creeper.png` },
   { tag: 'crafting',      label: 'Crafting Table',  color: '#B5804A', texture: `${BASE}markers/crafting.png` },
   { tag: 'mine',          label: 'Mine',            color: '#707070', texture: `${BASE}markers/mine.png` },

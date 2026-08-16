@@ -68,9 +68,10 @@
 
 ## 🧊 3D Printing
 
-- [ ] **Blocks — 3" × 3" × 3" cubes** (13 total)
-  - [ ] Wood Plank × 8
-  - [ ] Sand × 5
+- [ ] **Blocks — 2.5" cubes** (11 total)
+  - [ ] Wood Plank × 4
+  - [ ] Sand × 4
+  - [ ] Cobblestone × 3
 - [ ] **Items — 3" × 3" × 1.5" flat slabs** (31 total)
   - [x] Stick × 10
   - [x] Iron Ingot × 6
@@ -79,7 +80,8 @@
   - [x] Diamond × 2
   - [x] Gold Ingot × 3
   - [x] Gunpowder × 5
-  - [ ] Compass × 1
+  - [x] Compass × 1
+  - [ ] Emerald × 2 (trade with villager)
 - [x] Design block model with NTAG215 cavity (pause-at-layer method)
 - [x] Design item model (half-height) with NTAG215 cavity
 - [x] Test print one block + one item with embedded NFC tag — verify read range
@@ -162,8 +164,9 @@
   - [x] String × 3
   - [x] Coal × 2
   - [x] Copper Ingot × 2
-  - [ ] Wood Plank × 8
-  - [ ] Sand × 5
+  - [ ] Wood Plank × 4
+  - [ ] Sand × 4
+  - [ ] Cobblestone × 3
   - [ ] Paper × 8
   - [ ] Cobblestone × 3
   - [ ] Tripwire Hook × 1

@@ -1,34 +1,24 @@
-// Minecraft Block & Item Models — Hollow Shell with NFC Tag Cavity
-// Open in OpenSCAD → adjust parameters → F5 preview → F6 render → F7 export STL
+// Minecraft Block — Hollow cube with NFC tag cavity at bottom
+// Print upright. Bottom is solid with tag pocket (pause-at-layer to insert).
+// Above the tag: a few solid layers seal it in, then hollow walls to the top.
 //
-// Two models: block() = full cube, item() = half-height slab
-// Use # before tag_cavity() to see it highlighted through the walls
+// Open in OpenSCAD → F5 preview → F6 render → F7 export STL
 
 // ============================================================
 // PARAMETERS
 // ============================================================
 
-BLOCK_SIZE_IN   = 2.5;      // side length in inches
-ITEM_HEIGHT_IN  = 1;        // item slab height in inches
+BLOCK_SIZE_IN   = 2.5;          // side length in inches
+WALL_THICKNESS  = 2.5;          // mm — wall thickness (sides + top)
+FLOOR_THICKNESS = 3.0;          // mm — solid bottom floor
 
-WALL_THICKNESS  = 2.5;      // mm — shell wall thickness (all sides)
-
-// NFC tag (NTAG215 25mm coin)
-TAG_DIAMETER    = 26;       // mm — slightly oversized for easy drop-in
-TAG_THICKNESS   = 1.2;      // mm
-TAG_CLEARANCE   = 0.4;      // mm extra around the tag
-
-// Tag placement
-TAG_CENTERED    = true;     // true = middle (any orientation), false = near bottom
-
-// Spherical magnets at corners (self-aligning polarity)
-MAGNET_ENABLED  = true;     // set false to skip magnets
-MAGNET_DIAMETER = 5;        // mm — 5mm ball bearing magnets
-MAGNET_INSET    = 0.5;      // mm — how far inside the corner the center sits
-MAGNET_CLEARANCE= 0.3;      // mm — extra room for drop-in
+// NFC tag (NTAG215 25mm coin) — same as item models
+TAG_DIAMETER    = 26;           // mm — slightly oversized for easy drop-in
+TAG_THICKNESS   = 1.2;          // mm
+TAG_CLEARANCE   = 0.4;          // mm extra around the tag
 
 // Corner rounding (0 for sharp)
-CORNER_RADIUS   = 1.0;      // mm
+CORNER_RADIUS   = 1.0;          // mm
 
 // ============================================================
 // COMPUTED
@@ -36,135 +26,49 @@ CORNER_RADIUS   = 1.0;      // mm
 
 IN_TO_MM = 25.4;
 block_size = BLOCK_SIZE_IN * IN_TO_MM;
-item_height = ITEM_HEIGHT_IN * IN_TO_MM;
+w = WALL_THICKNESS;
+floor_h = FLOOR_THICKNESS;
 
 cavity_d = TAG_DIAMETER + TAG_CLEARANCE * 2;
 cavity_h = TAG_THICKNESS + TAG_CLEARANCE;
-w = WALL_THICKNESS;
 
-echo(str("=== Block: ", block_size, "mm (", BLOCK_SIZE_IN, "\")"));
-echo(str("=== Item: ", item_height, "mm (", ITEM_HEIGHT_IN, "\")"));
-echo(str("=== Wall: ", w, "mm"));
-echo(str("=== Tag placement: ", TAG_CENTERED ? "CENTERED" : "BOTTOM"));
+// The solid bottom section: floor + tag pocket + seal layers above tag
+seal_layers = 2.0;  // mm of solid plastic above the tag to seal it in
+solid_bottom = floor_h + cavity_h + seal_layers;
 
-if (!TAG_CENTERED) {
-    echo(str("=== PAUSE AT: ", w + cavity_h, "mm to insert tag"));
-} else {
-    echo(str("=== PAUSE BLOCK AT: ", block_size/2 + cavity_h/2, "mm"));
-    echo(str("=== PAUSE ITEM AT: ", item_height/2 + cavity_h/2, "mm"));
-}
+echo(str("Block: ", block_size, "mm (", BLOCK_SIZE_IN, "\")"));
+echo(str("Tag cavity: ", cavity_d, "mm dia x ", cavity_h, "mm deep"));
+echo(str("Solid bottom: ", solid_bottom, "mm (floor + tag + seal)"));
+echo(str("PAUSE AT: ", floor_h + cavity_h, "mm to insert tag"));
+echo(str("Hollow starts at: ", solid_bottom, "mm"));
 
 // ============================================================
-// MODULES
+// MODEL
 // ============================================================
-
-module rounded_cube(size, r) {
-    if (r > 0) {
-        minkowski() {
-            cube([size[0]-2*r, size[1]-2*r, size[2]-2*r], center=true);
-            sphere(r=r, $fn=20);
-        }
-    } else {
-        cube(size, center=true);
-    }
-}
-
-module shell(outer_size, wall) {
-    // Hollow box: solid walls on all 6 sides
-    difference() {
-        rounded_cube(outer_size, CORNER_RADIUS);
-        cube([outer_size[0]-2*wall, outer_size[1]-2*wall, outer_size[2]-2*wall], center=true);
-    }
-}
-
-module tag_shelf(model_height) {
-    // Disc platform at center height to hold the tag,
-    // connected to the walls by 4 diagonal ribs (45°) for clean printing
-    shelf_h = cavity_h + 1.0;
-    rib_w = 2.5;
-    diag = (block_size - 2*w) * sqrt(2);
-    
-    // The disc
-    cylinder(d=cavity_d + 4, h=shelf_h, center=true, $fn=48);
-    
-    // 4 ribs at 45° angles (corner to corner)
-    for (angle = [45, 135, 225, 315]) {
-        rotate([0, 0, angle])
-            cube([diag, rib_w, shelf_h], center=true);
-    }
-}
-
-module tag_pocket(model_height) {
-    // The actual cavity the tag drops into
-    cylinder(d=cavity_d, h=cavity_h, center=true, $fn=48);
-}
-
-module magnet_cavities(sx, sy, sz) {
-    // Spherical cavities at all 8 corners
-    if (MAGNET_ENABLED) {
-        mag_r = (MAGNET_DIAMETER + MAGNET_CLEARANCE * 2) / 2;
-        inset = MAGNET_DIAMETER/2 + MAGNET_INSET;
-        for (x = [-1, 1])
-            for (y = [-1, 1])
-                for (z = [-1, 1])
-                    translate([x*(sx/2-inset), y*(sy/2-inset), z*(sz/2-inset)])
-                        sphere(r=mag_r, $fn=24);
-    }
-}
 
 module block() {
-    // Hollow 2.5" cube — closed on all 6 sides.
-    // Large 45° chamfers on all inside edges for clean printing.
-    // Pause at halfway (~31.75mm), drop tag inside, resume print.
-    inner = block_size - 2*w;
-    chamfer = inner / 4;  // large 45° chamfer
-    
     difference() {
-        rounded_cube([block_size, block_size, block_size], CORNER_RADIUS);
-        // Inner cavity: cube intersected with chamfered cube (rotated 45° via minkowski)
-        intersection() {
-            cube([inner, inner, inner], center=true);
-            // Rotated cube creates 45° chamfers on all 12 edges
-            rotate([0, 0, 45])
-                cube([inner * 0.98, inner * 0.98, inner + 1], center=true);
-            rotate([45, 0, 0])
-                cube([inner + 1, inner * 0.98, inner * 0.98], center=true);
-            rotate([0, 45, 0])
-                cube([inner * 0.98, inner + 1, inner * 0.98], center=true);
-        }
+        // Outer cube
+        translate([0, 0, block_size/2])
+            cube([block_size, block_size, block_size], center=true);
+        
+        // Hollow interior — starts above the solid bottom, open up to the
+        // underside of the top wall. Walls on all 4 sides.
+        translate([0, 0, solid_bottom + (block_size - solid_bottom - w)/2])
+            cube([block_size - 2*w, block_size - 2*w, block_size - solid_bottom - w], center=true);
+        
+        // Tag pocket — circular cavity in the solid floor area
+        // Centered in XY, sits on top of the floor
+        translate([0, 0, floor_h + cavity_h/2])
+            cylinder(d=cavity_d, h=cavity_h + 0.1, center=true, $fn=48);
     }
 }
-
-module item() {
-    translate([0, 0, item_height/2]) {
-        difference() {
-            union() {
-                shell([block_size, block_size, item_height], w);
-                if (TAG_CENTERED) {
-                    tag_shelf(item_height);
-                }
-            }
-            if (TAG_CENTERED) {
-                tag_pocket(item_height);
-            } else {
-                translate([0, 0, w + cavity_h/2 - item_height/2])
-                    tag_pocket(item_height);
-            }
-            magnet_cavities(block_size, block_size, item_height);
-        }
-    }
-}
-
-// ============================================================
-// RENDER — uncomment one, then F6 → F7
-// ============================================================
 
 block();
 
-// item();
-
-// difference() {
-//      block();
-//      translate([block_size/2, 0, 0])
-//          cube([block_size, block_size*2, block_size*2], center=true);
+// Cross-section view (uncomment to see inside):
+//difference() {
+//     block();
+//     translate([block_size/2, 0, 0])
+//         cube([block_size, block_size*2, block_size*2], center=true);
 // }

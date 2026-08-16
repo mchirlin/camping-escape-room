@@ -145,15 +145,15 @@ const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
 const char* BLOCK_TYPES[] = {
   "wood_plank", "sand", "stick", "iron_ingot", "string",
   "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
-  "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook"
+  "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook", "emerald"
 };
-#define NUM_BLOCK_TYPES 15
+#define NUM_BLOCK_TYPES 16
 
 // Abbreviated display names (for web grid)
 const char* BLOCK_ABBREV[] = {
   "wood", "sand", "stick", "iron", "str",
   "red", "dia", "gold", "gun", "coal",
-  "cop", "ame", "paper", "cob", "trip"
+  "cop", "ame", "paper", "cob", "trip", "emer"
 };
 
 // Colors for each block type (RGB) — average pixel color from texture
@@ -173,6 +173,7 @@ const uint32_t BLOCK_COLORS[] = {
   0xD5D5D1,  // paper
   0x7F7F7F,  // cobblestone
   0x8E8576,  // tripwire_hook
+  0x17DD62,  // emerald
 };
 
 // =============================================================================
@@ -993,7 +994,7 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
 <p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
-<select id="btype"><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="stick">stick</option><option value="iron_ingot">iron_ingot</option><option value="string">string</option><option value="redstone">redstone</option><option value="diamond">diamond</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="coal">coal</option><option value="copper_ingot">copper_ingot</option><option value="amethyst_shard">amethyst_shard</option><option value="paper">paper</option><option value="cobblestone">cobblestone</option><option value="tripwire_hook">tripwire_hook</option></select>
+<select id="btype"><option value="wood_plank">-- Blocks --</option><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="cobblestone">cobblestone</option><option value="iron_ingot">-- Ingots --</option><option value="iron_ingot">iron_ingot</option><option value="gold_ingot">gold_ingot</option><option value="copper_ingot">copper_ingot</option><option value="diamond">-- Gems --</option><option value="diamond">diamond</option><option value="redstone">redstone</option><option value="amethyst_shard">amethyst_shard</option><option value="emerald">emerald</option><option value="coal">coal</option><option value="stick">-- Materials --</option><option value="stick">stick</option><option value="string">string</option><option value="paper">paper</option><option value="gunpowder">gunpowder</option><option value="tripwire_hook">tripwire_hook</option></select>
 <div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
 </div>
