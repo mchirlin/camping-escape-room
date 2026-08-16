@@ -120,7 +120,7 @@
 
 // Touch config
 #define TOUCH_THRESHOLD  700  // Below this = touched
-#define CRAFT_HOLD_MS    3000 // Hold 3 seconds to trigger crafting
+#define CRAFT_HOLD_MS    2000 // Hold 2 seconds to trigger crafting
 
 // Servo config
 #define SERVO_REST_DEG   90   // Resting: perpendicular (blocking door)
@@ -150,23 +150,23 @@ const char* BLOCK_ABBREV[] = {
   "cop", "ame", "paper", "cob", "trip"
 };
 
-// Colors for each block type (RGB)
+// Colors for each block type (RGB) — average pixel color from texture
 const uint32_t BLOCK_COLORS[] = {
-  0x8B6914,  // wood_plank — warm brown
-  0xD4C974,  // sand — pale yellow
-  0x6B4E1E,  // stick — dark brown
-  0xD4D4D4,  // iron_ingot — silver/light gray
-  0xE8E8E8,  // string — white
-  0xCC0000,  // redstone — red
-  0x4DEEEA,  // diamond — cyan/aqua
-  0xFFD700,  // gold_ingot — gold
-  0x808080,  // gunpowder — gray
-  0x2A2A2A,  // coal — dark gray
-  0xC87533,  // copper_ingot — copper orange
-  0x9B59B6,  // amethyst_shard — purple
-  0xF5F5DC,  // paper — off-white/cream
-  0x7A7A7A,  // cobblestone — stone gray
-  0xA0A0A0,  // tripwire_hook — light gray
+  0xA2824E,  // wood_plank
+  0xDBCFA3,  // sand
+  0x4B3815,  // stick
+  0x9C9C9C,  // iron_ingot
+  0x8F9A9B,  // string
+  0x6B0500,  // redstone
+  0x54BDB4,  // diamond
+  0xDCB342,  // gold_ingot
+  0x535353,  // gunpowder
+  0x232124,  // coal
+  0xB65C3E,  // copper_ingot
+  0x9370C0,  // amethyst_shard
+  0xD5D5D1,  // paper
+  0x7F7F7F,  // cobblestone
+  0x8E8576,  // tripwire_hook
 };
 
 // =============================================================================
@@ -899,6 +899,28 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 <button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button>
 <button class="btn-off" onclick="cmd('voff')">Vibe OFF</button>
 </div>
+<h2>Volume</h2>
+<div class="btn-row">
+<input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)">
+<span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span>
+</div>
+<h2>Slot Status</h2>
+<div class="grid" id="grid"></div>
+<div class="info">
+<span>Touch1: <span id="tv1" class="off">-</span></span>
+<span>Touch2: <span id="tv2" class="off">-</span></span>
+<span>DFPlayer: <span id="dfp" class="off">-</span></span>
+<button class="btn-refresh" onclick="refresh()">&#x1F504;</button>
+</div>
+<h2>Recipes</h2>
+<div id="recipes" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px"></div>
+<h2>Game State</h2>
+<div class="crafted" id="crafted"></div>
+<div class="btn-row">
+<button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button>
+</div>
+<h2>Log</h2>
+<div id="log">Connecting...</div>
 <h2>Register Tags</h2>
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.<br>Type is written directly to the tag's memory.</p>
@@ -924,25 +946,9 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 </div>
 <div class="result" id="regres"></div>
 </div>
-<h2>Game State</h2>
-<div class="crafted" id="crafted"></div>
-<div class="btn-row">
-<button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button>
-</div>
-<h2>Slot Status</h2>
-<div class="grid" id="grid"></div>
-<div class="info">
-<span>Touch1: <span id="tv1" class="off">-</span></span>
-<span>Touch2: <span id="tv2" class="off">-</span></span>
-<span>DFPlayer: <span id="dfp" class="off">-</span></span>
-<button class="btn-refresh" onclick="refresh()">&#x1F504;</button>
-</div>
-<h2>Recipes</h2>
-<div id="recipes" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px"></div>
-<h2>Log</h2>
-<div id="log">Connecting...</div>
 <script>
 function cmd(c){fetch('/cmd?c='+c).then(r=>r.text()).then(t=>{refresh()})}
+function setVol(v){document.getElementById('volval').textContent=v;fetch('/volume?v='+v);}
 function regTag(){
 let t=document.getElementById('btype').value;
 let el=document.getElementById('regres');
@@ -1239,6 +1245,20 @@ void handleRecipes() {
 }
 
 // =============================================================================
+// Volume Handler
+// =============================================================================
+void handleVolume() {
+  int v = server.arg("v").toInt();
+  if (v < 0) v = 0;
+  if (v > 30) v = 30;
+  if (dfPlayerReady) {
+    dfPlayer.volume(v);
+  }
+  logMsgf("[SOUND] Volume set to %d/30", v);
+  server.send(200, "text/plain", "OK");
+}
+
+// =============================================================================
 // Setup
 // =============================================================================
 void setup() {
@@ -1274,6 +1294,7 @@ void setup() {
   server.on("/register", handleRegister);
   server.on("/reset", handleReset);
   server.on("/recipes", handleRecipes);
+  server.on("/volume", handleVolume);
   server.begin();
   Serial.println("[WEB] Server started on port 80");
 
@@ -1325,9 +1346,9 @@ void setup() {
   dfSerial.begin(9600, SERIAL_8N1, -1, DFPLAYER_TX_PIN);
   delay(500);
   if (dfPlayer.begin(dfSerial, false)) {
-    dfPlayer.volume(20);
+    dfPlayer.volume(30);
     dfPlayerReady = true;
-    logMsg("[SOUND] DFPlayer OK, volume 20/30");
+    logMsg("[SOUND] DFPlayer OK, volume 30/30");
   } else {
     logMsg("[SOUND] DFPlayer NOT FOUND - sounds disabled");
   }
@@ -1406,7 +1427,7 @@ void loop() {
     }
   }
 
-  // ----- CAPACITIVE TOUCH → 3-SECOND HOLD TO CRAFT -----
+  // ----- CAPACITIVE TOUCH → 2-SECOND HOLD TO CRAFT (with vibration ramp-up) -----
   int touchVal = touchRead(TOUCH_PAD);
   int touchVal2 = touchRead(TOUCH_PAD_2);
   currentTouchVal1 = touchVal;
@@ -1416,19 +1437,25 @@ void loop() {
 
   if (isTouched) {
     if (!wasTouched) {
-      // Touch just started
+      // Touch just started — play start sound
       touchStartMs = millis();
       craftTriggered = false;
-      logMsgf("[TOUCH] Touched (val=%d) — hold 3s to craft", touchVal);
+      if (dfPlayerReady) dfPlayer.play(14);  // toast_in sound
+      logMsgf("[TOUCH] Touched (val=%d) — hold 2s to craft", touchVal);
     }
-    // Motor ON while touching (haptic feedback that touch is registered)
-    digitalWrite(MOTOR_PIN, HIGH);
+
+    // Ramp up vibration: 0% → 100% over CRAFT_HOLD_MS
+    unsigned long elapsed = millis() - touchStartMs;
+    if (!craftTriggered) {
+      int duty = map(constrain(elapsed, 0, CRAFT_HOLD_MS), 0, CRAFT_HOLD_MS, 30, 255);
+      analogWrite(MOTOR_PIN, duty);
+    }
 
     // Check if held long enough to trigger craft
-    if (!craftTriggered && (millis() - touchStartMs >= CRAFT_HOLD_MS)) {
+    if (!craftTriggered && (elapsed >= CRAFT_HOLD_MS)) {
       craftTriggered = true;
-      digitalWrite(MOTOR_PIN, LOW);  // Motor off before evaluation
-      logMsg("[TOUCH] 3s hold complete — evaluating recipes...");
+      analogWrite(MOTOR_PIN, 0);  // Motor off before evaluation
+      logMsg("[TOUCH] 2s hold complete — evaluating recipes...");
 
       // Evaluate recipes
       int matchedRecipe = checkRecipes();
@@ -1441,7 +1468,7 @@ void loop() {
   } else {
     if (wasTouched) {
       // Released
-      digitalWrite(MOTOR_PIN, LOW);
+      analogWrite(MOTOR_PIN, 0);
       if (!craftTriggered) {
         logMsgf("[TOUCH] Released early (val=%d) — no craft", touchVal);
       }
