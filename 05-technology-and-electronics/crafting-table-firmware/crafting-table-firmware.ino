@@ -120,7 +120,7 @@
 
 // Touch config
 #define TOUCH_THRESHOLD  700  // Below this = touched
-#define CRAFT_HOLD_MS    2000 // Hold 2 seconds to trigger crafting
+#define CRAFT_HOLD_MS    3000 // Hold 3 seconds to trigger crafting
 
 // Servo config
 #define SERVO_REST_DEG   90   // Resting: perpendicular (blocking door)
@@ -345,6 +345,7 @@ WebServer server(80);
 bool readerOk[NUM_SLOTS];
 bool slotActive[NUM_SLOTS];        // Tag currently present on slot
 bool dfPlayerReady = false;
+bool musicPlaying = true;           // Background music state
 bool currentTouchState = false;    // Exposed for web status
 int currentTouchVal1 = 0;          // Raw touch value pad 1
 int currentTouchVal2 = 0;          // Raw touch value pad 2
@@ -573,11 +574,13 @@ void vibeBuzzError() {
 void playSound(uint8_t track) {
   if (dfPlayerReady) {
     dfPlayer.play(3);  // Track 3 = block_place click
+    // Music will resume after short sound ends (DFPlayer handles this with loop)
   }
 }
 
 void playCraftSound(uint8_t recipeIndex) {
   if (dfPlayerReady) {
+    musicPlaying = false;  // Craft sounds are longer, stop music
     dfPlayer.play(1);  // Track 1 = craft_success
   }
 }
@@ -904,6 +907,10 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 <input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)">
 <span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span>
 </div>
+<div class="btn-row">
+<button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Music ON</button>
+<button class="btn-off" onclick="cmd('moff')">&#x1F507; Music OFF</button>
+</div>
 <h2>Slot Status</h2>
 <div class="grid" id="grid"></div>
 <div class="info">
@@ -1075,6 +1082,22 @@ void handleCmd() {
     digitalWrite(MOTOR_PIN, LOW);
     logMsg("[WEB] Vibration motor OFF");
     server.send(200, "text/plain", "OK: Motor OFF");
+  } else if (c == "mon") {
+    // Music on
+    if (dfPlayerReady) {
+      dfPlayer.loop(21);
+      musicPlaying = true;
+      logMsg("[SOUND] Music ON");
+    }
+    server.send(200, "text/plain", "OK: Music ON");
+  } else if (c == "moff") {
+    // Music off
+    if (dfPlayerReady) {
+      dfPlayer.stop();
+      musicPlaying = false;
+      logMsg("[SOUND] Music OFF");
+    }
+    server.send(200, "text/plain", "OK: Music OFF");
   } else {
     server.send(400, "text/plain", "Unknown command");
   }
@@ -1349,6 +1372,9 @@ void setup() {
     dfPlayer.volume(30);
     dfPlayerReady = true;
     logMsg("[SOUND] DFPlayer OK, volume 30/30");
+    // Start background music (sweden.ogg — track 21)
+    dfPlayer.loop(21);
+    logMsg("[SOUND] Background music started (track 21 — looping)");
   } else {
     logMsg("[SOUND] DFPlayer NOT FOUND - sounds disabled");
   }
@@ -1444,10 +1470,13 @@ void loop() {
       logMsgf("[TOUCH] Touched (val=%d) — hold 2s to craft", touchVal);
     }
 
-    // Ramp up vibration: 0% → 100% over CRAFT_HOLD_MS
+    // Ramp up vibration: exponential curve for smooth perceived acceleration
+    // Starts at ~50 (enough to spin the motor) and ramps to 255 over 3 seconds
     unsigned long elapsed = millis() - touchStartMs;
     if (!craftTriggered) {
-      int duty = map(constrain(elapsed, 0, CRAFT_HOLD_MS), 0, CRAFT_HOLD_MS, 30, 255);
+      float progress = constrain((float)elapsed / CRAFT_HOLD_MS, 0.0, 1.0);
+      // Exponential curve: progress^2 gives slow start, fast finish
+      int duty = 50 + (int)(progress * progress * 205);
       analogWrite(MOTOR_PIN, duty);
     }
 
