@@ -121,7 +121,7 @@
 #define TAG_CC_PAGE          3    // Capability Container page
 #define TAG_DATA_START_PAGE  4    // NDEF message starts here
 const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
-#define TAG_URL_BASE_LEN     46   // strlen of TAG_URL_BASE
+#define TAG_URL_BASE_LEN     45   // strlen of TAG_URL_BASE
 #define TAG_TYPE_MAX_LEN     14   // "amethyst_shard" = 14 chars
 
 // Touch config
@@ -137,7 +137,7 @@ const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
 #define TAG_READ_TIMEOUT 50
 
 // Number of recipes
-#define NUM_RECIPES      13
+#define NUM_RECIPES      14
 
 // =============================================================================
 // Block Types — valid types for tag registration
@@ -192,105 +192,95 @@ struct Recipe {
 };
 
 const Recipe RECIPES[NUM_RECIPES] = {
+  // === TOOLS (Pickaxes, Shovel, Torch) ===
   // Recipe 0: Wooden Pickaxe → door 0
   {
     "Wooden Pickaxe",
     {"", "stick", "", "", "stick", "", "wood_plank", "wood_plank", "wood_plank"},
     0
   },
-  // Recipe 1: Fishing Rod → door 1
+  // Recipe 1: Stone Pickaxe → door 0
   {
-    "Fishing Rod",
-    {"stick", "", "string", "", "stick", "string", "", "", "stick"},
-    1
-  },
-  // Recipe 2: Gold Sword → door 2
-  {
-    "Gold Sword",
-    {"", "stick", "", "", "gold_ingot", "", "", "gold_ingot", ""},
-    2
-  },
-  // Recipe 3: TNT → door 0
-  {
-    "TNT",
-    {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
+    "Stone Pickaxe",
+    {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
     0
   },
-  // Recipe 4: Compass → door 1
-  {
-    "Compass",
-    {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
-    1
-  },
-  // Recipe 5: Diamond Shovel → door 2
-  {
-    "Diamond Shovel",
-    {"", "stick", "", "", "stick", "", "", "diamond", ""},
-    2
-  },
-  // Recipe 6: Torch → no door (bonus)
-  // [    ] [coal]  [    ]
-  // [    ] [stick] [    ]
-  // [    ] [    ]  [    ]
-  {
-    "Torch",
-    {"", "", "", "", "stick", "", "", "coal", ""},
-    0
-  },
-  // Recipe 7: Map → no door (bonus)
-  // [paper] [paper]  [paper]
-  // [paper] [compass doesn't exist as block... use redstone] [paper]
-  // [paper] [paper]  [paper]
-  // Simplified: 8 paper + 1 redstone center (thematic stand-in for compass)
-  {
-    "Map",
-    {"paper", "paper", "paper", "paper", "redstone", "paper", "paper", "paper", "paper"},
-    1
-  },
-  // Recipe 8: Spyglass → no door (bonus)
-  // [    ] [amethyst] [    ]
-  // [    ] [copper]   [    ]
-  // [    ] [copper]   [    ]
-  {
-    "Spyglass",
-    {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
-    2
-  },
-  // Recipe 9: Diamond Pickaxe → no door (bonus)
-  // [dia]   [dia]   [dia]
-  // [    ]  [stick] [    ]
-  // [    ]  [stick] [    ]
+  // Recipe 2: Diamond Pickaxe → door 0
   {
     "Diamond Pickaxe",
     {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
     0
   },
-  // Recipe 10: Iron Sword → no door (bonus)
-  // [    ] [iron]  [    ]
-  // [    ] [iron]  [    ]
-  // [    ] [stick] [    ]
+  // Recipe 3: Diamond Shovel → door 2
+  {
+    "Diamond Shovel",
+    {"", "stick", "", "", "stick", "", "", "diamond", ""},
+    2
+  },
+  // Recipe 4: Fishing Rod → door 1
+  {
+    "Fishing Rod",
+    {"stick", "", "string", "", "stick", "string", "", "", "stick"},
+    1
+  },
+  // Recipe 5: Torch → door 0
+  {
+    "Torch",
+    {"", "", "", "", "stick", "", "", "coal", ""},
+    0
+  },
+  // === WEAPONS ===
+  // Recipe 6: Gold Sword → door 2
+  {
+    "Gold Sword",
+    {"", "stick", "", "", "gold_ingot", "", "", "gold_ingot", ""},
+    2
+  },
+  // Recipe 7: Iron Sword → door 2
   {
     "Iron Sword",
     {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
     2
   },
-  // Recipe 11: Crossbow → no door (bonus)
-  // [stick]  [iron]          [stick]
-  // [string] [tripwire_hook] [string]
-  // [    ]   [stick]         [    ]
+  // Recipe 8: Bow → door 1
+  // [    ]  [stick]  [string]
+  // [stick] [    ]   [string]
+  // [    ]  [stick]  [string]
+  {
+    "Bow",
+    {"", "stick", "string", "stick", "", "string", "", "stick", "string"},
+    1
+  },
+  // Recipe 9: Crossbow → door 1
   {
     "Crossbow",
     {"", "stick", "", "string", "tripwire_hook", "string", "stick", "iron_ingot", "stick"},
     1
   },
-  // Recipe 12: Stone Pickaxe → no door (bonus)
-  // [cobble] [cobble] [cobble]
-  // [    ]   [stick]  [    ]
-  // [    ]   [stick]  [    ]
+  // Recipe 10: TNT → door 0
   {
-    "Stone Pickaxe",
-    {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
+    "TNT",
+    {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
     0
+  },
+  // === NAVIGATION & UTILITY ===
+  // Recipe 11: Compass → door 1
+  {
+    "Compass",
+    {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
+    1
+  },
+  // Recipe 12: Map → door 1
+  {
+    "Map",
+    {"paper", "paper", "paper", "paper", "redstone", "paper", "paper", "paper", "paper"},
+    1
+  },
+  // Recipe 13: Spyglass → door 2
+  {
+    "Spyglass",
+    {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
+    2
   },
 };
 
@@ -700,18 +690,15 @@ bool writeTypeToTag(const String &type) {
   // Terminator TLV
   buf[idx++] = 0xFE;
 
+  // Pad with zeros to fill 2 extra pages after terminator (iOS compatibility)
+  while (idx % 4 != 0) buf[idx++] = 0x00;
+  // Add 2 more empty pages
+  for (int i = 0; i < 8; i++) buf[idx++] = 0x00;
+
   uint8_t totalBytes = idx;
   uint8_t numPages = (totalBytes + 3) / 4;  // Round up to full pages
 
-  // Step 1: Write Capability Container to page 3 (ensures iPhone recognizes tag)
-  uint8_t cc[4] = {0xE1, 0x10, 0x3E, 0x00};
-  if (!nfc.ntag2xx_WritePage(TAG_CC_PAGE, cc)) {
-    logMsgf("[TAG-WR] Failed writing CC page %d", TAG_CC_PAGE);
-    return false;
-  }
-  delay(5);
-
-  // Step 2: Write NDEF data starting at page 4
+  // Write NDEF data starting at page 4
   for (uint8_t p = 0; p < numPages; p++) {
     uint8_t pageData[4];
     memcpy(pageData, &buf[p * 4], 4);
@@ -728,45 +715,57 @@ bool writeTypeToTag(const String &type) {
 }
 
 String readTypeFromTag() {
-  // Read TAG_NDEF_PAGES pages starting at page 4 (72 bytes covers full NDEF URI)
-  uint8_t buf[TAG_NDEF_PAGES * 4];
+  // The type string starts at a known offset in the NDEF URI:
+  // Header (7 bytes) + base URL (46 bytes) = byte 53 from page 4
+  // "?scan=" (6 bytes) at byte 47, type starts at byte 53
+  // Byte 53 from page 4 = page 4 + (53/4) = page 17, offset 1
+  // Read pages 17-20 (16 bytes) to get the type string
+  
+  #define TYPE_START_PAGE 17  // Page where "?scan=" region begins
+  #define TYPE_PAGES 4        // 4 pages = 16 bytes (more than enough)
+  
+  uint8_t buf[16];
   memset(buf, 0, sizeof(buf));
 
-  for (uint8_t p = 0; p < TAG_NDEF_PAGES; p++) {
-    uint8_t pageData[4];
-    if (!nfc.ntag2xx_ReadPage(TAG_DATA_START_PAGE + p, pageData)) {
-      logMsgf("[TAG-RD] Failed reading page %d", TAG_DATA_START_PAGE + p);
+  for (uint8_t p = 0; p < TYPE_PAGES; p++) {
+    uint8_t pageData[16];
+    memset(pageData, 0, sizeof(pageData));
+    if (!nfc.ntag2xx_ReadPage(TYPE_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-RD] Failed reading page %d", TYPE_START_PAGE + p);
       return "";
     }
     memcpy(&buf[p * 4], pageData, 4);
   }
 
-  uint8_t totalBytes = TAG_NDEF_PAGES * 4;
+  // Debug: print what we read
+  String hexDump = "[TAG-RD] Pg17+: ";
+  for (uint8_t i = 0; i < 16; i++) {
+    if (buf[i] < 0x10) hexDump += "0";
+    hexDump += String(buf[i], HEX);
+    hexDump += " ";
+  }
+  logMsg(hexDump);
 
-  // Search for "?scan=" in the buffer to find the block type
-  const char* scanParam = "?scan=";
-  uint8_t scanParamLen = 6;
-  int scanPos = -1;
-
-  for (uint8_t i = 0; i <= totalBytes - scanParamLen; i++) {
-    if (memcmp(&buf[i], scanParam, scanParamLen) == 0) {
-      scanPos = i + scanParamLen;
+  // Type string starts at byte 1 of page 17 (known fixed offset)
+  // Header(7) + base_url(46) + "?scan="(6) = byte 59 from page 4
+  // Page 17 starts at byte (17-4)*4 = 52 from page 4
+  // So type starts at byte 59 - 52 = 7... but we see it at byte 1.
+  // Just find the first printable lowercase/underscore char after any null/padding
+  int startPos = -1;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (buf[i] >= 'a' && buf[i] <= 'z') {
+      startPos = i;
       break;
     }
   }
 
-  if (scanPos < 0) {
-    // "?scan=" not found — might be blank or old-format tag
-    return "";
-  }
+  if (startPos < 0) return "";
 
-  // Extract block type: read printable ASCII until FE terminator, null, or non-printable
+  // Extract type string
   String type = "";
-  for (uint8_t i = scanPos; i < totalBytes; i++) {
+  for (uint8_t i = startPos; i < 16; i++) {
     uint8_t c = buf[i];
-    if (c == 0xFE || c == 0x00 || c < 0x20 || c > 0x7E) {
-      break;
-    }
+    if (c == 0xFE || c == 0x00 || c < 0x20 || c > 0x7E) break;
     type += (char)c;
     if (type.length() >= TAG_TYPE_MAX_LEN) break;
   }
@@ -993,6 +992,7 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 <h2>Register Tags</h2>
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
+<p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
 <select id="btype"><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="stick">stick</option><option value="iron_ingot">iron_ingot</option><option value="string">string</option><option value="redstone">redstone</option><option value="diamond">diamond</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="coal">coal</option><option value="copper_ingot">copper_ingot</option><option value="amethyst_shard">amethyst_shard</option><option value="paper">paper</option><option value="cobblestone">cobblestone</option><option value="tripwire_hook">tripwire_hook</option></select>
 <div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
@@ -1020,7 +1020,7 @@ function setVol(v){document.getElementById('volval').textContent=v;fetch('/volum
 function setMtr(v){document.getElementById('mtrval').textContent=v;fetch('/motor?pwm='+v);}
 function regTag(){let t=document.getElementById('btype').value;let el=document.getElementById('regres');el.textContent='Programming...';el.className='result';fetch('/register?type='+t).then(r=>r.json()).then(d=>{if(d.success){el.textContent='Written: '+d.type;el.className='result';}else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}refresh();}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});}
 function resetGame(){if(confirm('Reset all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
-function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}if(d.crafted){let names=['Pickaxe','Fish Rod','Gold Sword','TNT','Compass','Shovel','Torch','Map','Spyglass','Dia Pick','Iron Sword','Crossbow','Stone Pick'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
+function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Wood Pick','Stone Pick','Dia Pick','Shovel','Fish Rod','Torch','Gold Sword','Iron Sword','Bow','Crossbow','TNT','Compass','Map','Spyglass'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
 setInterval(refresh,2000);refresh();
 fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
 </script></body></html>)rawliteral";
@@ -1145,6 +1145,14 @@ void handleStatus() {
   }
   json += "],\"dfplayer\":";
   json += dfPlayerReady ? "true" : "false";
+  json += ",\"regSlotType\":";
+  if (slotActive[REGISTER_SLOT] && slotType[REGISTER_SLOT].length() > 0) {
+    json += "\"" + slotType[REGISTER_SLOT] + "\"";
+  } else if (slotActive[REGISTER_SLOT]) {
+    json += "\"unregistered\"";
+  } else {
+    json += "null";
+  }
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -1213,7 +1221,12 @@ void handleRegister() {
     return;
   }
 
-  // Verify write
+  // Verify write — re-detect tag first (PN532 may need re-selection after multi-page write)
+  delay(50);
+  uint8_t uid2[7];
+  uint8_t uidLen2;
+  nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid2, &uidLen2, 200);
+  delay(10);
   String readBack = readTypeFromTag();
   pcaDeselectAll();
 
@@ -1545,7 +1558,8 @@ void loop() {
       String uidHex = uidToHexString(uid, uidLen);
       slotUid[i] = uidHex;
 
-      // Read type from tag memory
+      // Read type from tag memory (need brief delay after detection for reliable page reads)
+      delay(30);
       String tagType = readTypeFromTag();
       if (tagType.length() > 0 && isValidBlockType(tagType)) {
         slotType[i] = tagType;

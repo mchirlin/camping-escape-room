@@ -126,11 +126,11 @@ module block() {
             cube([inner, inner, inner], center=true);
             // Rotated cube creates 45° chamfers on all 12 edges
             rotate([0, 0, 45])
-                cube([inner * 0.95, inner * 0.95, inner + 1], center=true);
+                cube([inner * 0.98, inner * 0.98, inner + 1], center=true);
             rotate([45, 0, 0])
-                cube([inner + 1, inner * 0.95, inner * 0.95], center=true);
+                cube([inner + 1, inner * 0.98, inner * 0.98], center=true);
             rotate([0, 45, 0])
-                cube([inner * 0.95, inner + 1, inner * 0.95], center=true);
+                cube([inner * 0.98, inner + 1, inner * 0.98], center=true);
         }
     }
 }
