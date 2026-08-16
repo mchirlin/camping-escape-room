@@ -142,15 +142,38 @@
 - [ ] Install power toggle switch (inline with 5V power to ESP32)
 - [ ] Write ESP32 firmware:
   - [x] Sequential I2C scanning of 9 readers
-  - [ ] NFC tag reading + block type parsing
-  - [ ] Recipe matching (6 recipes: pickaxe, fishing rod, gold sword, TNT, compass, diamond shovel)
-  - [ ] NeoPixel feedback (white=detected, green=valid, rainbow=success)
-  - [ ] Sound playback on successful craft
-  - [ ] Empty-grid detection (prevent re-triggering)
-  - [ ] Tag registration/writing mode
+  - [x] NFC tag reading + block type parsing
+  - [x] Recipe matching (6 recipes: pickaxe, fishing rod, gold sword, TNT, compass, diamond shovel)
+  - [x] NeoPixel feedback (type-colored on detect, rainbow=success, red=fail)
+  - [x] Sound playback on successful craft
+  - [x] Empty-grid detection (prevent re-triggering)
+  - [x] Tag registration/writing mode
+  - [ ] Dynamic recipe creation from web UI (define patterns via phone)
 - [ ] Write all block tags using registration program
+  - [x] Stick × 11
+  - [x] Iron Ingot × 6
+  - [ ] Iron Ingot × 1 (extra for iron pickaxe bonus recipe)
+  - [x] Gold Ingot × 3
+  - [x] Amethyst Shard × 1
+  - [x] Diamond × 3
+  - [x] Redstone × 1
+  - [x] Gunpowder × 5
+  - [x] String × 3
+  - [x] Coal × 2
+  - [x] Copper Ingot × 2
+  - [ ] Wood Plank × 8
+  - [ ] Sand × 5
+  - [ ] Paper × 8
+  - [ ] Cobblestone × 3
+  - [ ] Tripwire Hook × 1
+- [ ] Print and sticker new items:
+  - [ ] Print tripwire_hook item slab
+  - [ ] Print cobblestone cubes × 3
+  - [ ] Sticker cobblestone cubes (sticker-block-cobblestone.pdf)
+  - [ ] Sticker tripwire_hook item (sticker-tripwire_hook.pdf)
+- [ ] Copy updated mp3/ folder to DFPlayer SD card (now 20 tracks)
 - [ ] Test every block on every grid slot
-- [ ] Test all 6 recipes
+- [ ] Test all 13 recipes
 - [ ] Test wrong recipe rejection
 
 ## 🪑 Crafting Table — Physical Build

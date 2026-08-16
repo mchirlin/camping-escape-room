@@ -26,6 +26,7 @@ export type MarkerTag =
   | 'copper_ingot'
   | 'amethyst_shard'
   | 'paper'
+  | 'cobblestone'
   | 'creeper'
   | 'crafting'
   | 'mine'
@@ -48,6 +49,7 @@ export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; textur
   { tag: 'copper_ingot',  label: 'Copper Ingot',    color: '#C87533', texture: `${BASE}markers/copper_ingot.png` },
   { tag: 'amethyst_shard',label: 'Amethyst Shard',  color: '#9B59B6', texture: `${BASE}markers/amethyst_shard.png` },
   { tag: 'paper',         label: 'Paper',           color: '#F5F5DC', texture: `${BASE}markers/paper.png` },
+  { tag: 'cobblestone',   label: 'Cobblestone',     color: '#7A7A7A', texture: `${BASE}markers/cobblestone.png` },
   { tag: 'creeper',       label: 'Creeper',         color: '#55AA33', texture: `${BASE}markers/creeper.png` },
   { tag: 'crafting',      label: 'Crafting Table',  color: '#B5804A', texture: `${BASE}markers/crafting.png` },
   { tag: 'mine',          label: 'Mine',            color: '#707070', texture: `${BASE}markers/mine.png` },

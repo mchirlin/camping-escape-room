@@ -131,7 +131,7 @@
 #define TAG_READ_TIMEOUT 50
 
 // Number of recipes
-#define NUM_RECIPES      6
+#define NUM_RECIPES      13
 
 // =============================================================================
 // Block Types — valid types for tag registration
@@ -139,15 +139,15 @@
 const char* BLOCK_TYPES[] = {
   "wood_plank", "sand", "stick", "iron_ingot", "string",
   "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
-  "copper_ingot", "amethyst_shard", "paper"
+  "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook"
 };
-#define NUM_BLOCK_TYPES 13
+#define NUM_BLOCK_TYPES 15
 
 // Abbreviated display names (for web grid)
 const char* BLOCK_ABBREV[] = {
   "wood", "sand", "stick", "iron", "str",
   "red", "dia", "gold", "gun", "coal",
-  "cop", "ame", "paper"
+  "cop", "ame", "paper", "cob", "trip"
 };
 
 // Colors for each block type (RGB)
@@ -165,6 +165,8 @@ const uint32_t BLOCK_COLORS[] = {
   0xC87533,  // copper_ingot — copper orange
   0x9B59B6,  // amethyst_shard — purple
   0xF5F5DC,  // paper — off-white/cream
+  0x7A7A7A,  // cobblestone — stone gray
+  0xA0A0A0,  // tripwire_hook — light gray
 };
 
 // =============================================================================
@@ -219,6 +221,70 @@ const Recipe RECIPES[NUM_RECIPES] = {
     "Diamond Shovel",
     {"", "stick", "", "", "stick", "", "", "diamond", ""},
     2
+  },
+  // Recipe 6: Torch → no door (bonus)
+  // [    ] [coal]  [    ]
+  // [    ] [stick] [    ]
+  // [    ] [    ]  [    ]
+  {
+    "Torch",
+    {"", "", "", "", "stick", "", "", "coal", ""},
+    0
+  },
+  // Recipe 7: Map → no door (bonus)
+  // [paper] [paper]  [paper]
+  // [paper] [compass doesn't exist as block... use redstone] [paper]
+  // [paper] [paper]  [paper]
+  // Simplified: 8 paper + 1 redstone center (thematic stand-in for compass)
+  {
+    "Map",
+    {"paper", "paper", "paper", "paper", "redstone", "paper", "paper", "paper", "paper"},
+    1
+  },
+  // Recipe 8: Spyglass → no door (bonus)
+  // [    ] [amethyst] [    ]
+  // [    ] [copper]   [    ]
+  // [    ] [copper]   [    ]
+  {
+    "Spyglass",
+    {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
+    2
+  },
+  // Recipe 9: Diamond Pickaxe → no door (bonus)
+  // [dia]   [dia]   [dia]
+  // [    ]  [stick] [    ]
+  // [    ]  [stick] [    ]
+  {
+    "Diamond Pickaxe",
+    {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
+    0
+  },
+  // Recipe 10: Iron Sword → no door (bonus)
+  // [    ] [iron]  [    ]
+  // [    ] [iron]  [    ]
+  // [    ] [stick] [    ]
+  {
+    "Iron Sword",
+    {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
+    2
+  },
+  // Recipe 11: Crossbow → no door (bonus)
+  // [stick]  [iron]          [stick]
+  // [string] [tripwire_hook] [string]
+  // [    ]   [stick]         [    ]
+  {
+    "Crossbow",
+    {"", "stick", "", "string", "tripwire_hook", "string", "stick", "iron_ingot", "stick"},
+    1
+  },
+  // Recipe 12: Stone Pickaxe → no door (bonus)
+  // [cobble] [cobble] [cobble]
+  // [    ]   [stick]  [    ]
+  // [    ]   [stick]  [    ]
+  {
+    "Stone Pickaxe",
+    {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
+    0
   },
 };
 
@@ -506,19 +572,19 @@ void vibeBuzzError() {
 // =============================================================================
 void playSound(uint8_t track) {
   if (dfPlayerReady) {
-    dfPlayer.playFolder(1, track);  // Folder 01, track 001-009
+    dfPlayer.play(3);  // Track 3 = block_place click
   }
 }
 
 void playCraftSound(uint8_t recipeIndex) {
   if (dfPlayerReady) {
-    dfPlayer.playFolder(2, recipeIndex + 1);  // Folder 02, track 001-006
+    dfPlayer.play(1);  // Track 1 = craft_success
   }
 }
 
 void playErrorSound() {
   if (dfPlayerReady) {
-    dfPlayer.playFolder(2, 10);  // Folder 02, track 010
+    dfPlayer.play(2);  // Track 2 = craft_fail
   }
 }
 
@@ -850,6 +916,8 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 <option value="copper_ingot">copper_ingot</option>
 <option value="amethyst_shard">amethyst_shard</option>
 <option value="paper">paper</option>
+<option value="cobblestone">cobblestone</option>
+<option value="tripwire_hook">tripwire_hook</option>
 </select>
 <div class="btn-row">
 <button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button>
@@ -869,6 +937,8 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 <span>DFPlayer: <span id="dfp" class="off">-</span></span>
 <button class="btn-refresh" onclick="refresh()">&#x1F504;</button>
 </div>
+<h2>Recipes</h2>
+<div id="recipes" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px"></div>
 <h2>Log</h2>
 <div id="log">Connecting...</div>
 <script>
@@ -909,7 +979,7 @@ let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.
 let df=document.getElementById('dfp');df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';
 // Crafted recipes display
 if(d.crafted){
-let names=['Pickaxe','Fish Rod','Gold Sword','TNT','Compass','Shovel'];
+let names=['Pickaxe','Fish Rod','Gold Sword','TNT','Compass','Shovel','Torch','Map','Spyglass','Dia Pick','Iron Sword','Crossbow','Stone Pick'];
 let h='';
 for(let i=0;i<d.crafted.length;i++){
 h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';
@@ -922,6 +992,22 @@ document.getElementById('log').textContent=arr.join('\n');
 let el=document.getElementById('log');el.scrollTop=el.scrollHeight;
 });}
 setInterval(refresh,2000);refresh();
+fetch('/recipes').then(r=>r.json()).then(recipes=>{
+let h='';
+let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper'};
+recipes.forEach(r=>{
+h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px">';
+h+='<div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div>';
+h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';
+let order=[6,7,8,3,4,5,0,1,2];
+for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];
+let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';
+h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';
+}
+h+='</div></div>';
+});
+document.getElementById('recipes').innerHTML=h;
+});
 </script></body></html>)rawliteral";
 
 // =============================================================================
@@ -1125,6 +1211,34 @@ void handleReset() {
 }
 
 // =============================================================================
+// Recipes Handler — returns all recipes as JSON
+// =============================================================================
+void handleRecipes() {
+  String json = "[";
+  for (int r = 0; r < NUM_RECIPES; r++) {
+    json += "{\"name\":\"";
+    json += RECIPES[r].name;
+    json += "\",\"door\":";
+    json += RECIPES[r].doorIndex;
+    json += ",\"pattern\":[";
+    for (int i = 0; i < NUM_SLOTS; i++) {
+      if (strlen(RECIPES[r].pattern[i]) > 0) {
+        json += "\"";
+        json += RECIPES[r].pattern[i];
+        json += "\"";
+      } else {
+        json += "null";
+      }
+      if (i < NUM_SLOTS - 1) json += ",";
+    }
+    json += "]}";
+    if (r < NUM_RECIPES - 1) json += ",";
+  }
+  json += "]";
+  server.send(200, "application/json", json);
+}
+
+// =============================================================================
 // Setup
 // =============================================================================
 void setup() {
@@ -1159,6 +1273,7 @@ void setup() {
   server.on("/log", handleLog);
   server.on("/register", handleRegister);
   server.on("/reset", handleReset);
+  server.on("/recipes", handleRecipes);
   server.begin();
   Serial.println("[WEB] Server started on port 80");
 
