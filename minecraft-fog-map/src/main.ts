@@ -332,9 +332,9 @@ async function main(): Promise<void> {
     const badge = count > 1 ? `<span style="position:absolute;bottom:-2px;right:-2px;background:#000;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;font-family:monospace;">${count}</span>` : '';
     const icon = L.divIcon({
       className: 'marker-icon-pixelated',
-      html: `<div style="position:relative;width:24px;height:24px;"><img src="${tagInfo.texture}" style="width:24px;height:24px;image-rendering:pixelated;">${badge}</div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#fff #555 #555 #fff;padding:3px;"><img src="${tagInfo.texture}" style="width:24px;height:24px;image-rendering:pixelated;">${badge}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
     });
 
     const lm = L.marker([lat, lng], { icon, draggable: true }).addTo(leafletMap);
@@ -363,9 +363,9 @@ async function main(): Promise<void> {
     const badge = count > 1 ? `<span style="position:absolute;bottom:-2px;right:-2px;background:#000;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;font-family:monospace;">${count}</span>` : '';
     const icon = L.divIcon({
       className: 'marker-icon-pixelated',
-      html: `<div style="position:relative;width:24px;height:24px;"><img src="${tagInfo.texture}" style="width:24px;height:24px;image-rendering:pixelated;">${badge}</div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
+      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#fff #555 #555 #fff;padding:3px;"><img src="${tagInfo.texture}" style="width:24px;height:24px;image-rendering:pixelated;">${badge}</div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
     });
     lm.setIcon(icon);
     lm.setPopupContent(`<b>${tagInfo.label} x${count}</b><br><button onclick="document.dispatchEvent(new CustomEvent('remove-marker',{detail:'${id}'}))">Remove</button>`);
@@ -379,6 +379,39 @@ async function main(): Promise<void> {
       leafletMap.removeLayer(leafletMarkerLayers[id]);
       delete leafletMarkerLayers[id];
     }
+  }) as EventListener);
+
+  // Listen for marker collection from popups (must be within 15m)
+  document.addEventListener('collect-marker', ((e: CustomEvent) => {
+    const id = e.detail;
+    const marker = markerStore.getAll().find(m => m.id === id);
+    const tagInfo = marker ? MARKER_TAGS.find(t => t.tag === marker.tag) : null;
+
+    // Check proximity — need GPS position within 15m of marker
+    getCurrentPosition().then((pos) => {
+      if (!pos || !marker) {
+        uiOverlay.showToast('📍 GPS not available — move closer and try again');
+        return;
+      }
+      const dLat = Math.abs(marker.position.latitude - pos.latitude) * 111320;
+      const dLng = Math.abs(marker.position.longitude - pos.longitude) * 111320 *
+        Math.cos(pos.latitude * Math.PI / 180);
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+
+      if (dist > 15) {
+        uiOverlay.showToast(`📍 Too far away (${Math.round(dist)}m) — get closer!`);
+        return;
+      }
+
+      markerStore.remove(id);
+      if (leafletMarkerLayers[id] && leafletMap) {
+        leafletMap.removeLayer(leafletMarkerLayers[id]);
+        delete leafletMarkerLayers[id];
+      }
+      if (tagInfo) {
+        uiOverlay.showToast(`✅ Collected: ${tagInfo.label}`);
+      }
+    });
   }) as EventListener);
 
   // ---- Crafting Table WiFi Link ----
