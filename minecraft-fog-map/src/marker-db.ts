@@ -1,9 +1,20 @@
 // ============================================================
-// Marker Database — shared state across devices
-// Uses a simple REST API (Vite dev server or ESP32).
-// Polls for changes to sync across devices.
+// Marker Database — Firebase Firestore for real-time sync
+// Syncs markers across multiple devices in real-time.
+// Falls back to localStorage-only if Firebase is unavailable.
 // ============================================================
 
+import { initializeApp } from 'firebase/app';
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  type Unsubscribe,
+} from 'firebase/firestore';
 import type { GeoPosition } from './types';
 
 export interface DbMarker {
@@ -16,26 +27,36 @@ export interface DbMarker {
   createdAt: number;
 }
 
-// API base URL — in dev it's the Vite server, in production it could be ESP32
-const API_BASE = `${import.meta.env.BASE_URL}api/markers`;
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyD8fwFu0xed8R2wRTkeQP7hxauz7_I81Ko",
+  authDomain: "camping-escape-room-a3b7b.firebaseapp.com",
+  projectId: "camping-escape-room-a3b7b",
+  storageBucket: "camping-escape-room-a3b7b.firebasestorage.app",
+  messagingSenderId: "1058615151116",
+  appId: "1:1058615151116:web:ab38910aec5f9b9583fc29"
+};
 
+let db: ReturnType<typeof getFirestore> | null = null;
 let apiAvailable = false;
+let unsubscribe: Unsubscribe | null = null;
+
+const COLLECTION_NAME = 'markers';
 
 /**
- * Initialize the marker database. Tests if the API is reachable.
+ * Initialize Firebase Firestore. Returns true if connected.
  */
 export async function initMarkerDb(): Promise<boolean> {
   try {
-    const res = await fetch(API_BASE, { method: 'GET' });
-    if (res.ok) {
-      apiAvailable = true;
-      console.log('Marker API connected');
-      return true;
-    }
-  } catch { /* ignore */ }
-
-  console.warn('Marker API not available — using localStorage only');
-  return false;
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    apiAvailable = true;
+    console.log('Firebase Firestore connected');
+    return true;
+  } catch (err) {
+    console.warn('Firebase init failed — using localStorage only', err);
+    return false;
+  }
 }
 
 export function isDbActive(): boolean {
@@ -43,71 +64,98 @@ export function isDbActive(): boolean {
 }
 
 export async function dbGetMarkers(): Promise<DbMarker[]> {
-  if (!apiAvailable) return [];
-  const res = await fetch(API_BASE);
-  if (!res.ok) return [];
-  return res.json();
+  // Not used with real-time listeners, but kept for compatibility
+  return [];
 }
 
 export async function dbPutMarker(marker: DbMarker): Promise<void> {
-  if (!apiAvailable) return;
-  await fetch(API_BASE, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(marker),
-  });
+  if (!apiAvailable || !db) return;
+  try {
+    await setDoc(doc(db, COLLECTION_NAME, marker.id), {
+      position: marker.position,
+      tag: marker.tag,
+      count: marker.count,
+      label: marker.label || null,
+      collected: marker.collected,
+      createdAt: marker.createdAt,
+    });
+  } catch (err) {
+    console.warn('Failed to write marker to Firestore', err);
+  }
 }
 
 export async function dbRemoveMarker(id: string): Promise<void> {
-  if (!apiAvailable) return;
-  await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+  if (!apiAvailable || !db) return;
+  try {
+    await deleteDoc(doc(db, COLLECTION_NAME, id));
+  } catch (err) {
+    console.warn('Failed to remove marker from Firestore', err);
+  }
 }
 
 export async function dbCollectMarker(id: string): Promise<void> {
-  if (!apiAvailable) return;
-  await fetch(`${API_BASE}/${id}/collect`, { method: 'POST' });
+  if (!apiAvailable || !db) return;
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), { collected: true });
+  } catch (err) {
+    console.warn('Failed to collect marker in Firestore', err);
+  }
 }
 
 export async function dbUpdatePosition(id: string, position: GeoPosition): Promise<void> {
-  if (!apiAvailable) return;
-  await fetch(`${API_BASE}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ position }),
-  });
+  if (!apiAvailable || !db) return;
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), { position });
+  } catch (err) {
+    console.warn('Failed to update marker position', err);
+  }
 }
 
 export async function dbUpdateCount(id: string, count: number): Promise<void> {
-  if (!apiAvailable) return;
-  await fetch(`${API_BASE}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ count }),
-  });
+  if (!apiAvailable || !db) return;
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), { count });
+  } catch (err) {
+    console.warn('Failed to update marker count', err);
+  }
 }
 
 /**
- * Poll for marker changes. Returns a cleanup function.
- * Calls the callback with the full marker list every `intervalMs`.
+ * Subscribe to real-time marker updates from Firestore.
+ * Calls the callback whenever markers change on any device.
+ * Returns a cleanup function to stop listening.
  */
 export function dbPollMarkers(
   callback: (markers: DbMarker[]) => void,
-  intervalMs = 3000
+  _intervalMs = 3000  // ignored — Firestore uses real-time listeners
 ): () => void {
-  if (!apiAvailable) return () => {};
+  if (!apiAvailable || !db) return () => {};
 
-  let running = true;
+  const colRef = collection(db, COLLECTION_NAME);
 
-  const poll = async () => {
-    while (running) {
-      try {
-        const markers = await dbGetMarkers();
-        callback(markers);
-      } catch { /* ignore */ }
-      await new Promise((r) => setTimeout(r, intervalMs));
+  unsubscribe = onSnapshot(colRef, (snapshot) => {
+    const markers: DbMarker[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      markers.push({
+        id: docSnap.id,
+        position: data.position,
+        tag: data.tag,
+        count: data.count || 1,
+        label: data.label || undefined,
+        collected: data.collected || false,
+        createdAt: data.createdAt || 0,
+      });
+    });
+    callback(markers);
+  }, (err) => {
+    console.warn('Firestore listener error:', err);
+  });
+
+  return () => {
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
     }
   };
-
-  poll();
-  return () => { running = false; };
 }
