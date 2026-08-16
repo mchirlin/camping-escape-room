@@ -411,6 +411,60 @@ async function main(): Promise<void> {
     craftLink.start();
   }
 
+  // ---- NFC Tag Scan Handler ----
+  // When opened via NFC tag URL: ?scan=block_type
+  // First scan at a location: places a marker at current GPS position
+  // Second scan of same tag type at same location: marks it as collected (removes marker)
+  const scanParam = new URLSearchParams(window.location.search).get('scan');
+  if (scanParam) {
+    const scanType = scanParam as MarkerTag;
+    const tagInfo = MARKER_TAGS.find((t) => t.tag === scanType);
+    if (tagInfo) {
+      // Get current GPS position
+      getCurrentPosition().then((pos) => {
+        if (!pos) {
+          uiOverlay.showToast('📍 GPS not available — cannot place marker');
+          return;
+        }
+
+        // Check if there's already a marker of this type nearby (within 15m)
+        const existingMarkers = markerStore.getAll();
+        const nearby = existingMarkers.find((m) => {
+          if (m.tag !== scanType) return false;
+          const dLat = Math.abs(m.position.latitude - pos.latitude) * 111320;
+          const dLng = Math.abs(m.position.longitude - pos.longitude) * 111320 *
+            Math.cos(pos.latitude * Math.PI / 180);
+          return Math.sqrt(dLat * dLat + dLng * dLng) < 15;
+        });
+
+        if (nearby) {
+          // Second scan — collect it (remove from map)
+          markerStore.remove(nearby.id);
+          if (leafletMarkerLayers[nearby.id] && leafletMap) {
+            leafletMap.removeLayer(leafletMarkerLayers[nearby.id]);
+            delete leafletMarkerLayers[nearby.id];
+          }
+          uiOverlay.showToast(`✅ Collected: ${tagInfo.label}`);
+        } else {
+          // First scan — place marker at current position
+          const { marker } = markerStore.add(pos, scanType);
+          addLeafletMarker(marker.id, pos.latitude, pos.longitude, tagInfo, marker.count);
+          uiOverlay.showToast(`📌 Placed: ${tagInfo.label}`);
+        }
+
+        // Clean the URL (remove ?scan= param so refresh doesn't re-trigger)
+        const cleanParams = new URLSearchParams(window.location.search);
+        cleanParams.delete('scan');
+        const cleanUrl = cleanParams.toString()
+          ? `${window.location.pathname}?${cleanParams.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      });
+    } else {
+      uiOverlay.showToast(`❓ Unknown block type: ${scanParam}`);
+    }
+  }
+
   // Map level: display level 0=128m, 1=256m, 2=512m
   // Maps to internal terrain grid level and a visible area fraction
   const MAP_LEVEL_CONFIG = [

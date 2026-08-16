@@ -113,10 +113,16 @@
 // Registration slot (middle of the grid)
 #define REGISTER_SLOT   4
 
-// Tag memory layout: type string stored in pages 4-7 (NTAG215 user memory)
-#define TAG_TYPE_START_PAGE  4
-#define TAG_TYPE_NUM_PAGES   4
-#define TAG_TYPE_MAX_LEN     14  // "amethyst_shard" = 14 chars
+// NDEF URI tag format — enables iPhone scanning + ESP32 reading
+// URL: https://mchirlin.github.io/camping-escape-room/?scan=BLOCK_TYPE
+// Uses NDEF URI prefix code 0x04 = "https://"
+#define TAG_URL_PREFIX_CODE  0x04
+#define TAG_NDEF_PAGES       18   // Pages to read when parsing (4 through 21)
+#define TAG_CC_PAGE          3    // Capability Container page
+#define TAG_DATA_START_PAGE  4    // NDEF message starts here
+const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
+#define TAG_URL_BASE_LEN     46   // strlen of TAG_URL_BASE
+#define TAG_TYPE_MAX_LEN     14   // "amethyst_shard" = 14 chars
 
 // Touch config
 #define TOUCH_THRESHOLD  700  // Below this = touched
@@ -639,56 +645,130 @@ uint32_t getTypeColor(const String &type) {
 }
 
 // =============================================================================
-// Tag Type Read/Write Helpers (NTAG215 pages 4-7)
+// Tag Type Read/Write Helpers (NDEF URI format for iPhone + ESP32)
+// =============================================================================
+// Writes an NDEF URI record to the tag so iPhones can scan and open the URL:
+//   https://mchirlin.github.io/camping-escape-room/?scan=BLOCK_TYPE
+//
+// NDEF structure on NTAG215 (pages 3+):
+//   Page 3 (CC):   E1 10 3E 00
+//   Page 4+:       03 LL D1 01   (TLV type=03, len=LL, NDEF hdr: MB|ME|SR, type_len=1)
+//                  PP 55 04 xx   (payload_len=PP, type='U', prefix=0x04, URL bytes...)
+//                  ...URL...
+//                  FE            (terminator TLV)
 // =============================================================================
 bool writeTypeToTag(const String &type) {
-  uint8_t len = type.length();
-  if (len > TAG_TYPE_MAX_LEN) len = TAG_TYPE_MAX_LEN;
+  uint8_t typeLen = type.length();
+  if (typeLen > TAG_TYPE_MAX_LEN) typeLen = TAG_TYPE_MAX_LEN;
 
-  uint8_t buf[16];
+  // Build the URI payload: prefix code + base URL + block type
+  // URI payload = 0x04 + "mchirlin.github.io/camping-escape-room/?scan=" + type
+  uint8_t uriPayloadLen = 1 + TAG_URL_BASE_LEN + typeLen;
+
+  // NDEF record: header(1) + type_len(1) + payload_len(1) + type(1) + payload
+  // Since SR (Short Record) flag is set, payload_len is 1 byte
+  uint8_t ndefRecordLen = 1 + 1 + 1 + 1 + uriPayloadLen;  // = 4 + uriPayloadLen
+
+  // TLV: type(1) + length(1) + NDEF record + terminator(1)
+  // Total bytes starting at page 4:
+  //   03 LL [NDEF record bytes...] FE
+  uint8_t ndefMsgLen = ndefRecordLen;  // Length field in TLV = size of NDEF record
+
+  // Build the full byte buffer (page 4 onward)
+  uint8_t buf[80];  // Max ~68 bytes needed
   memset(buf, 0, sizeof(buf));
-  buf[0] = len;
-  for (uint8_t i = 0; i < len; i++) {
-    buf[1 + i] = (uint8_t)type.charAt(i);
+  uint8_t idx = 0;
+
+  // TLV header
+  buf[idx++] = 0x03;            // NDEF Message TLV type
+  buf[idx++] = ndefMsgLen;      // Length of NDEF message
+
+  // NDEF record header
+  buf[idx++] = 0xD1;            // MB=1, ME=1, CF=0, SR=1, IL=0, TNF=001 (Well-Known)
+  buf[idx++] = 0x01;            // Type length = 1
+  buf[idx++] = uriPayloadLen;   // Payload length (short record, 1 byte)
+  buf[idx++] = 0x55;            // Type = 'U' (URI record)
+
+  // URI payload
+  buf[idx++] = TAG_URL_PREFIX_CODE;  // 0x04 = "https://"
+  memcpy(&buf[idx], TAG_URL_BASE, TAG_URL_BASE_LEN);
+  idx += TAG_URL_BASE_LEN;
+  for (uint8_t i = 0; i < typeLen; i++) {
+    buf[idx++] = (uint8_t)type.charAt(i);
   }
 
-  for (uint8_t p = 0; p < TAG_TYPE_NUM_PAGES; p++) {
+  // Terminator TLV
+  buf[idx++] = 0xFE;
+
+  uint8_t totalBytes = idx;
+  uint8_t numPages = (totalBytes + 3) / 4;  // Round up to full pages
+
+  // Step 1: Write Capability Container to page 3 (ensures iPhone recognizes tag)
+  uint8_t cc[4] = {0xE1, 0x10, 0x3E, 0x00};
+  if (!nfc.ntag2xx_WritePage(TAG_CC_PAGE, cc)) {
+    logMsgf("[TAG-WR] Failed writing CC page %d", TAG_CC_PAGE);
+    return false;
+  }
+  delay(5);
+
+  // Step 2: Write NDEF data starting at page 4
+  for (uint8_t p = 0; p < numPages; p++) {
     uint8_t pageData[4];
     memcpy(pageData, &buf[p * 4], 4);
-    if (!nfc.ntag2xx_WritePage(TAG_TYPE_START_PAGE + p, pageData)) {
-      logMsgf("[TAG-WR] Failed writing page %d", TAG_TYPE_START_PAGE + p);
+    if (!nfc.ntag2xx_WritePage(TAG_DATA_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-WR] Failed writing page %d", TAG_DATA_START_PAGE + p);
       return false;
     }
     delay(5);
   }
+
+  logMsgf("[TAG-WR] Wrote NDEF URI (%d bytes, %d pages) type=%s",
+          totalBytes, numPages, type.c_str());
   return true;
 }
 
 String readTypeFromTag() {
-  uint8_t buf[16];
+  // Read TAG_NDEF_PAGES pages starting at page 4 (72 bytes covers full NDEF URI)
+  uint8_t buf[TAG_NDEF_PAGES * 4];
   memset(buf, 0, sizeof(buf));
 
-  for (uint8_t p = 0; p < TAG_TYPE_NUM_PAGES; p++) {
+  for (uint8_t p = 0; p < TAG_NDEF_PAGES; p++) {
     uint8_t pageData[4];
-    if (!nfc.ntag2xx_ReadPage(TAG_TYPE_START_PAGE + p, pageData)) {
-      logMsgf("[TAG-RD] Failed reading page %d", TAG_TYPE_START_PAGE + p);
+    if (!nfc.ntag2xx_ReadPage(TAG_DATA_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-RD] Failed reading page %d", TAG_DATA_START_PAGE + p);
       return "";
     }
     memcpy(&buf[p * 4], pageData, 4);
   }
 
-  uint8_t len = buf[0];
-  if (len == 0 || len > TAG_TYPE_MAX_LEN) {
+  uint8_t totalBytes = TAG_NDEF_PAGES * 4;
+
+  // Search for "?scan=" in the buffer to find the block type
+  const char* scanParam = "?scan=";
+  uint8_t scanParamLen = 6;
+  int scanPos = -1;
+
+  for (uint8_t i = 0; i <= totalBytes - scanParamLen; i++) {
+    if (memcmp(&buf[i], scanParam, scanParamLen) == 0) {
+      scanPos = i + scanParamLen;
+      break;
+    }
+  }
+
+  if (scanPos < 0) {
+    // "?scan=" not found — might be blank or old-format tag
     return "";
   }
 
+  // Extract block type: read printable ASCII until FE terminator, null, or non-printable
   String type = "";
-  for (uint8_t i = 0; i < len; i++) {
-    char c = (char)buf[1 + i];
-    if (c < 0x20 || c > 0x7E) {
-      return "";
+  for (uint8_t i = scanPos; i < totalBytes; i++) {
+    uint8_t c = buf[i];
+    if (c == 0xFE || c == 0x00 || c < 0x20 || c > 0x7E) {
+      break;
     }
-    type += c;
+    type += (char)c;
+    if (type.length() >= TAG_TYPE_MAX_LEN) break;
   }
 
   return type;
@@ -853,10 +933,13 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 body{font-family:'Courier New',monospace;background:#1a1a1a;color:#a0a0a0;padding:12px;max-width:480px;margin:0 auto}
 h1{color:#5b8731;font-size:1.4em;text-align:center;margin-bottom:8px;text-shadow:2px 2px #000;letter-spacing:2px}
 .subtitle{text-align:center;color:#6b5b3a;font-size:0.8em;margin-bottom:16px}
+.tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #333}
+.tab{flex:1;padding:10px 4px;text-align:center;cursor:pointer;color:#666;font-size:0.85em;font-weight:bold;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:#5b8731;border-bottom-color:#5b8731}
+.panel{display:none}
+.panel.active{display:block}
 .btn-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-button{flex:1;min-width:100px;min-height:52px;border:3px solid #3d3d3d;background:#2d2d2d;color:#c8c8c8;
-font-family:'Courier New',monospace;font-size:1em;font-weight:bold;cursor:pointer;
-image-rendering:pixelated;border-radius:0}
+button{flex:1;min-width:100px;min-height:52px;border:3px solid #3d3d3d;background:#2d2d2d;color:#c8c8c8;font-family:'Courier New',monospace;font-size:1em;font-weight:bold;cursor:pointer;border-radius:0}
 button:active{background:#5b8731;color:#fff;border-color:#7ec842}
 .btn-light{border-color:#5b8731}
 .btn-crawl{border-color:#6b5b3a}
@@ -884,145 +967,62 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 .crafted{font-size:0.75em;color:#5b8731;margin-bottom:8px}
 .crafted span{display:inline-block;margin:2px 6px 2px 0;padding:2px 6px;background:#2d3d20;border:1px solid #5b8731}
 .crafted span.no{background:#2a2a2a;border-color:#333;color:#666}
-#log{background:#111;border:1px solid #333;padding:8px;height:180px;overflow-y:auto;
-font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
+#log{background:#111;border:1px solid #333;padding:8px;height:180px;overflow-y:auto;font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 </style></head><body>
 <h1>&#x2B1C; Crafting Table</h1>
 <p class="subtitle">Escape Room Control Panel</p>
-<div class="btn-row">
-<button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button>
-<button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button>
-<button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button>
+<div class="tabs">
+<div class="tab active" onclick="showTab(0)">Game</div>
+<div class="tab" onclick="showTab(1)">Admin</div>
+<div class="tab" onclick="showTab(2)">Test</div>
 </div>
-<h2>Motors</h2>
-<div class="btn-row">
-<button class="btn-motor" onclick="cmd('sv0')">Servo 0</button>
-<button class="btn-motor" onclick="cmd('sv1')">Servo 1</button>
-<button class="btn-motor" onclick="cmd('sv2')">Servo 2</button>
-</div>
-<div class="btn-row">
-<button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button>
-<button class="btn-off" onclick="cmd('voff')">Vibe OFF</button>
-</div>
-<h2>Volume</h2>
-<div class="btn-row">
-<input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)">
-<span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span>
-</div>
-<div class="btn-row">
-<button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Music ON</button>
-<button class="btn-off" onclick="cmd('moff')">&#x1F507; Music OFF</button>
-</div>
+<div class="panel active" id="tab0">
 <h2>Slot Status</h2>
 <div class="grid" id="grid"></div>
-<div class="info">
-<span>Touch1: <span id="tv1" class="off">-</span></span>
-<span>Touch2: <span id="tv2" class="off">-</span></span>
-<span>DFPlayer: <span id="dfp" class="off">-</span></span>
-<button class="btn-refresh" onclick="refresh()">&#x1F504;</button>
-</div>
+<div class="info"><span>Touch1: <span id="tv1" class="off">-</span></span><span>Touch2: <span id="tv2" class="off">-</span></span></div>
 <h2>Recipes</h2>
 <div id="recipes" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px"></div>
 <h2>Game State</h2>
 <div class="crafted" id="crafted"></div>
-<div class="btn-row">
-<button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button>
+<div class="btn-row"><button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button></div>
+<h2>Volume</h2>
+<div class="btn-row"><input type="range" id="vol" min="0" max="30" value="25" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">25</span></div>
+<div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Music ON</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Music OFF</button></div>
 </div>
-<h2>Log</h2>
-<div id="log">Connecting...</div>
+<div class="panel" id="tab1">
 <h2>Register Tags</h2>
 <div class="reg-box">
-<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.<br>Type is written directly to the tag's memory.</p>
-<select id="btype">
-<option value="wood_plank">wood_plank</option>
-<option value="sand">sand</option>
-<option value="stick">stick</option>
-<option value="iron_ingot">iron_ingot</option>
-<option value="string">string</option>
-<option value="redstone">redstone</option>
-<option value="diamond">diamond</option>
-<option value="gold_ingot">gold_ingot</option>
-<option value="gunpowder">gunpowder</option>
-<option value="coal">coal</option>
-<option value="copper_ingot">copper_ingot</option>
-<option value="amethyst_shard">amethyst_shard</option>
-<option value="paper">paper</option>
-<option value="cobblestone">cobblestone</option>
-<option value="tripwire_hook">tripwire_hook</option>
-</select>
-<div class="btn-row">
-<button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button>
-</div>
+<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
+<select id="btype"><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="stick">stick</option><option value="iron_ingot">iron_ingot</option><option value="string">string</option><option value="redstone">redstone</option><option value="diamond">diamond</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="coal">coal</option><option value="copper_ingot">copper_ingot</option><option value="amethyst_shard">amethyst_shard</option><option value="paper">paper</option><option value="cobblestone">cobblestone</option><option value="tripwire_hook">tripwire_hook</option></select>
+<div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
 </div>
+<h2>Motors</h2>
+<div class="btn-row"><button class="btn-motor" onclick="cmd('sv0')">Servo 0</button><button class="btn-motor" onclick="cmd('sv1')">Servo 1</button><button class="btn-motor" onclick="cmd('sv2')">Servo 2</button></div>
+<div class="btn-row"><button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button><button class="btn-off" onclick="cmd('voff')">Vibe OFF</button></div>
+<div class="btn-row"><input type="range" id="mtr" min="0" max="255" value="0" style="flex:1;accent-color:#6b4fa5" oninput="setMtr(this.value)"><span id="mtrval" style="min-width:30px;text-align:center;color:#c8c8c8">0</span></div>
+<h2>Status</h2>
+<div class="info"><span>DFPlayer: <span id="dfp" class="off">-</span></span></div>
+<h2>Log</h2>
+<div id="log">Connecting...</div>
+</div>
+<div class="panel" id="tab2">
+<h2>LED Tests</h2>
+<div class="btn-row"><button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button><button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button><button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button></div>
+<h2>Simulate Slots</h2>
+<p style="font-size:0.75em;color:#666;margin-bottom:8px">Tap to toggle LEDs:</p>
+<div class="grid" id="grid2"></div>
+</div>
 <script>
+function showTab(n){document.querySelectorAll('.tab').forEach((t,i)=>{t.className='tab'+(i===n?' active':'')});document.querySelectorAll('.panel').forEach((p,i)=>{p.className='panel'+(i===n?' active':'')});}
 function cmd(c){fetch('/cmd?c='+c).then(r=>r.text()).then(t=>{refresh()})}
 function setVol(v){document.getElementById('volval').textContent=v;fetch('/volume?v='+v);}
-function regTag(){
-let t=document.getElementById('btype').value;
-let el=document.getElementById('regres');
-el.textContent='Programming...';el.className='result';
-fetch('/register?type='+t).then(r=>r.json()).then(d=>{
-if(d.success){el.textContent='Written to tag: '+d.type;el.className='result';}
-else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}
-refresh();
-}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});
-}
-function resetGame(){
-if(confirm('Reset all recipes and close doors?')){
-fetch('/reset').then(r=>r.json()).then(d=>{refresh();});
-}}
-function refresh(){
-fetch('/status').then(r=>r.json()).then(d=>{
-let g='';
-let order=[6,7,8,3,4,5,0,1,2];
-for(let k=0;k<9;k++){let j=order[k];
-let cls='slot';
-if(!d.readers[j])cls+=' no-reader';
-else if(d.slots[j])cls+=' active';
-let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');
-let typeHtml='';
-if(d.slots[j]&&d.types){let tp=d.types[j];
-if(tp)typeHtml='<div class="stype">'+tp+'</div>';
-else typeHtml='<div class="stype unreg">???</div>';
-}
-g+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+label+typeHtml+'</div>';
-}
-document.getElementById('grid').innerHTML=g;
-let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';
-let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<1000?'on':'off';
-let df=document.getElementById('dfp');df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';
-// Crafted recipes display
-if(d.crafted){
-let names=['Pickaxe','Fish Rod','Gold Sword','TNT','Compass','Shovel','Torch','Map','Spyglass','Dia Pick','Iron Sword','Crossbow','Stone Pick'];
-let h='';
-for(let i=0;i<d.crafted.length;i++){
-h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';
-}
-document.getElementById('crafted').innerHTML=h;
-}
-});
-fetch('/log').then(r=>r.json()).then(arr=>{
-document.getElementById('log').textContent=arr.join('\n');
-let el=document.getElementById('log');el.scrollTop=el.scrollHeight;
-});}
+function setMtr(v){document.getElementById('mtrval').textContent=v;fetch('/motor?pwm='+v);}
+function regTag(){let t=document.getElementById('btype').value;let el=document.getElementById('regres');el.textContent='Programming...';el.className='result';fetch('/register?type='+t).then(r=>r.json()).then(d=>{if(d.success){el.textContent='Written: '+d.type;el.className='result';}else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}refresh();}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});}
+function resetGame(){if(confirm('Reset all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
+function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}if(d.crafted){let names=['Pickaxe','Fish Rod','Gold Sword','TNT','Compass','Shovel','Torch','Map','Spyglass','Dia Pick','Iron Sword','Crossbow','Stone Pick'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
 setInterval(refresh,2000);refresh();
-fetch('/recipes').then(r=>r.json()).then(recipes=>{
-let h='';
-let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper'};
-recipes.forEach(r=>{
-h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px">';
-h+='<div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div>';
-h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';
-let order=[6,7,8,3,4,5,0,1,2];
-for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];
-let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';
-h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';
-}
-h+='</div></div>';
-});
-document.getElementById('recipes').innerHTML=h;
-});
+fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
 </script></body></html>)rawliteral";
 
 // =============================================================================
@@ -1286,6 +1286,18 @@ void handleVolume() {
 }
 
 // =============================================================================
+// Motor PWM Handler
+// =============================================================================
+void handleMotorPWM() {
+  int pwm = server.arg("pwm").toInt();
+  if (pwm < 0) pwm = 0;
+  if (pwm > 255) pwm = 255;
+  analogWrite(MOTOR_PIN, pwm);
+  logMsgf("[MOTOR] PWM set to %d/255", pwm);
+  server.send(200, "text/plain", "OK");
+}
+
+// =============================================================================
 // Setup
 // =============================================================================
 void setup() {
@@ -1322,6 +1334,7 @@ void setup() {
   server.on("/reset", handleReset);
   server.on("/recipes", handleRecipes);
   server.on("/volume", handleVolume);
+  server.on("/motor", handleMotorPWM);
   server.begin();
   Serial.println("[WEB] Server started on port 80");
 
@@ -1373,9 +1386,9 @@ void setup() {
   dfSerial.begin(9600, SERIAL_8N1, -1, DFPLAYER_TX_PIN);
   delay(500);
   if (dfPlayer.begin(dfSerial, false)) {
-    dfPlayer.volume(30);
+    dfPlayer.volume(25);
     dfPlayerReady = true;
-    logMsg("[SOUND] DFPlayer OK, volume 30/30");
+    logMsg("[SOUND] DFPlayer OK, volume 25/30");
     // Start background music (sweden — folder 03, track 001, looping)
     dfPlayer.enableLoop();
     dfPlayer.playFolder(3, 1);
@@ -1475,20 +1488,16 @@ void loop() {
       logMsgf("[TOUCH] Touched (val=%d) — hold 2s to craft", touchVal);
     }
 
-    // Ramp up vibration: exponential curve for smooth perceived acceleration
-    // Starts at ~50 (enough to spin the motor) and ramps to 255 over 3 seconds
+    // Motor ON during hold (full power, no PWM = no whine)
+    digitalWrite(MOTOR_PIN, HIGH);
+
+    // No motor during hold — just wait for 3 seconds
     unsigned long elapsed = millis() - touchStartMs;
-    if (!craftTriggered) {
-      float progress = constrain((float)elapsed / CRAFT_HOLD_MS, 0.0, 1.0);
-      // Exponential curve: progress^2 gives slow start, fast finish
-      int duty = 50 + (int)(progress * progress * 205);
-      analogWrite(MOTOR_PIN, duty);
-    }
 
     // Check if held long enough to trigger craft
     if (!craftTriggered && (elapsed >= CRAFT_HOLD_MS)) {
       craftTriggered = true;
-      analogWrite(MOTOR_PIN, 0);  // Motor off before evaluation
+      digitalWrite(MOTOR_PIN, LOW);  // Motor off before evaluation
       logMsg("[TOUCH] 2s hold complete — evaluating recipes...");
 
       // Evaluate recipes
@@ -1502,7 +1511,7 @@ void loop() {
   } else {
     if (wasTouched) {
       // Released
-      analogWrite(MOTOR_PIN, 0);
+      digitalWrite(MOTOR_PIN, LOW);
       if (!craftTriggered) {
         logMsgf("[TOUCH] Released early (val=%d) — no craft", touchVal);
       }
