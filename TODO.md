@@ -79,6 +79,7 @@
   - [x] Diamond × 2
   - [x] Gold Ingot × 3
   - [x] Gunpowder × 5
+  - [ ] Compass × 1
 - [x] Design block model with NTAG215 cavity (pause-at-layer method)
 - [x] Design item model (half-height) with NTAG215 cavity
 - [x] Test print one block + one item with embedded NFC tag — verify read range

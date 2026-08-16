@@ -1,60 +1,91 @@
-# DFPlayer SD Card — Sound Mapping
+# DFPlayer SD Card — Folder-Based Sound Mapping
 
-Copy the `mp3/` folder to the root of a FAT32-formatted micro SD card.
+Copy the `01/`, `02/`, and `03/` folders to the root of a FAT32-formatted micro SD card.
 
-## File Format
+## SD Card Structure
 
-DFPlayer uses the `/mp3/` folder with 4-digit numbered filenames.
-Files are played by number: `dfPlayer.play(N)` plays `mp3/0000N_name.mp3`.
-
-## Track Mapping
-
-| Track | File | Firmware Use |
-|-------|------|-----|
-| 1 | 0001_craft_success.mp3 | Play on valid recipe match |
-| 2 | 0002_craft_fail.mp3 | Play on wrong recipe |
-| 3 | 0003_block_place.mp3 | Play when block placed on slot |
-| 4 | 0004_levelup.mp3 | Victory fanfare / game complete |
-| 5 | 0005_explosion1.mp3 | TNT recipe success |
-| 6 | 0006_creeper_hiss.mp3 | Creeper proximity (phone soundboard) |
-| 7 | 0007_chest_open.mp3 | Door opening |
-| 8 | 0008_chest_close.mp3 | Game reset / doors closing |
-| 9 | 0009_xp_pickup.mp3 | Item collected / tag registered |
-| 10 | 0010_anvil_use.mp3 | Alternative craft sound |
-| 11 | 0011_explosion2.mp3 | Explosion variant |
-| 12 | 0012_explosion3.mp3 | Explosion variant |
-| 13 | 0013_explosion4.mp3 | Explosion variant |
-| 14 | 0014_toast_in.mp3 | UI notification in |
-| 15 | 0015_toast_out.mp3 | UI notification out |
-| 16 | 0016_crossbow_shoot.mp3 | Crossbow recipe (TODO: add) |
-| 17 | 0017_door_open.mp3 | Servo door opening (TODO: add) |
-| 18 | 0018_door_close.mp3 | Doors closing on reset (TODO: add) |
-| 19 | 0019_enchant.mp3 | Spyglass/special craft (TODO: add) |
-| 20 | 0020_note_pling.mp3 | Touch countdown complete (TODO: add) |
+```
+SD Card Root/
+  01/                         — Block interaction sounds
+    001.mp3                   — block_place (click on tag detect)
+  02/                         — Game event sounds & effects
+    001.mp3                   — craft_success
+    002.mp3                   — craft_fail
+    003.mp3                   — toast_in (touch start chime)
+    004.mp3                   — levelup (victory variant)
+    005.mp3                   — xp_pickup
+    006.mp3                   — explosion1
+    007.mp3                   — chest_open (legacy from mp3/ folder)
+    008.mp3                   — note_pling
+    009.mp3                   — levelup
+    010.mp3                   — anvil
+    011.mp3                   — chest_close
+    012.mp3                   — chest_open
+    013.mp3                   — crossbow_shoot
+    014.mp3                   — door_open
+    015.mp3                   — door_close
+    016.mp3                   — enchant
+    017.mp3                   — creeper_death
+    018.mp3                   — explosion
+    019.mp3                   — explosion2
+    020.mp3                   — bow_shoot
+    021.mp3                   — item_pop
+    022.mp3                   — burp
+    023.mp3                   — drink
+    024.mp3                   — eat
+    025.mp3                   — zombie
+    026.mp3                   — skeleton
+    027.mp3                   — villager_yes
+    028.mp3                   — villager_no
+    032.mp3                   — block_break
+    033.mp3                   — fire_ignite
+  03/                         — Background music (long tracks)
+    001.mp3                   — sweden (THE Minecraft theme)
+    002.mp3                   — wet_hands
+    003.mp3                   — mice_on_venus
+    004.mp3                   — haggstrom
+    005.mp3                   — living_mice
+    006.mp3                   — subwoofer_lullaby
+    007.mp3                   — danny
+    008.mp3                   — dry_hands
+    009.mp3                   — clark
+    010.mp3                   — minecraft_calm
+```
 
 ## Firmware Usage
 
 ```cpp
-dfPlayer.play(3);   // block placement click
-dfPlayer.play(1);   // craft success
-dfPlayer.play(2);   // craft fail / wrong recipe
-dfPlayer.play(4);   // level up / game victory
-dfPlayer.play(7);   // chest/door open
+// Block placement
+dfPlayer.playFolder(1, 1);   // block_place click
+
+// Game events
+dfPlayer.playFolder(2, 1);   // craft success
+dfPlayer.playFolder(2, 2);   // craft fail
+dfPlayer.playFolder(2, 3);   // toast_in (touch hold start)
+dfPlayer.playFolder(2, 9);   // levelup
+dfPlayer.playFolder(2, 12);  // chest open
+dfPlayer.playFolder(2, 14);  // door open
+dfPlayer.playFolder(2, 16);  // enchant
+dfPlayer.playFolder(2, 18);  // explosion
+
+// Background music (looping)
+dfPlayer.enableLoop();
+dfPlayer.playFolder(3, 1);   // sweden
+dfPlayer.playFolder(3, 2);   // wet_hands
+dfPlayer.playFolder(3, 4);   // haggstrom
+// etc.
 ```
 
-## Sounds Still Needed
+## Folder Layout Logic
 
-Extract from Minecraft Java Edition assets jar (`assets/minecraft/sounds/`):
-- `random/door_open.ogg` → convert to MP3 → track 17
-- `random/door_close.ogg` → convert to MP3 → track 18
-- `random/orb.ogg` or `entity/experience_orb/pickup.ogg` → enchant sound → track 19
-- `block/note_block/pling.ogg` → convert to MP3 → track 20
-- `item/crossbow/shoot1.ogg` → convert to MP3 → track 16
-
-Convert with: `ffmpeg -i input.ogg -b:a 128k output.mp3`
+- **Folder 01:** Block interaction sounds (played frequently, very short)
+- **Folder 02:** Game event sounds & ambient effects (short-medium)
+- **Folder 03:** Background music (long tracks, 1-5 minutes, looped)
 
 ## Notes
 - SD card MUST be FAT32 formatted
-- Max 3000 files in /mp3/ folder
-- Files play in numerical order by filename number, not creation date
-- Keep filenames short — DFPlayer can be picky with long names on some cards
+- Folder names must be exactly 2 digits: `01`, `02`, `03`
+- File names must be exactly 3 digits: `001.mp3`, `002.mp3`, etc.
+- `dfPlayer.playFolder(folder, track)` is the most reliable playback method
+- All files encoded at 44.1kHz mono 128kbps for DFPlayer compatibility
+- The old `/mp3/` folder can be deleted from the SD card (no longer used)

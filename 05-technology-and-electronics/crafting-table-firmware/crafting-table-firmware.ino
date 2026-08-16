@@ -573,21 +573,23 @@ void vibeBuzzError() {
 // =============================================================================
 void playSound(uint8_t track) {
   if (dfPlayerReady) {
-    dfPlayer.play(3);  // Track 3 = block_place click
-    // Music will resume after short sound ends (DFPlayer handles this with loop)
+    dfPlayer.disableLoop();
+    dfPlayer.playFolder(1, 1);  // Folder 01, track 001 = block_place
   }
 }
 
 void playCraftSound(uint8_t recipeIndex) {
   if (dfPlayerReady) {
-    musicPlaying = false;  // Craft sounds are longer, stop music
-    dfPlayer.play(1);  // Track 1 = craft_success
+    dfPlayer.disableLoop();
+    musicPlaying = false;
+    dfPlayer.playFolder(2, 1);  // Folder 02, track 001 = craft_success
   }
 }
 
 void playErrorSound() {
   if (dfPlayerReady) {
-    dfPlayer.play(2);  // Track 2 = craft_fail
+    dfPlayer.disableLoop();
+    dfPlayer.playFolder(2, 2);  // Folder 02, track 002 = craft_fail
   }
 }
 
@@ -1085,7 +1087,8 @@ void handleCmd() {
   } else if (c == "mon") {
     // Music on
     if (dfPlayerReady) {
-      dfPlayer.loop(21);
+      dfPlayer.enableLoop();
+      dfPlayer.playFolder(3, 1);
       musicPlaying = true;
       logMsg("[SOUND] Music ON");
     }
@@ -1093,6 +1096,7 @@ void handleCmd() {
   } else if (c == "moff") {
     // Music off
     if (dfPlayerReady) {
+      dfPlayer.disableLoop();
       dfPlayer.stop();
       musicPlaying = false;
       logMsg("[SOUND] Music OFF");
@@ -1372,9 +1376,10 @@ void setup() {
     dfPlayer.volume(30);
     dfPlayerReady = true;
     logMsg("[SOUND] DFPlayer OK, volume 30/30");
-    // Start background music (sweden.ogg — track 21)
-    dfPlayer.loop(21);
-    logMsg("[SOUND] Background music started (track 21 — looping)");
+    // Start background music (sweden — folder 03, track 001, looping)
+    dfPlayer.enableLoop();
+    dfPlayer.playFolder(3, 1);
+    logMsg("[SOUND] Background music started (folder 03/001 — looping)");
   } else {
     logMsg("[SOUND] DFPlayer NOT FOUND - sounds disabled");
   }
@@ -1466,7 +1471,7 @@ void loop() {
       // Touch just started — play start sound
       touchStartMs = millis();
       craftTriggered = false;
-      if (dfPlayerReady) dfPlayer.play(14);  // toast_in sound
+      if (dfPlayerReady) dfPlayer.playFolder(2, 3);  // Folder 02, track 003 = toast_in
       logMsgf("[TOUCH] Touched (val=%d) — hold 2s to craft", touchVal);
     }
 
