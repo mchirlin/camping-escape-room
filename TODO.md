@@ -29,24 +29,24 @@
   - [x] Pin header 1x9 (GPIO breakout) — ~$2
   - [x] JST-XH housings + crimp contacts (for making cables) — ~$12 kit
 - [x] **MCompass** — buy pre-assembled from Etsy
-- [ ] **Crafting Table — Lumber & Hardware**
-  - [ ] 2×8 lumber × 8' (8 pieces)
-  - [ ] Plywood 2'×2' × 1/8" (4 pieces)
-  - [ ] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
-  - [ ] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
-  - [ ] 1"×1" wood rods, 4' total
+- [x] **Crafting Table — Lumber & Hardware**
+  - [x] 2×8 lumber × 8' (8 pieces)
+  - [x] Plywood 2'×2' × 1/8" (4 pieces)
+  - [o] Aluminum angle 1.5" × 4' × 1/8" thick (2 pieces)
+  - [o] Aluminum flat bar 1.5" × 8' × 1/8" thick (1 piece)
+  - [x] 1"×1" wood rods, 4' total
   - [x] Small piano hinges for doors (3)
   - [x] Ball catches for doors (3-6)
-  - [ ] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
+  - [x] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
 - [ ] **Crafting Table — Finishing**
   - [x] 2.5' square of camel pleather
   - [x] 3" strips of dark brown pleather
-  - [ ] 1'×1' frosted acrylic
-  - [ ] Danish oil (for wood planks — natural finish)
+  - [x] 1'×1' frosted acrylic
+  - [x] Danish oil (for wood planks — natural finish)
   - [ ] Watered-down acrylic paints (for pixel color variation on planks)
-  - [ ] Wood stain — dark (espresso) for plywood backing
+  - [x] Wood stain — dark (espresso) for plywood backing
 - [ ] **3D Printing supplies**
-  - [ ] Black PLA filament (1-2 spools)
+  - [x] Black PLA filament (1-2 spools)
   - [x] Printable vinyl sticker paper (matte, waterproof, 25-pack)
   - [x] Matte clear coat spray
 - [ ] **Props & materials**
@@ -72,31 +72,29 @@
   - [ ] Wood Plank × 8
   - [ ] Sand × 5
 - [ ] **Items — 3" × 3" × 1.5" flat slabs** (31 total)
-  - [ ] Stick × 10
-  - [ ] Iron Ingot × 6
-  - [ ] String × 3
+  - [x] Stick × 10
+  - [x] Iron Ingot × 6
+  - [x] String × 3
   - [ ] Redstone × 2
-  - [ ] Diamond × 2
-  - [ ] Gold Ingot × 3
-  - [ ] Gunpowder × 5
-- [ ] Design block model with NTAG215 cavity (pause-at-layer method)
-- [ ] Design item model (half-height) with NTAG215 cavity
-- [ ] Test print one block + one item with embedded NFC tag — verify read range
+  - [x] Diamond × 2
+  - [x] Gold Ingot × 3
+  - [x] Gunpowder × 5
+- [x] Design block model with NTAG215 cavity (pause-at-layer method)
+- [x] Design item model (half-height) with NTAG215 cavity
+- [x] Test print one block + one item with embedded NFC tag — verify read range
 - [ ] **Ender Dragon Egg** — print and paint (keepsake quality)
-- [ ] **Wooden Pickaxe prop** (if 3D printing it)
 
 ## 🎨 Block Finishing
 
-- [ ] Design texture sheets for each block type (Minecraft textures)
-- [ ] Print textures on vinyl sticker paper
-- [ ] Cut to 3" squares (6 faces per block, 5 visible)
+- [x] Design texture sheets for each block type (Minecraft textures)
+- [x] Print textures on vinyl sticker paper
+- [x] Cut to 3" squares (6 faces per block, 5 visible)
 - [ ] Apply stickers to all printed blocks
 - [ ] Clear coat spray over stickers
-- [ ] Optional: install magnetic ball bearings (8 per block) for snap-together
 
 ## 🔌 Crafting Table — PCB
 
-- [ ] **Breadboard testing (before PCB order)**
+- [x] **Breadboard testing (before PCB order)**
   - [x] POC: ESP32 + PCA9548A + PN532 + NeoPixel + servo — working
   - [x] Component test: NeoPixel ring — verified (red/green/blue/white cycle)
   - [x] Component test: Servo — verified (sweep 0°-180°)
@@ -108,8 +106,7 @@
   - [x] Test vibration motor circuit (IRFZ44N + diode + motor) — working, MOSFET stays cool
   - [x] Test DeWalt battery → buck converter → 5V output under load — working (separate servo power path needed)
   - [x] Test PN532 read range at 50mm — DOES NOT READ at this distance
-  - [ ] Reconfigure block NFC tag placement for reliable reads (test after table is built with real scenarios)
-- [ ] **Motherboard PCB**
+- [x] **Motherboard PCB**
   - [x] Design KiCad schematic (see PCB-DESIGN-GUIDE.md)
   - [x] Route traces in PCB editor
   - [x] Design complete — ready for Gerber export
@@ -118,7 +115,7 @@
   - [x] Solder all sockets, resistors, caps, connectors to motherboard
   - [x] Plug in ESP32, PCA9548A breakouts, DFPlayer
   - [x] Test all connections before installing in table
-- [ ] **Daughter Board PCB (x9)**
+- [x] **Daughter Board PCB (x9)**
   - [x] Design KiCad schematic
   - [x] Route traces
   - [x] Design complete — ready for Gerber export
@@ -126,12 +123,12 @@
   - [x] Solder JST connectors and NeoPixel ring pads to all 9 boards
   - [x] Solder PN532 modules directly to daughter boards
   - [x] Test each daughter board individually
-- [ ] **Power supply**
+- [x] **Power supply**
   - [x] Order DeWalt 20V battery adapter with screw terminals
   - [x] Order 5V 10A buck converter (12V-24V input)
-  - [ ] Wire: DeWalt battery → adapter → buck converter → barrel jack + NeoPixel bus (waiting on barrel jack)
+  - [x] Wire: DeWalt battery → adapter → buck converter → barrel jack + NeoPixel bus (waiting on barrel jack)
   - [x] Test runtime on DeWalt 5Ah battery (target: 2+ hours)
-- [ ] **Cables**
+- [x] **Cables**
   - [x] Make 9x JST-XH 4-pin I2C cables (motherboard → daughter boards)
   - [x] Make 3x JST-XH 3-pin servo extension cables
   - [x] Make 1x JST-XH 3-pin NeoPixel data cable (motherboard → first ring)
@@ -142,7 +139,6 @@
 - [x] Wire 9x PN532 readers to PCA9548A multiplexer to ESP32
 - [x] Wire 9x NeoPixel rings (daisy-chained, single GPIO)
 - [x] Wire DFPlayer Mini + speaker
-- [ ] Install copper tape shielding between grid slots
 - [ ] Install power toggle switch (inline with 5V power to ESP32)
 - [ ] Write ESP32 firmware:
   - [x] Sequential I2C scanning of 9 readers
@@ -176,6 +172,7 @@
 - [x] Test read range through frosted acrylic
 - [ ] Finish/wrap table with pleather
 - [ ] Apply dark brown pleather edging
+- [x] Add black edging
 - [ ] Paint pixel color variation on planks
 
 ## 🚪 Crafting Table — Servo Doors (3 doors)

@@ -6,6 +6,7 @@
 //   - Capacitive touch → vibration motor (while touching), servo (on release)
 //   - RFID tag detected → NeoPixel color (ROYGBIV by slot) + play a sound
 //   - WiFi AP mode with web UI for remote control and status monitoring
+//   - Tag registration: write Minecraft block type directly to NFC tag memory
 //
 // Hardware (same crafting table setup):
 //   - ESP32 DevKit v1
@@ -39,12 +40,21 @@
 //   AP Mode — SSID: "CraftingTable" (no password)
 //   Web UI at http://192.168.4.1/
 //   Endpoints:
-//     GET /        — HTML control page
-//     GET /cmd?c=L — Light test (cycle rings)
-//     GET /cmd?c=P — Pixel crawl
-//     GET /cmd?c=off — All LEDs off
-//     GET /status  — JSON status of slots, readers, touch, dfplayer
-//     GET /log     — JSON array of recent log messages
+//     GET /           — HTML control page
+//     GET /cmd?c=L    — Light test (cycle rings)
+//     GET /cmd?c=P    — Pixel crawl
+//     GET /cmd?c=off  — All LEDs off
+//     GET /status     — JSON status of slots, readers, touch, dfplayer, types
+//     GET /log        — JSON array of recent log messages
+//     GET /register?type=wood_plank — Read tag from slot 4, write type to tag
+//
+// Tag Registration (stored ON the NFC tag itself):
+//   Block types: wood_plank, sand, stick, iron_ingot, string, redstone,
+//                diamond, gold_ingot, gunpowder, coal, copper_ingot,
+//                amethyst_shard, paper
+//   Storage: NTAG215 user memory pages 4-7
+//   Format: page 4 byte 0 = string length, bytes 1-3 + pages 5-7 = ASCII chars
+//   Max type length: 14 chars ("amethyst_shard"), 4 pages always written
 //
 // =============================================================================
 
@@ -67,6 +77,7 @@
 #define I2C_SDA         21
 #define I2C_SCL         22
 #define TOUCH_PAD       27   // Touch7
+#define TOUCH_PAD_2     33   // Touch8
 #define MOTOR_PIN       26   // Vibration motor via MOSFET
 
 // =============================================================================
@@ -85,6 +96,31 @@
 // WiFi AP Config
 #define WIFI_SSID       "CraftingTable"
 // No password — open AP for easy access
+
+// Registration slot (middle of the grid)
+#define REGISTER_SLOT   4
+
+// Tag memory layout: type string stored in pages 4-7 (NTAG215 user memory)
+#define TAG_TYPE_START_PAGE  4
+#define TAG_TYPE_NUM_PAGES   4   // 4 pages × 4 bytes = 16 bytes (1 length + 15 chars max)
+#define TAG_TYPE_MAX_LEN     14  // "amethyst_shard" = 14 chars
+
+// =============================================================================
+// Block Types — valid types for tag registration
+// =============================================================================
+const char* BLOCK_TYPES[] = {
+  "wood_plank", "sand", "stick", "iron_ingot", "string",
+  "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
+  "copper_ingot", "amethyst_shard", "paper"
+};
+#define NUM_BLOCK_TYPES 13
+
+// Abbreviated display names (for web grid)
+const char* BLOCK_ABBREV[] = {
+  "wood", "sand", "stick", "iron", "str",
+  "red", "dia", "gold", "gun", "coal",
+  "cop", "ame", "paper"
+};
 
 // =============================================================================
 // Multiplexer channel mapping for each logical slot (phone-keypad numbering)
@@ -121,7 +157,7 @@ int8_t SLOT_TO_RING[NUM_SLOTS];
 #define SERVO_HOLD_MS    500
 
 // Touch config
-#define TOUCH_THRESHOLD  1000  // Below this = touched
+#define TOUCH_THRESHOLD  700  // Below this = touched (copper plate: ~500-600 touched, ~800-1000 untouched)
 
 // Tag read timeout (ms) — keep short so web server stays responsive
 #define TAG_READ_TIMEOUT 50
@@ -160,6 +196,12 @@ bool slotActive[NUM_SLOTS];        // Tag currently present on slot
 bool wasTouched = false;           // Previous touch state (for edge detection)
 bool dfPlayerReady = false;
 bool currentTouchState = false;    // Exposed for web status
+int currentTouchVal1 = 0;          // Raw touch value pad 1
+int currentTouchVal2 = 0;          // Raw touch value pad 2
+
+// Tag UID and type tracking per slot
+String slotUid[NUM_SLOTS];         // Current tag UID hex string (empty if no tag)
+String slotType[NUM_SLOTS];        // Block type read from tag (empty if unregistered)
 
 // =============================================================================
 // Circular Log Buffer
@@ -287,6 +329,125 @@ void playSound(uint8_t track) {
 }
 
 // =============================================================================
+// Tag UID Helpers
+// =============================================================================
+
+// Convert raw UID bytes to lowercase hex string (no separators)
+String uidToHexString(uint8_t* uid, uint8_t uidLen) {
+  String s = "";
+  for (uint8_t i = 0; i < uidLen; i++) {
+    if (uid[i] < 0x10) s += "0";
+    s += String(uid[i], HEX);
+  }
+  s.toLowerCase();
+  return s;
+}
+
+// Convert raw UID bytes to colon-separated hex (for display)
+String uidToDisplayString(uint8_t* uid, uint8_t uidLen) {
+  String s = "";
+  for (uint8_t i = 0; i < uidLen; i++) {
+    if (uid[i] < 0x10) s += "0";
+    s += String(uid[i], HEX);
+    if (i < uidLen - 1) s += ":";
+  }
+  s.toLowerCase();
+  return s;
+}
+
+// Validate that a type string is in our allowed list
+bool isValidBlockType(const String &type) {
+  for (int i = 0; i < NUM_BLOCK_TYPES; i++) {
+    if (type == BLOCK_TYPES[i]) return true;
+  }
+  return false;
+}
+
+// Get abbreviated display name for a block type
+String getTypeAbbrev(const String &type) {
+  for (int i = 0; i < NUM_BLOCK_TYPES; i++) {
+    if (type == BLOCK_TYPES[i]) return String(BLOCK_ABBREV[i]);
+  }
+  return "???";
+}
+
+// =============================================================================
+// Tag Type Read/Write Helpers (NTAG215 pages 4-7)
+// =============================================================================
+// Memory format:
+//   Page 4: [length, char0, char1, char2]
+//   Page 5: [char3, char4, char5, char6]
+//   Page 6: [char7, char8, char9, char10]
+//   Page 7: [char11, char12, char13, 0x00]
+//
+// Length byte encodes how many ASCII characters follow (max 14).
+// Unused bytes are zero-padded.
+
+// Write type string to currently-selected tag's pages 4-7.
+// The tag must already be detected (readPassiveTargetID succeeded).
+// Returns true if all 4 pages were written successfully.
+bool writeTypeToTag(const String &type) {
+  uint8_t len = type.length();
+  if (len > TAG_TYPE_MAX_LEN) len = TAG_TYPE_MAX_LEN;
+
+  // Build a 16-byte buffer: [length, char0..char14, padding]
+  uint8_t buf[16];
+  memset(buf, 0, sizeof(buf));
+  buf[0] = len;
+  for (uint8_t i = 0; i < len; i++) {
+    buf[1 + i] = (uint8_t)type.charAt(i);
+  }
+
+  // Write 4 pages (4 bytes each)
+  for (uint8_t p = 0; p < TAG_TYPE_NUM_PAGES; p++) {
+    uint8_t pageData[4];
+    memcpy(pageData, &buf[p * 4], 4);
+    if (!nfc.ntag2xx_WritePage(TAG_TYPE_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-WR] Failed writing page %d", TAG_TYPE_START_PAGE + p);
+      return false;
+    }
+    delay(5);  // Small delay between page writes for reliability
+  }
+  return true;
+}
+
+// Read type string from currently-selected tag's pages 4-7.
+// The tag must already be detected (readPassiveTargetID succeeded).
+// Returns the type string, or "" if unreadable/blank.
+String readTypeFromTag() {
+  uint8_t buf[16];
+  memset(buf, 0, sizeof(buf));
+
+  // Read 4 pages (4 bytes each)
+  for (uint8_t p = 0; p < TAG_TYPE_NUM_PAGES; p++) {
+    uint8_t pageData[4];
+    if (!nfc.ntag2xx_ReadPage(TAG_TYPE_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-RD] Failed reading page %d", TAG_TYPE_START_PAGE + p);
+      return "";
+    }
+    memcpy(&buf[p * 4], pageData, 4);
+  }
+
+  // Parse: first byte is length
+  uint8_t len = buf[0];
+  if (len == 0 || len > TAG_TYPE_MAX_LEN) {
+    return "";  // Unregistered or corrupted
+  }
+
+  // Extract ASCII string
+  String type = "";
+  for (uint8_t i = 0; i < len; i++) {
+    char c = (char)buf[1 + i];
+    if (c < 0x20 || c > 0x7E) {
+      return "";  // Non-printable character = corrupted data
+    }
+    type += c;
+  }
+
+  return type;
+}
+
+// =============================================================================
 // Servo Action (on touch release)
 // =============================================================================
 void servoSweep() {
@@ -365,15 +526,22 @@ button:active{background:#5b8731;color:#fff;border-color:#7ec842}
 .btn-motor{border-color:#8b6914}
 .btn-motor.vibe{border-color:#6b4fa5}
 .btn-refresh{border-color:#4a6fa5;min-width:60px;flex:0}
+.btn-reg{border-color:#4a9fa5}
 h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;padding-bottom:4px}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:12px}
-.slot{background:#2a2a2a;border:2px solid #333;padding:8px;text-align:center;font-size:0.8em;min-height:40px;cursor:pointer}
+.slot{background:#2a2a2a;border:2px solid #333;padding:8px;text-align:center;font-size:0.8em;min-height:50px;cursor:pointer}
 .slot.active{border-color:#5b8731;background:#2d3d20;color:#7ec842}
 .slot.no-reader{border-color:#4a1a1a;color:#666}
+.slot .stype{font-size:0.7em;color:#8b8;margin-top:2px}
+.slot .stype.unreg{color:#b86}
 .info{font-size:0.75em;color:#666;margin-bottom:8px}
 .info span{margin-right:12px}
 .info .on{color:#5b8731}
 .info .off{color:#8b2020}
+.reg-box{background:#222;border:1px solid #4a9fa5;padding:10px;margin-bottom:12px}
+.reg-box select{background:#1a1a1a;color:#c8c8c8;border:1px solid #555;padding:4px;font-family:monospace;width:100%;margin:6px 0}
+.reg-box .result{font-size:0.75em;margin-top:6px;min-height:1.2em;color:#8b8}
+.reg-box .result.err{color:#b44}
 #log{background:#111;border:1px solid #333;padding:8px;height:180px;overflow-y:auto;
 font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 </style></head><body>
@@ -394,10 +562,34 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 <button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button>
 <button class="btn-off" onclick="cmd('voff')">Vibe OFF</button>
 </div>
+<h2>Register Tags</h2>
+<div class="reg-box">
+<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.<br>Type is written directly to the tag's memory.</p>
+<select id="btype">
+<option value="wood_plank">wood_plank</option>
+<option value="sand">sand</option>
+<option value="stick">stick</option>
+<option value="iron_ingot">iron_ingot</option>
+<option value="string">string</option>
+<option value="redstone">redstone</option>
+<option value="diamond">diamond</option>
+<option value="gold_ingot">gold_ingot</option>
+<option value="gunpowder">gunpowder</option>
+<option value="coal">coal</option>
+<option value="copper_ingot">copper_ingot</option>
+<option value="amethyst_shard">amethyst_shard</option>
+<option value="paper">paper</option>
+</select>
+<div class="btn-row">
+<button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button>
+</div>
+<div class="result" id="regres"></div>
+</div>
 <h2>Slot Status</h2>
 <div class="grid" id="grid"></div>
 <div class="info">
-<span>Touch: <span id="tch" class="off">-</span></span>
+<span>Touch1: <span id="tv1" class="off">-</span></span>
+<span>Touch2: <span id="tv2" class="off">-</span></span>
 <span>DFPlayer: <span id="dfp" class="off">-</span></span>
 <button class="btn-refresh" onclick="refresh()">&#x1F504;</button>
 </div>
@@ -405,6 +597,16 @@ font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 <div id="log">Connecting...</div>
 <script>
 function cmd(c){fetch('/cmd?c='+c).then(r=>r.text()).then(t=>{refresh()})}
+function regTag(){
+let t=document.getElementById('btype').value;
+let el=document.getElementById('regres');
+el.textContent='Programming...';el.className='result';
+fetch('/register?type='+t).then(r=>r.json()).then(d=>{
+if(d.success){el.textContent='OK: '+d.uid+' written as '+d.type;el.className='result';}
+else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}
+refresh();
+}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});
+}
 function refresh(){
 fetch('/status').then(r=>r.json()).then(d=>{
 let g='';
@@ -413,10 +615,17 @@ for(let k=0;k<9;k++){let j=order[k];
 let cls='slot';
 if(!d.readers[j])cls+=' no-reader';
 else if(d.slots[j])cls+=' active';
-g+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;')+'</div>';
+let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');
+let typeHtml='';
+if(d.slots[j]&&d.types){let tp=d.types[j];
+if(tp)typeHtml='<div class="stype">'+tp+'</div>';
+else typeHtml='<div class="stype unreg">???</div>';
+}
+g+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+label+typeHtml+'</div>';
 }
 document.getElementById('grid').innerHTML=g;
-let te=document.getElementById('tch');te.textContent=d.touch?'ON':'off';te.className=d.touch?'on':'off';
+let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';
+let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<1000?'on':'off';
 let df=document.getElementById('dfp');df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';
 });
 fetch('/log').then(r=>r.json()).then(arr=>{
@@ -443,7 +652,11 @@ void handleCmd() {
     testPixelCrawl();
   } else if (c == "off") {
     clearAllRings();
-    for (uint8_t i = 0; i < NUM_SLOTS; i++) slotActive[i] = false;
+    for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+      slotActive[i] = false;
+      slotUid[i] = "";
+      slotType[i] = "";
+    }
     logMsg("[WEB] All LEDs off");
     server.send(200, "text/plain", "OK: All off");
   } else if (c.startsWith("sv")) {
@@ -493,6 +706,10 @@ void handleCmd() {
 void handleStatus() {
   String json = "{\"touch\":";
   json += currentTouchState ? "true" : "false";
+  json += ",\"touchVal1\":";
+  json += currentTouchVal1;
+  json += ",\"touchVal2\":";
+  json += currentTouchVal2;
   json += ",\"slots\":[";
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
     json += slotActive[i] ? "true" : "false";
@@ -501,6 +718,21 @@ void handleStatus() {
   json += "],\"readers\":[";
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
     json += readerOk[i] ? "true" : "false";
+    if (i < NUM_SLOTS - 1) json += ",";
+  }
+  json += "],\"types\":[";
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    if (slotActive[i] && slotUid[i].length() > 0) {
+      if (slotType[i].length() > 0) {
+        // Show abbreviated type name
+        String abbr = getTypeAbbrev(slotType[i]);
+        json += "\"" + abbr + "\"";
+      } else {
+        json += "null";  // Tag present but unregistered
+      }
+    } else {
+      json += "null";    // No tag
+    }
     if (i < NUM_SLOTS - 1) json += ",";
   }
   json += "],\"dfplayer\":";
@@ -528,6 +760,81 @@ void handleLog() {
 }
 
 // =============================================================================
+// Tag Registration Handler — writes type directly to tag memory
+// =============================================================================
+void handleRegister() {
+  String type = server.arg("type");
+
+  // Validate type
+  if (!isValidBlockType(type)) {
+    String json = "{\"success\":false,\"error\":\"invalid type: " + type + "\"}";
+    server.send(400, "application/json", json);
+    logMsgf("[REG] Invalid type: %s", type.c_str());
+    return;
+  }
+
+  // Check that reader for registration slot is OK
+  if (!readerOk[REGISTER_SLOT]) {
+    server.send(200, "application/json", "{\"success\":false,\"error\":\"slot 4 reader not available\"}");
+    logMsg("[REG] Slot 4 reader not available");
+    return;
+  }
+
+  // Select slot 4 and detect tag
+  selectSlot(REGISTER_SLOT);
+
+  if (SLOT_MUX[REGISTER_SLOT].pca == PCA2_ADDR) {
+    nfc.begin();
+    nfc.SAMConfig();
+  }
+
+  uint8_t uid[7];
+  uint8_t uidLen;
+  bool tagPresent = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, 200);
+
+  if (!tagPresent) {
+    pcaDeselectAll();
+    server.send(200, "application/json", "{\"success\":false,\"error\":\"no tag on slot 4\"}");
+    logMsg("[REG] No tag detected on slot 4");
+    return;
+  }
+
+  // Convert UID to hex string for logging
+  String uidHex = uidToHexString(uid, uidLen);
+  logMsgf("[REG] Tag found: %s — writing type '%s'...", uidHex.c_str(), type.c_str());
+
+  // Write type to tag pages 4-7
+  bool writeOk = writeTypeToTag(type);
+  if (!writeOk) {
+    pcaDeselectAll();
+    server.send(200, "application/json", "{\"success\":false,\"error\":\"write failed\"}");
+    logMsg("[REG] FAILED to write type to tag");
+    return;
+  }
+
+  // Verify: re-read the tag to confirm write was successful
+  String readBack = readTypeFromTag();
+  pcaDeselectAll();
+
+  if (readBack != type) {
+    logMsgf("[REG] VERIFY FAILED: wrote '%s', read back '%s'", type.c_str(), readBack.c_str());
+    String json = "{\"success\":false,\"error\":\"verify failed — read back: " + readBack + "\"}";
+    server.send(200, "application/json", json);
+    return;
+  }
+
+  // Update current slot state if tag is currently active on slot 4
+  if (slotActive[REGISTER_SLOT] && slotUid[REGISTER_SLOT] == uidHex) {
+    slotType[REGISTER_SLOT] = type;
+  }
+
+  logMsgf("[REG] SUCCESS: %s = %s (verified)", uidHex.c_str(), type.c_str());
+
+  String json = "{\"success\":true,\"uid\":\"" + uidHex + "\",\"type\":\"" + type + "\"}";
+  server.send(200, "application/json", json);
+}
+
+// =============================================================================
 // Setup
 // =============================================================================
 void setup() {
@@ -542,6 +849,7 @@ void setup() {
   Serial.println("  Release    -> servo sweep");
   Serial.println("  RFID tag   -> colored light + sound");
   Serial.println("  WiFi AP    -> web control panel");
+  Serial.println("  Tag Reg    -> type written to tag");
   Serial.println("========================================");
   Serial.println();
 
@@ -560,6 +868,7 @@ void setup() {
   server.on("/cmd", handleCmd);
   server.on("/status", handleStatus);
   server.on("/log", handleLog);
+  server.on("/register", handleRegister);
   server.begin();
   Serial.println("[WEB] Server started on port 80");
 
@@ -640,6 +949,8 @@ void setup() {
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
     readerOk[i] = initReader(i);
     slotActive[i] = false;
+    slotUid[i] = "";
+    slotType[i] = "";
     if (readerOk[i]) ok++;
   }
   pcaDeselectAll();
@@ -663,6 +974,8 @@ void setup() {
   logMsg("Running! Interact with hardware or use web UI.");
   logMsg("  Serial: 'L' = light test, 'P' = pixel crawl");
   logMsgf("  Web: http://%s/", WiFi.softAPIP().toString().c_str());
+  logMsg("  Registration: place tag on slot 4, use web UI to program");
+  logMsg("  Types are stored ON the tags (pages 4-7)");
   logMsg("");
 }
 
@@ -686,7 +999,10 @@ void loop() {
 
   // ----- CAPACITIVE TOUCH → MOTOR + SERVO -----
   int touchVal = touchRead(TOUCH_PAD);
-  bool isTouched = (touchVal < TOUCH_THRESHOLD);
+  int touchVal2 = touchRead(TOUCH_PAD_2);
+  currentTouchVal1 = touchVal;
+  currentTouchVal2 = touchVal2;
+  bool isTouched = (touchVal < TOUCH_THRESHOLD) || (touchVal2 < TOUCH_THRESHOLD);
   currentTouchState = isTouched;
 
   if (isTouched) {
@@ -703,7 +1019,7 @@ void loop() {
   }
   wasTouched = isTouched;
 
-  // ----- RFID SCANNING → LIGHT + SOUND -----
+  // ----- RFID SCANNING → LIGHT + SOUND + TYPE READ FROM TAG -----
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
     server.handleClient();  // Keep web responsive during scan loop
 
@@ -723,6 +1039,18 @@ void loop() {
     if (tagPresent && !slotActive[i]) {
       slotActive[i] = true;
 
+      // Store UID
+      String uidHex = uidToHexString(uid, uidLen);
+      slotUid[i] = uidHex;
+
+      // Read type from tag memory (pages 4-7)
+      String tagType = readTypeFromTag();
+      if (tagType.length() > 0 && isValidBlockType(tagType)) {
+        slotType[i] = tagType;
+      } else {
+        slotType[i] = "";  // Unregistered or invalid
+      }
+
       int8_t ring = SLOT_TO_RING[i];
       if (ring >= 0) {
         uint32_t color = getSlotColor(i);
@@ -732,18 +1060,20 @@ void loop() {
 
       playSound(i + 1);
 
-      // Build UID string
-      String uidStr = "";
-      for (uint8_t b = 0; b < uidLen; b++) {
-        if (uid[b] < 0x10) uidStr += "0";
-        uidStr += String(uid[b], HEX);
-        if (b < uidLen - 1) uidStr += ":";
+      // Build display UID string
+      String uidDisp = uidToDisplayString(uid, uidLen);
+      if (slotType[i].length() > 0) {
+        logMsgf("[SLOT %d] Tag %s -> type: %s (ring %d)",
+                i, uidDisp.c_str(), slotType[i].c_str(), ring);
+      } else {
+        logMsgf("[SLOT %d] Tag %s -> UNREGISTERED (ring %d)",
+                i, uidDisp.c_str(), ring);
       }
-      logMsgf("[SLOT %d] Tag detected -> Ring %d, Hue=%d, Track=%d UID: %s",
-              i, ring, SLOT_HUES[i], i + 1, uidStr.c_str());
 
     } else if (!tagPresent && slotActive[i]) {
       slotActive[i] = false;
+      slotUid[i] = "";
+      slotType[i] = "";
       int8_t ring = SLOT_TO_RING[i];
       if (ring >= 0) {
         clearRing(ring);

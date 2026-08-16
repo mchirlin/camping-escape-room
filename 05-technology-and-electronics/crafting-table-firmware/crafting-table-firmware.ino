@@ -1,27 +1,75 @@
 // =============================================================================
-// Crafting Table Firmware — ESP32
+// Crafting Table Firmware — Recipe Matching + Touch-to-Craft
 // =============================================================================
 //
-// Full 9-slot crafting table with NFC block detection, recipe matching,
-// NeoPixel feedback, DFPlayer sound, servo doors, WiFi status API,
-// and tag registration mode.
+// Purpose: Minecraft-themed escape room crafting table controller.
+//   - 9 NFC slots detect block tags placed on the grid
+//   - 3-second capacitive touch hold triggers recipe evaluation
+//   - Matched recipes play sounds, animate LEDs, and open door servos
+//   - WiFi AP mode with web UI for control, status, and game reset
+//   - Tag registration: write Minecraft block type directly to NFC tag memory
 //
 // Hardware:
-//   - ESP32 DevKit v1 (38-pin)
+//   - ESP32 DevKit v1
 //   - 2x PCA9548A I2C multiplexers (0x70, 0x71)
-//   - 9x PN532 NFC readers (one per grid slot, all at I2C 0x24)
+//   - 9x PN532 NFC readers (one per grid slot)
 //   - 9x WS2812B NeoPixel 24-LED rings (daisy-chained)
 //   - 1x DFPlayer Mini MP3 module (UART)
-//   - 3x MG90S micro servos (door pushers)
-//   - 2x copper tape pads (capacitive touch submit)
+//   - 3x MG90S micro servos (one per door)
+//   - 1x Vibration motor (via MOSFET)
+//   - Capacitive touch pads
 //
-// Libraries (Arduino Library Manager):
-//   - Adafruit PN532
+// Grid Layout (slot numbers):
+//     6  7  8      ← top row
+//     3  4  5      ← middle row
+//     0  1  2      ← bottom row
+//
+// Recipes:
+//   1. Wooden Pickaxe (door 0): wood_plank×3 top + stick×2 center column
+//   2. Fishing Rod (door 1): sticks diagonal + strings right column
+//   3. Gold Sword (door 2): gold_ingot×2 + stick center column
+//   4. TNT (door 0): gunpowder/sand checkerboard
+//   5. Compass (door 1): iron_ingot cross + redstone center
+//   6. Diamond Shovel (door 2): diamond + stick×2 center column
+//
+// Pin assignments:
+//   GPIO 18 — NeoPixel DIN
+//   GPIO 17 — Servo 0 (door 0)
+//   GPIO 16 — Servo 1 (door 1)
+//   GPIO 4  — Servo 2 (door 2)
+//   GPIO 25 — DFPlayer TX (ESP32 TX → DFPlayer RX)
+//   GPIO 21 — I2C SDA
+//   GPIO 22 — I2C SCL
+//   GPIO 27 — Capacitive touch pad (Touch7)
+//   GPIO 33 — Capacitive touch pad (Touch8)
+//   GPIO 26 — Vibration motor (MOSFET gate)
+//
+// Libraries needed:
 //   - Adafruit NeoPixel
 //   - ESP32Servo
 //   - DFRobotDFPlayerMini
+//   - Adafruit PN532
+//   - Wire (built-in)
+//   - WiFi (built-in)
+//   - WebServer (built-in)
 //
-// Board: "ESP32 Dev Module" in Arduino IDE
+// WiFi:
+//   AP Mode — SSID: "CraftingTable" (no password)
+//   Web UI at http://192.168.4.1/
+//   Endpoints:
+//     GET /           — HTML control page
+//     GET /cmd?c=L    — Light test (cycle rings)
+//     GET /cmd?c=P    — Pixel crawl
+//     GET /cmd?c=off  — All LEDs off
+//     GET /status     — JSON status of slots, readers, touch, dfplayer, types
+//     GET /log        — JSON array of recent log messages
+//     GET /register?type=wood_plank — Read tag from slot 4, write type to tag
+//     GET /reset      — Reset game (clear crafted flags, close doors)
+//
+// SD Card Sound Layout:
+//   Folder 01: slot placement sounds (tracks 001-009)
+//   Folder 02: recipe sounds (tracks 001-006 = success per recipe, 010 = error)
+//
 // =============================================================================
 
 #include <Wire.h>
@@ -31,208 +79,249 @@
 #include <DFRobotDFPlayerMini.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <ESPmDNS.h>
 
 // =============================================================================
-// Pin Assignments
+// Pin Definitions
 // =============================================================================
-#define SDA_PIN        21
-#define SCL_PIN        22
-#define NEOPIXEL_PIN   18
-#define SERVO1_PIN     4     // Door 1 (recipes: wooden_pickaxe, fishing_rod)
-#define SERVO2_PIN     16    // Door 2 (recipes: gold_sword, tnt)
-#define SERVO3_PIN     17    // Door 3 (recipes: compass, diamond_shovel)
-#define DFPLAYER_TX    25    // ESP32 TX → DFPlayer RX
-#define DFPLAYER_RX    26    // ESP32 RX ← DFPlayer TX
-#define TOUCH_L_PIN    32    // Left copper pad  (Touch9)
-#define TOUCH_R_PIN    33    // Right copper pad (Touch8)
+#define NEOPIXEL_PIN    18
+#define SERVO_PIN_0     17   // Servo 0 — J14 (door 0)
+#define SERVO_PIN_1     16   // Servo 1 — J15 (door 1)
+#define SERVO_PIN_2     4    // Servo 2 — J16 (door 2)
+#define DFPLAYER_TX_PIN 25   // ESP32 TX → DFPlayer RX
+#define I2C_SDA         21
+#define I2C_SCL         22
+#define TOUCH_PAD       27   // Touch7
+#define TOUCH_PAD_2     33   // Touch8
+#define MOTOR_PIN       26   // Vibration motor via MOSFET
 
 // =============================================================================
 // Hardware Config
 // =============================================================================
-#define NUM_SLOTS      9
-#define LEDS_PER_RING  24
-#define TOTAL_LEDS     (NUM_SLOTS * LEDS_PER_RING)
-#define LED_SKIP       2     // Light every-other LED for even glow
-#define BRIGHTNESS     25    // 0-255, keep low for battery
+#define NUM_SLOTS       9
+#define LEDS_PER_RING   24
+#define TOTAL_LEDS      (NUM_SLOTS * LEDS_PER_RING)
+#define LED_SKIP        2    // Light every-other LED
+#define BRIGHTNESS      25
 
 // PCA9548A addresses
-#define PCA1_ADDR      0x70  // Slots 0-7
-#define PCA2_ADDR      0x71  // Slot 8
+#define PCA1_ADDR       0x70  // Slots 0-7
+#define PCA2_ADDR       0x71  // Slot 8
 
-// Multiplexer channel mapping: {pca_addr, channel} for each slot
-// Grid layout (player's perspective):
-//   [0][1][2]
-//   [3][4][5]
-//   [6][7][8]
-const struct { uint8_t pca; uint8_t ch; } SLOT_MUX[NUM_SLOTS] = {
-  {PCA1_ADDR, 0}, {PCA1_ADDR, 1}, {PCA1_ADDR, 2},
-  {PCA1_ADDR, 3}, {PCA1_ADDR, 4}, {PCA1_ADDR, 5},
-  {PCA1_ADDR, 6}, {PCA1_ADDR, 7}, {PCA2_ADDR, 0},
-};
+// WiFi AP Config
+#define WIFI_SSID       "CraftingTable"
 
-// Servo pulse widths (calibrate per servo)
-#define SERVO_REST_US  500
-#define SERVO_PUSH_US  2200
-#define SERVO_PUSH_MS  600
+// Registration slot (middle of the grid)
+#define REGISTER_SLOT   4
 
-// NTAG215 user data starts at page 4 (4 bytes per page)
-// We store block type string in pages 4-7 (16 bytes max)
-#define TAG_DATA_PAGE  4
-#define TAG_DATA_PAGES 4
+// Tag memory layout: type string stored in pages 4-7 (NTAG215 user memory)
+#define TAG_TYPE_START_PAGE  4
+#define TAG_TYPE_NUM_PAGES   4
+#define TAG_TYPE_MAX_LEN     14  // "amethyst_shard" = 14 chars
 
-// Scan timing
-#define SCAN_INTERVAL_MS  100
-#define TAG_READ_TIMEOUT  100
+// Touch config
+#define TOUCH_THRESHOLD  700  // Below this = touched
+#define CRAFT_HOLD_MS    3000 // Hold 3 seconds to trigger crafting
 
-// Touch pad config
-#define TOUCH_THRESHOLD_PCT 70  // Trigger at 70% of baseline (lower = touched)
-#define TOUCH_DEBOUNCE_MS   50  // Both pads must be held this long
+// Servo config
+#define SERVO_REST_DEG   90   // Resting: perpendicular (blocking door)
+#define SERVO_PUSH_DEG   180  // Activated: rotated away (door released)
+#define SERVO_HOLD_MS    500
+
+// Tag read timeout (ms)
+#define TAG_READ_TIMEOUT 50
+
+// Number of recipes
+#define NUM_RECIPES      6
 
 // =============================================================================
-// DFPlayer Track Numbers (matches dfplayer-sdcard/README.md)
+// Block Types — valid types for tag registration
 // =============================================================================
-#define SND_CRAFT_SUCCESS  1
-#define SND_CRAFT_FAIL     2
-#define SND_BLOCK_PLACE    3
-#define SND_LEVELUP        4
-#define SND_EXPLOSION      5
-#define SND_CREEPER_HISS   6
-#define SND_CHEST_OPEN     7
-#define SND_CHEST_CLOSE    8
-#define SND_XP_PICKUP      9
-#define SND_ANVIL_USE      10
-
-// =============================================================================
-// WiFi Config
-// =============================================================================
-// On boot: tries to join your phone hotspot (STA mode).
-// If the hotspot isn't found within 10 seconds, creates its own AP instead.
-// Either way, mDNS advertises http://crafting-table.local
-//
-// To use hotspot mode: turn on your phone hotspot before powering the table.
-// To use AP mode: just leave the hotspot off — table creates "CraftingTable".
-
-#define WIFI_STA_SSID  "YourPhone"        // Phone hotspot SSID — change this
-#define WIFI_STA_PASS  "hotspotpassword"  // Phone hotspot password — change this
-#define WIFI_AP_SSID   "CraftingTable"    // Fallback AP name
-#define WIFI_AP_PASS   "minecraft"        // Fallback AP password
-#define WIFI_AP_CHAN   6
-#define WIFI_STA_TIMEOUT 10000            // ms to wait for hotspot connection
-#define MDNS_NAME      "crafting-table"   // → http://crafting-table.local
-
-// =============================================================================
-// Block Types — must match what's written to NFC tags
-// =============================================================================
-// Keep these short (≤15 chars) to fit in 4 NTAG215 pages
 const char* BLOCK_TYPES[] = {
-  "wood_plank", "stick", "iron_ingot", "string",
-  "gold_ingot", "diamond", "gunpowder", "sand", "redstone"
+  "wood_plank", "sand", "stick", "iron_ingot", "string",
+  "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
+  "copper_ingot", "amethyst_shard", "paper"
 };
-#define NUM_BLOCK_TYPES 9
+#define NUM_BLOCK_TYPES 13
+
+// Abbreviated display names (for web grid)
+const char* BLOCK_ABBREV[] = {
+  "wood", "sand", "stick", "iron", "str",
+  "red", "dia", "gold", "gun", "coal",
+  "cop", "ame", "paper"
+};
+
+// Colors for each block type (RGB)
+const uint32_t BLOCK_COLORS[] = {
+  0x8B6914,  // wood_plank — warm brown
+  0xD4C974,  // sand — pale yellow
+  0x6B4E1E,  // stick — dark brown
+  0xD4D4D4,  // iron_ingot — silver/light gray
+  0xE8E8E8,  // string — white
+  0xCC0000,  // redstone — red
+  0x4DEEEA,  // diamond — cyan/aqua
+  0xFFD700,  // gold_ingot — gold
+  0x808080,  // gunpowder — gray
+  0x2A2A2A,  // coal — dark gray
+  0xC87533,  // copper_ingot — copper orange
+  0x9B59B6,  // amethyst_shard — purple
+  0xF5F5DC,  // paper — off-white/cream
+};
 
 // =============================================================================
-// Recipes — 3x3 grid patterns
+// Recipe Definitions
 // =============================================================================
-// "" = empty slot, block type string = required block
-// Grid indices: [0][1][2] / [3][4][5] / [6][7][8]
+// Grid layout:
+//   slot6  slot7  slot8    (top row)
+//   slot3  slot4  slot5    (middle row)
+//   slot0  slot1  slot2    (bottom row)
+//
+// Each recipe: name, 9-slot pattern ("" = must be empty), door index (0-2)
 
 struct Recipe {
   const char* name;
-  const char* grid[NUM_SLOTS];
-  uint8_t door;  // Which servo door (0, 1, 2)
+  const char* pattern[NUM_SLOTS];  // [0]-[8], "" means slot must be empty
+  uint8_t doorIndex;               // Which door to open (0, 1, or 2)
 };
 
-const Recipe RECIPES[] = {
-  // Door 0: Wooden Pickaxe — 3 wood plank across top, 2 sticks down center
-  {"wooden_pickaxe", {
-    "wood_plank", "wood_plank", "wood_plank",
-    "",           "stick",      "",
-    "",           "stick",      ""
-  }, 0},
-
-  // Door 0: Fishing Rod — sticks diagonal + string right column
-  {"fishing_rod", {
-    "",     "",       "stick",
-    "",     "stick",  "string",
-    "stick","",       "string"
-  }, 0},
-
-  // Door 1: Gold Sword — 2 gold on top, stick below
-  {"gold_sword", {
-    "", "gold_ingot", "",
-    "", "gold_ingot", "",
-    "", "stick",      ""
-  }, 1},
-
-  // Door 1: TNT — gunpowder/sand checkerboard
-  {"tnt", {
-    "gunpowder", "sand",      "gunpowder",
-    "sand",      "gunpowder", "sand",
-    "gunpowder", "sand",      "gunpowder"
-  }, 1},
-
-  // Door 2: Compass — 4 iron around redstone center
-  {"compass", {
-    "",           "iron_ingot", "",
-    "iron_ingot", "redstone",   "iron_ingot",
-    "",           "iron_ingot", ""
-  }, 2},
-
-  // Door 2: Diamond Shovel — diamond on top, 2 sticks below
-  {"diamond_shovel", {
-    "", "diamond", "",
-    "", "stick",   "",
-    "", "stick",   ""
-  }, 2},
+const Recipe RECIPES[NUM_RECIPES] = {
+  // Recipe 0: Wooden Pickaxe → door 0
+  {
+    "Wooden Pickaxe",
+    {"", "stick", "", "", "stick", "", "wood_plank", "wood_plank", "wood_plank"},
+    0
+  },
+  // Recipe 1: Fishing Rod → door 1
+  {
+    "Fishing Rod",
+    {"stick", "", "string", "", "stick", "string", "", "", "stick"},
+    1
+  },
+  // Recipe 2: Gold Sword → door 2
+  {
+    "Gold Sword",
+    {"", "stick", "", "", "gold_ingot", "", "", "gold_ingot", ""},
+    2
+  },
+  // Recipe 3: TNT → door 0
+  {
+    "TNT",
+    {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
+    0
+  },
+  // Recipe 4: Compass → door 1
+  {
+    "Compass",
+    {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
+    1
+  },
+  // Recipe 5: Diamond Shovel → door 2
+  {
+    "Diamond Shovel",
+    {"", "stick", "", "", "stick", "", "", "diamond", ""},
+    2
+  },
 };
-#define NUM_RECIPES 6
+
+// =============================================================================
+// Multiplexer channel mapping for each logical slot
+// =============================================================================
+const struct { uint8_t pca; uint8_t ch; } SLOT_MUX[NUM_SLOTS] = {
+  {PCA2_ADDR, 0}, {PCA1_ADDR, 6}, {PCA1_ADDR, 7},  // Slots 0, 1, 2 (bottom row)
+  {PCA1_ADDR, 1}, {PCA1_ADDR, 2}, {PCA1_ADDR, 5},  // Slots 3, 4, 5 (middle row)
+  {PCA1_ADDR, 0}, {PCA1_ADDR, 3}, {PCA1_ADDR, 4},  // Slots 6, 7, 8 (top row)
+};
+
+// NeoPixel ring order in the daisy-chain (physical wiring order)
+const int8_t RING_ORDER[NUM_SLOTS] = {
+  0,   // Chain position 0 → Slot 0 (bottom-right)
+  1,   // Chain position 1 → Slot 1 (bottom-center)
+  2,   // Chain position 2 → Slot 2 (bottom-left)
+  5,   // Chain position 3 → Slot 5 (middle-left)
+  4,   // Chain position 4 → Slot 4 (middle-center)
+  3,   // Chain position 5 → Slot 3 (middle-right)
+  6,   // Chain position 6 → Slot 6 (top-right)
+  7,   // Chain position 7 → Slot 7 (top-center)
+  8,   // Chain position 8 → Slot 8 (top-left)
+};
+
+// Reverse lookup: given a logical slot, which chain position is it?
+int8_t SLOT_TO_RING[NUM_SLOTS];
+
+// =============================================================================
+// ROYGBIV Color Table — mapped across 9 slots
+// =============================================================================
+const uint16_t SLOT_HUES[NUM_SLOTS] = {
+  0,      // Slot 0: Red
+  5461,   // Slot 1: Orange
+  10922,  // Slot 2: Yellow
+  16384,  // Slot 3: Yellow-Green
+  21845,  // Slot 4: Green
+  32768,  // Slot 5: Cyan/Blue-Green
+  43690,  // Slot 6: Blue
+  49152,  // Slot 7: Indigo
+  54613,  // Slot 8: Violet/Purple
+};
 
 // =============================================================================
 // Globals
 // =============================================================================
 Adafruit_NeoPixel strip(TOTAL_LEDS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
-// Constructor matches POC pattern: (irq, reset, &Wire)
-// IRQ/RESET not physically wired — library falls back to I2C polling.
-// Using SDA/SCL pin numbers here is harmless; Wire.begin() reconfigures them.
-Adafruit_PN532 nfc(SDA_PIN, SCL_PIN, &Wire);
-Servo servos[3];
-HardwareSerial dfSerial(1);  // UART1 for DFPlayer
+Adafruit_PN532 nfc(I2C_SDA, I2C_SCL, &Wire);
+Servo servo0;
+Servo servo1;
+Servo servo2;
+const uint8_t SERVO_PINS[3] = {SERVO_PIN_0, SERVO_PIN_1, SERVO_PIN_2};
+Servo* servos[3] = {&servo0, &servo1, &servo2};
+HardwareSerial dfSerial(1);
 DFRobotDFPlayerMini dfPlayer;
 WebServer server(80);
 
-// Slot state
-String slotBlock[NUM_SLOTS];       // Block type on each slot ("" = empty)
-bool slotPresent[NUM_SLOTS];       // Tag physically present
-bool readerOk[NUM_SLOTS];          // Reader initialized successfully
+bool readerOk[NUM_SLOTS];
+bool slotActive[NUM_SLOTS];        // Tag currently present on slot
+bool dfPlayerReady = false;
+bool currentTouchState = false;    // Exposed for web status
+int currentTouchVal1 = 0;          // Raw touch value pad 1
+int currentTouchVal2 = 0;          // Raw touch value pad 2
+
+// Tag UID and type tracking per slot
+String slotUid[NUM_SLOTS];         // Current tag UID hex string (empty if no tag)
+String slotType[NUM_SLOTS];        // Block type read from tag (empty if unregistered)
+
+// Touch-to-craft state
+unsigned long touchStartMs = 0;    // When touch first detected (0 = not touching)
+bool craftTriggered = false;       // Prevents re-trigger while still holding
+bool wasTouched = false;           // Previous touch state for edge detection
 
 // Recipe state
-String lastCraftedRecipe = "";
-unsigned long lastCraftTime = 0;
-bool craftTriggered = false;       // Prevents re-triggering same pattern
+bool recipeCrafted[NUM_RECIPES];   // Once crafted, don't re-trigger
 
-// Servo state
-bool doorOpen[3] = {false, false, false};
+// =============================================================================
+// Circular Log Buffer
+// =============================================================================
+#define LOG_SIZE 20
+String logBuffer[LOG_SIZE];
+int logHead = 0;
+int logCount = 0;
 
-// Mode
-bool registrationMode = false;     // Tag writing mode via serial
-uint8_t regSlot = 0;               // Which slot to use for registration
+void logMsg(const String &msg) {
+  Serial.println(msg);
+  logBuffer[logHead] = msg;
+  logHead = (logHead + 1) % LOG_SIZE;
+  if (logCount < LOG_SIZE) logCount++;
+}
 
-// Touch pads
-uint16_t touchBaselineL = 0;       // Calibrated baseline (untouched)
-uint16_t touchBaselineR = 0;
-uint16_t touchThresholdL = 0;      // Trigger threshold
-uint16_t touchThresholdR = 0;
+void logMsgf(const char* fmt, ...) {
+  char buf[256];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  logMsg(String(buf));
+}
 
 // =============================================================================
 // PCA9548A Multiplexer Control
 // =============================================================================
-void pcaSelect(uint8_t pcaAddr, uint8_t channel) {
-  Wire.beginTransmission(pcaAddr);
-  Wire.write(1 << channel);
-  Wire.endTransmission();
-}
-
 void pcaDeselectAll() {
   Wire.beginTransmission(PCA1_ADDR);
   Wire.write(0);
@@ -244,67 +333,61 @@ void pcaDeselectAll() {
 
 void selectSlot(uint8_t slot) {
   pcaDeselectAll();
-  pcaSelect(SLOT_MUX[slot].pca, SLOT_MUX[slot].ch);
-  delay(2);
+  Wire.beginTransmission(SLOT_MUX[slot].pca);
+  Wire.write(1 << SLOT_MUX[slot].ch);
+  uint8_t err = Wire.endTransmission();
+  if (SLOT_MUX[slot].pca == PCA2_ADDR) {
+    delay(5);
+  } else {
+    delay(2);
+  }
 }
 
 // =============================================================================
-// PN532 — Init & Read
+// PN532 Init
 // =============================================================================
 bool initReader(uint8_t slot) {
   selectSlot(slot);
-  nfc.begin();
-  uint32_t ver = nfc.getFirmwareVersion();
-  if (!ver) {
-    Serial.printf("  [SLOT %d] PN532 NOT FOUND\n", slot);
+
+  Wire.beginTransmission(SLOT_MUX[slot].pca);
+  uint8_t pcaErr = Wire.endTransmission();
+  if (pcaErr != 0) {
+    logMsgf("  [SLOT %d] PCA9548A @ 0x%02X NOT responding (err=%d)",
+            slot, SLOT_MUX[slot].pca, pcaErr);
     return false;
   }
+
+  if (SLOT_MUX[slot].pca == PCA2_ADDR) {
+    delay(10);
+  }
+
+  nfc.begin();
+  delay(5);
+
+  uint32_t ver = nfc.getFirmwareVersion();
+  if (!ver) {
+    if (SLOT_MUX[slot].pca == PCA2_ADDR) {
+      logMsgf("  [SLOT %d] PN532 retry on PCA2...", slot);
+      delay(50);
+      nfc.begin();
+      delay(10);
+      ver = nfc.getFirmwareVersion();
+    }
+    if (!ver) {
+      logMsgf("  [SLOT %d] PN532 NOT FOUND (PCA=0x%02X, CH=%d)",
+              slot, SLOT_MUX[slot].pca, SLOT_MUX[slot].ch);
+      return false;
+    }
+  }
   nfc.SAMConfig();
-  Serial.printf("  [SLOT %d] PN532 OK (FW %d.%d)\n", slot,
-                (ver >> 16) & 0xFF, (ver >> 8) & 0xFF);
+  logMsgf("  [SLOT %d] PN532 OK (FW %d.%d) via PCA 0x%02X CH %d", slot,
+          (ver >> 16) & 0xFF, (ver >> 8) & 0xFF,
+          SLOT_MUX[slot].pca, SLOT_MUX[slot].ch);
   return true;
 }
 
-// Read block type string from NTAG215 user data pages.
-// Returns block type string or "" if no tag / unrecognized.
-String readBlockType(uint8_t slot) {
-  selectSlot(slot);
-
-  uint8_t uid[7];
-  uint8_t uidLen;
-  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, TAG_READ_TIMEOUT))
-    return "";
-
-  // Read pages 4-7 (16 bytes of user data)
-  char buf[TAG_DATA_PAGES * 4 + 1];
-  memset(buf, 0, sizeof(buf));
-
-  for (uint8_t p = 0; p < TAG_DATA_PAGES; p++) {
-    uint8_t data[4];
-    if (!nfc.ntag2xx_ReadPage(TAG_DATA_PAGE + p, data))
-      return "";  // Read failed — tag removed mid-read
-    memcpy(buf + p * 4, data, 4);
-  }
-
-  // Null-terminate and trim
-  buf[TAG_DATA_PAGES * 4] = '\0';
-  String blockType = String(buf);
-  blockType.trim();
-
-  // Validate against known block types
-  for (uint8_t i = 0; i < NUM_BLOCK_TYPES; i++) {
-    if (blockType == BLOCK_TYPES[i]) return blockType;
-  }
-
-  // Unknown tag data — return empty (could be unwritten tag)
-  if (blockType.length() > 0) {
-    Serial.printf("  [SLOT %d] Unknown tag data: '%s'\n", slot, blockType.c_str());
-  }
-  return "";
-}
-
 // =============================================================================
-// NeoPixel Feedback
+// NeoPixel Helpers
 // =============================================================================
 void setRing(uint8_t ring, uint32_t color) {
   uint16_t offset = ring * LEDS_PER_RING;
@@ -313,138 +396,257 @@ void setRing(uint8_t ring, uint32_t color) {
   }
 }
 
-void clearRing(uint8_t ring) { setRing(ring, 0); }
+void clearRing(uint8_t ring) {
+  setRing(ring, 0);
+}
 
-void showAllRings(uint32_t color) {
-  for (uint8_t i = 0; i < NUM_SLOTS; i++) setRing(i, color);
+void clearAllRings() {
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) clearRing(i);
   strip.show();
 }
 
-void rainbowSweep(uint16_t durationMs) {
-  unsigned long start = millis();
-  while (millis() - start < durationMs) {
-    uint16_t elapsed = millis() - start;
-    uint16_t hueBase = (elapsed * 65536UL) / durationMs;
+uint32_t getSlotColor(uint8_t slot) {
+  uint16_t hue = SLOT_HUES[slot];
+  return strip.gamma32(strip.ColorHSV(hue, 255, 180));
+}
+
+// =============================================================================
+// Animation: Rainbow Sweep (~2 seconds)
+// =============================================================================
+void rainbowSweep() {
+  logMsg("[ANIM] Rainbow sweep");
+  unsigned long startTime = millis();
+  uint16_t hueOffset = 0;
+  // Run for ~2 seconds, advancing hue each frame
+  while (millis() - startTime < 2000) {
     for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
-      if (i % LED_SKIP == 0) {
-        uint16_t hue = hueBase + (i * 65536UL / TOTAL_LEDS);
-        strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(hue)));
-      }
+      // Spread hue across the strip + offset for animation
+      uint16_t pixelHue = hueOffset + (i * 65536L / TOTAL_LEDS);
+      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue, 255, 180)));
     }
     strip.show();
+    hueOffset += 1500;  // Speed of rotation
     delay(20);
   }
-}
-
-void flashColor(uint32_t color, uint8_t flashes, uint16_t onMs, uint16_t offMs) {
-  for (uint8_t f = 0; f < flashes; f++) {
-    showAllRings(color);
-    delay(onMs);
-    showAllRings(0);
-    delay(offMs);
-  }
-}
-
-// Update ring colors — white glow on occupied slots, off on empty
-void updateRingColors() {
-  uint32_t white = strip.Color(60, 60, 60);
+  // Restore slot ring colors after animation
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-    if (slotBlock[i].length() > 0) setRing(i, white);
-    else clearRing(i);
+    int8_t ring = SLOT_TO_RING[i];
+    if (ring >= 0) {
+      if (slotActive[i] && slotType[i].length() > 0) {
+        setRing(ring, getTypeColor(slotType[i]));
+      } else if (slotActive[i]) {
+        setRing(ring, 0xFFFFFF);
+      } else {
+        clearRing(ring);
+      }
+    }
   }
   strip.show();
 }
 
 // =============================================================================
-// DFPlayer Sound
+// Animation: Flash Red (error feedback)
 // =============================================================================
-void initDFPlayer() {
-  dfSerial.begin(9600, SERIAL_8N1, DFPLAYER_RX, DFPLAYER_TX);
-  delay(500);
-  if (dfPlayer.begin(dfSerial)) {
-    dfPlayer.volume(25);  // 0-30
-    Serial.println("[SOUND] DFPlayer OK");
-  } else {
-    Serial.println("[SOUND] DFPlayer FAILED — check wiring/SD card");
+void flashRed() {
+  logMsg("[ANIM] Flash red (no match)");
+  for (uint8_t flash = 0; flash < 2; flash++) {
+    // All rings red
+    for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+      int8_t ring = SLOT_TO_RING[i];
+      if (ring >= 0) setRing(ring, strip.Color(255, 0, 0));
+    }
+    strip.show();
+    delay(250);
+    // All rings off
+    for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+      int8_t ring = SLOT_TO_RING[i];
+      if (ring >= 0) clearRing(ring);
+    }
+    strip.show();
+    delay(250);
   }
-}
-
-void playSound(uint8_t track) {
-  dfPlayer.play(track);
-}
-
-// =============================================================================
-// Servo Door Control
-// =============================================================================
-void initServos() {
-  servos[0].attach(SERVO1_PIN);
-  servos[1].attach(SERVO2_PIN);
-  servos[2].attach(SERVO3_PIN);
-  for (uint8_t i = 0; i < 3; i++) {
-    servos[i].writeMicroseconds(SERVO_REST_US);
-  }
-  delay(500);
-  Serial.println("[SERVO] 3 servos initialized");
-}
-
-void pushDoor(uint8_t door) {
-  if (door >= 3) return;
-  Serial.printf("[SERVO] Pushing door %d\n", door);
-  servos[door].writeMicroseconds(SERVO_PUSH_US);
-  delay(SERVO_PUSH_MS);
-  servos[door].writeMicroseconds(SERVO_REST_US);
-  doorOpen[door] = true;
-}
-
-void resetAllDoors() {
-  for (uint8_t i = 0; i < 3; i++) {
-    servos[i].writeMicroseconds(SERVO_REST_US);
-    doorOpen[i] = false;
-  }
-  Serial.println("[SERVO] All doors reset");
-}
-
-// =============================================================================
-// Capacitive Touch Pads — Craft Submit
-// =============================================================================
-void calibrateTouch() {
-  // Sample each pad several times and average for baseline
-  uint32_t sumL = 0, sumR = 0;
-  const uint8_t samples = 10;
-  for (uint8_t i = 0; i < samples; i++) {
-    sumL += touchRead(TOUCH_L_PIN);
-    sumR += touchRead(TOUCH_R_PIN);
-    delay(10);
-  }
-  touchBaselineL = sumL / samples;
-  touchBaselineR = sumR / samples;
-  touchThresholdL = touchBaselineL * TOUCH_THRESHOLD_PCT / 100;
-  touchThresholdR = touchBaselineR * TOUCH_THRESHOLD_PCT / 100;
-  Serial.printf("[TOUCH] Baseline L=%d R=%d, Threshold L=%d R=%d\n",
-                touchBaselineL, touchBaselineR, touchThresholdL, touchThresholdR);
-}
-
-// Returns true if both pads are being touched simultaneously
-bool bothPadsTouched() {
-  uint16_t valL = touchRead(TOUCH_L_PIN);
-  uint16_t valR = touchRead(TOUCH_R_PIN);
-  return (valL < touchThresholdL) && (valR < touchThresholdR);
-}
-
-// =============================================================================
-// Recipe Matching
-// =============================================================================
-// Returns recipe index (0-5) or -1 if no match
-int checkRecipes() {
-  for (uint8_t r = 0; r < NUM_RECIPES; r++) {
-    bool match = true;
-    for (uint8_t s = 0; s < NUM_SLOTS; s++) {
-      String expected = RECIPES[r].grid[s];
-      if (expected.length() == 0) {
-        // Slot must be empty
-        if (slotBlock[s].length() != 0) { match = false; break; }
+  // Restore slot ring colors
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    int8_t ring = SLOT_TO_RING[i];
+    if (ring >= 0) {
+      if (slotActive[i] && slotType[i].length() > 0) {
+        setRing(ring, getTypeColor(slotType[i]));
+      } else if (slotActive[i]) {
+        setRing(ring, 0xFFFFFF);
       } else {
-        if (slotBlock[s] != expected) { match = false; break; }
+        clearRing(ring);
+      }
+    }
+  }
+  strip.show();
+}
+
+// =============================================================================
+// Vibration Patterns
+// =============================================================================
+void vibeBuzzSuccess() {
+  // 3 short pulses
+  for (uint8_t i = 0; i < 3; i++) {
+    digitalWrite(MOTOR_PIN, HIGH);
+    delay(100);
+    digitalWrite(MOTOR_PIN, LOW);
+    delay(100);
+  }
+}
+
+void vibeBuzzError() {
+  // 1 longer pulse
+  digitalWrite(MOTOR_PIN, HIGH);
+  delay(200);
+  digitalWrite(MOTOR_PIN, LOW);
+}
+
+// =============================================================================
+// Sound
+// =============================================================================
+void playSound(uint8_t track) {
+  if (dfPlayerReady) {
+    dfPlayer.playFolder(1, track);  // Folder 01, track 001-009
+  }
+}
+
+void playCraftSound(uint8_t recipeIndex) {
+  if (dfPlayerReady) {
+    dfPlayer.playFolder(2, recipeIndex + 1);  // Folder 02, track 001-006
+  }
+}
+
+void playErrorSound() {
+  if (dfPlayerReady) {
+    dfPlayer.playFolder(2, 10);  // Folder 02, track 010
+  }
+}
+
+// =============================================================================
+// Tag UID Helpers
+// =============================================================================
+String uidToHexString(uint8_t* uid, uint8_t uidLen) {
+  String s = "";
+  for (uint8_t i = 0; i < uidLen; i++) {
+    if (uid[i] < 0x10) s += "0";
+    s += String(uid[i], HEX);
+  }
+  s.toLowerCase();
+  return s;
+}
+
+String uidToDisplayString(uint8_t* uid, uint8_t uidLen) {
+  String s = "";
+  for (uint8_t i = 0; i < uidLen; i++) {
+    if (uid[i] < 0x10) s += "0";
+    s += String(uid[i], HEX);
+    if (i < uidLen - 1) s += ":";
+  }
+  s.toLowerCase();
+  return s;
+}
+
+bool isValidBlockType(const String &type) {
+  for (int i = 0; i < NUM_BLOCK_TYPES; i++) {
+    if (type == BLOCK_TYPES[i]) return true;
+  }
+  return false;
+}
+
+String getTypeAbbrev(const String &type) {
+  for (int i = 0; i < NUM_BLOCK_TYPES; i++) {
+    if (type == BLOCK_TYPES[i]) return String(BLOCK_ABBREV[i]);
+  }
+  return "???";
+}
+
+uint32_t getTypeColor(const String &type) {
+  for (int i = 0; i < NUM_BLOCK_TYPES; i++) {
+    if (type == BLOCK_TYPES[i]) return BLOCK_COLORS[i];
+  }
+  return 0xFFFFFF;  // White fallback
+}
+
+// =============================================================================
+// Tag Type Read/Write Helpers (NTAG215 pages 4-7)
+// =============================================================================
+bool writeTypeToTag(const String &type) {
+  uint8_t len = type.length();
+  if (len > TAG_TYPE_MAX_LEN) len = TAG_TYPE_MAX_LEN;
+
+  uint8_t buf[16];
+  memset(buf, 0, sizeof(buf));
+  buf[0] = len;
+  for (uint8_t i = 0; i < len; i++) {
+    buf[1 + i] = (uint8_t)type.charAt(i);
+  }
+
+  for (uint8_t p = 0; p < TAG_TYPE_NUM_PAGES; p++) {
+    uint8_t pageData[4];
+    memcpy(pageData, &buf[p * 4], 4);
+    if (!nfc.ntag2xx_WritePage(TAG_TYPE_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-WR] Failed writing page %d", TAG_TYPE_START_PAGE + p);
+      return false;
+    }
+    delay(5);
+  }
+  return true;
+}
+
+String readTypeFromTag() {
+  uint8_t buf[16];
+  memset(buf, 0, sizeof(buf));
+
+  for (uint8_t p = 0; p < TAG_TYPE_NUM_PAGES; p++) {
+    uint8_t pageData[4];
+    if (!nfc.ntag2xx_ReadPage(TAG_TYPE_START_PAGE + p, pageData)) {
+      logMsgf("[TAG-RD] Failed reading page %d", TAG_TYPE_START_PAGE + p);
+      return "";
+    }
+    memcpy(&buf[p * 4], pageData, 4);
+  }
+
+  uint8_t len = buf[0];
+  if (len == 0 || len > TAG_TYPE_MAX_LEN) {
+    return "";
+  }
+
+  String type = "";
+  for (uint8_t i = 0; i < len; i++) {
+    char c = (char)buf[1 + i];
+    if (c < 0x20 || c > 0x7E) {
+      return "";
+    }
+    type += c;
+  }
+
+  return type;
+}
+
+// =============================================================================
+// Recipe Evaluation
+// =============================================================================
+// Returns recipe index (0-5) if grid matches a recipe, or -1 if no match.
+int checkRecipes() {
+  for (int r = 0; r < NUM_RECIPES; r++) {
+    // Skip already-crafted recipes
+    if (recipeCrafted[r]) continue;
+
+    bool match = true;
+    for (int i = 0; i < NUM_SLOTS; i++) {
+      const char* expected = RECIPES[r].pattern[i];
+      if (strlen(expected) == 0) {
+        // Slot must be empty
+        if (slotActive[i] || slotType[i].length() > 0) {
+          match = false;
+          break;
+        }
+      } else {
+        // Slot must have this exact type
+        if (!slotActive[i] || slotType[i] != String(expected)) {
+          match = false;
+          break;
+        }
       }
     }
     if (match) return r;
@@ -452,393 +654,757 @@ int checkRecipes() {
   return -1;
 }
 
-// Count how many slots have blocks
-uint8_t filledSlotCount() {
-  uint8_t count = 0;
-  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-    if (slotBlock[i].length() > 0) count++;
-  }
-  return count;
-}
-
 // =============================================================================
 // Craft Execution
 // =============================================================================
-void executeCraft(int recipeIdx) {
-  const Recipe& recipe = RECIPES[recipeIdx];
-  Serial.printf("\n*** CRAFTED: %s → Door %d ***\n\n", recipe.name, recipe.door);
+void executeCraft(int recipeIndex) {
+  logMsgf("[CRAFT] === RECIPE MATCHED: %s (door %d) ===",
+          RECIPES[recipeIndex].name, RECIPES[recipeIndex].doorIndex);
 
-  lastCraftedRecipe = recipe.name;
-  lastCraftTime = millis();
+  // Mark as crafted
+  recipeCrafted[recipeIndex] = true;
 
-  // Green flash on occupied slots
-  flashColor(strip.Color(0, 80, 0), 3, 200, 150);
+  // Play success sound
+  playCraftSound(recipeIndex);
 
-  // Sound
-  playSound(SND_CRAFT_SUCCESS);
+  // Rainbow sweep animation (~2 seconds)
+  rainbowSweep();
 
-  // Open the door
-  pushDoor(recipe.door);
+  // Open the corresponding door
+  servoSweepN(RECIPES[recipeIndex].doorIndex);
 
-  // Rainbow celebration
-  rainbowSweep(2000);
+  // Haptic feedback: 3 short pulses
+  vibeBuzzSuccess();
 
-  // Restore white glow on occupied slots
-  updateRingColors();
+  logMsgf("[CRAFT] Door %d opened for %s",
+          RECIPES[recipeIndex].doorIndex, RECIPES[recipeIndex].name);
+}
 
-  craftTriggered = true;  // Don't re-trigger until grid changes
+void executeCraftFail() {
+  logMsg("[CRAFT] No recipe match — error feedback");
+
+  // Play error sound
+  playErrorSound();
+
+  // Flash red
+  flashRed();
+
+  // Short vibration
+  vibeBuzzError();
 }
 
 // =============================================================================
-// WiFi AP + HTTP Status API
+// Servo Action
 // =============================================================================
-void initWiFi() {
-  bool connected = false;
+void servoSweep() {
+  servoSweepN(2);
+}
 
-  // Try to join phone hotspot first
-  Serial.printf("[WIFI] Looking for '%s'...\n", WIFI_STA_SSID);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_STA_SSID, WIFI_STA_PASS);
+void servoSweepN(uint8_t n) {
+  if (n > 2) return;
+  logMsgf("[SERVO] Sweeping servo %d (GPIO %d)", n, SERVO_PINS[n]);
+  servos[n]->attach(SERVO_PINS[n]);
+  delay(50);
+  servos[n]->write(SERVO_PUSH_DEG);
+  delay(SERVO_HOLD_MS);
+  servos[n]->write(SERVO_REST_DEG);
+  delay(SERVO_HOLD_MS);
+  servos[n]->detach();
+}
 
-  unsigned long start = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - start < WIFI_STA_TIMEOUT) {
-    delay(250);
-    Serial.print(".");
+// =============================================================================
+// Game Reset
+// =============================================================================
+void resetGame() {
+  logMsg("[GAME] === RESET ===");
+  // Clear crafted flags
+  for (int i = 0; i < NUM_RECIPES; i++) {
+    recipeCrafted[i] = false;
   }
-  Serial.println();
-
-  if (WiFi.status() == WL_CONNECTED) {
-    connected = true;
-    WiFi.setAutoReconnect(true);
-    Serial.printf("[WIFI] Joined hotspot! IP: %s\n", WiFi.localIP().toString().c_str());
-  } else {
-    // Hotspot not found — create own AP
-    WiFi.disconnect();
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(WIFI_AP_SSID, WIFI_AP_PASS, WIFI_AP_CHAN);
-    Serial.printf("[WIFI] Hotspot not found — AP '%s' started, IP: %s\n",
-                  WIFI_AP_SSID, WiFi.softAPIP().toString().c_str());
+  // Close all doors (return servos to rest)
+  for (uint8_t i = 0; i < 3; i++) {
+    servos[i]->attach(SERVO_PINS[i]);
+    servos[i]->write(SERVO_REST_DEG);
   }
-
-  // mDNS: reachable at http://crafting-table.local
-  if (MDNS.begin(MDNS_NAME)) {
-    MDNS.addService("http", "tcp", 80);
-    Serial.printf("[WIFI] mDNS: http://%s.local\n", MDNS_NAME);
+  delay(300);
+  for (uint8_t i = 0; i < 3; i++) {
+    servos[i]->detach();
   }
+  logMsg("[GAME] All recipes cleared, doors closed");
+}
 
-  // GET /status — JSON for fog map integration
-  server.on("/status", HTTP_GET, []() {
-    String json = "{\"slots\":[";
-    for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-      json += "\"" + slotBlock[i] + "\"";
-      if (i < NUM_SLOTS - 1) json += ",";
+// =============================================================================
+// Ring Tests
+// =============================================================================
+void testAllRings() {
+  logMsg("[LED TEST] Cycling through all rings (slot 0-8)...");
+  for (uint8_t slot = 0; slot < NUM_SLOTS; slot++) {
+    int8_t ring = SLOT_TO_RING[slot];
+    if (ring < 0) {
+      logMsgf("  Slot %d -> not wired, skipping", slot);
+      continue;
     }
-    json += "],\"recipe\":";
-    if (lastCraftedRecipe.length() > 0)
-      json += "\"" + lastCraftedRecipe + "\"";
-    else
-      json += "null";
-    json += ",\"lastCraft\":" + String(lastCraftTime) + "}";
+    uint32_t color = getSlotColor(slot);
+    setRing(ring, color);
+    strip.show();
+    logMsgf("  Slot %d -> Chain pos %d -> ON", slot, ring);
+    delay(1000);
+    clearRing(ring);
+    strip.show();
+  }
+  logMsg("[LED TEST] Done.");
+}
 
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "application/json", json);
-  });
-
-  // GET /reset — reset doors (game master utility)
-  server.on("/reset", HTTP_GET, []() {
-    resetAllDoors();
-    craftTriggered = false;
-    server.sendHeader("Access-Control-Allow-Origin", "*");
-    server.send(200, "text/plain", "OK");
-  });
-
-  server.begin();
-  Serial.println("[WIFI] HTTP server started on port 80");
+void testPixelCrawl() {
+  logMsg("[LED CRAWL] Lighting one pixel at a time (0.2s each)...");
+  for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+    strip.clear();
+    strip.setPixelColor(i, strip.Color(50, 50, 50));
+    strip.show();
+    if (i % LEDS_PER_RING == 0) {
+      logMsgf("  --- Ring boundary at pixel %d (ring %d) ---",
+              i, i / LEDS_PER_RING);
+    }
+    delay(200);
+  }
+  strip.clear();
+  strip.show();
+  logMsg("[LED CRAWL] Done.");
 }
 
 // =============================================================================
-// Tag Registration Mode — write block type to NTAG215 via serial
+// Web Server — HTML Page (PROGMEM)
 // =============================================================================
-// Commands (type in Serial Monitor):
-//   reg                — enter registration mode (uses slot 0)
-//   reg 3              — enter registration mode using slot 3
-//   write wood_plank   — write "wood_plank" to tag on active slot
-//   read               — read current tag data on active slot
-//   exit               — leave registration mode
-//   craft              — manual submit (same as touching both pads)
-//   reset              — reset all servo doors
-//   doors              — push all doors open (game master override)
+const char HTML_PAGE[] PROGMEM = R"rawliteral(<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crafting Table</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',monospace;background:#1a1a1a;color:#a0a0a0;padding:12px;max-width:480px;margin:0 auto}
+h1{color:#5b8731;font-size:1.4em;text-align:center;margin-bottom:8px;text-shadow:2px 2px #000;letter-spacing:2px}
+.subtitle{text-align:center;color:#6b5b3a;font-size:0.8em;margin-bottom:16px}
+.btn-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+button{flex:1;min-width:100px;min-height:52px;border:3px solid #3d3d3d;background:#2d2d2d;color:#c8c8c8;
+font-family:'Courier New',monospace;font-size:1em;font-weight:bold;cursor:pointer;
+image-rendering:pixelated;border-radius:0}
+button:active{background:#5b8731;color:#fff;border-color:#7ec842}
+.btn-light{border-color:#5b8731}
+.btn-crawl{border-color:#6b5b3a}
+.btn-off{border-color:#8b2020}
+.btn-motor{border-color:#8b6914}
+.btn-motor.vibe{border-color:#6b4fa5}
+.btn-refresh{border-color:#4a6fa5;min-width:60px;flex:0}
+.btn-reg{border-color:#4a9fa5}
+.btn-reset{border-color:#cc4400;background:#3a1a00;color:#ff8844}
+h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;padding-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:12px}
+.slot{background:#2a2a2a;border:2px solid #333;padding:8px;text-align:center;font-size:0.8em;min-height:50px;cursor:pointer}
+.slot.active{border-color:#5b8731;background:#2d3d20;color:#7ec842}
+.slot.no-reader{border-color:#4a1a1a;color:#666}
+.slot .stype{font-size:0.7em;color:#8b8;margin-top:2px}
+.slot .stype.unreg{color:#b86}
+.info{font-size:0.75em;color:#666;margin-bottom:8px}
+.info span{margin-right:12px}
+.info .on{color:#5b8731}
+.info .off{color:#8b2020}
+.reg-box{background:#222;border:1px solid #4a9fa5;padding:10px;margin-bottom:12px}
+.reg-box select{background:#1a1a1a;color:#c8c8c8;border:1px solid #555;padding:4px;font-family:monospace;width:100%;margin:6px 0}
+.reg-box .result{font-size:0.75em;margin-top:6px;min-height:1.2em;color:#8b8}
+.reg-box .result.err{color:#b44}
+.crafted{font-size:0.75em;color:#5b8731;margin-bottom:8px}
+.crafted span{display:inline-block;margin:2px 6px 2px 0;padding:2px 6px;background:#2d3d20;border:1px solid #5b8731}
+.crafted span.no{background:#2a2a2a;border-color:#333;color:#666}
+#log{background:#111;border:1px solid #333;padding:8px;height:180px;overflow-y:auto;
+font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
+</style></head><body>
+<h1>&#x2B1C; Crafting Table</h1>
+<p class="subtitle">Escape Room Control Panel</p>
+<div class="btn-row">
+<button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button>
+<button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button>
+<button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button>
+</div>
+<h2>Motors</h2>
+<div class="btn-row">
+<button class="btn-motor" onclick="cmd('sv0')">Servo 0</button>
+<button class="btn-motor" onclick="cmd('sv1')">Servo 1</button>
+<button class="btn-motor" onclick="cmd('sv2')">Servo 2</button>
+</div>
+<div class="btn-row">
+<button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button>
+<button class="btn-off" onclick="cmd('voff')">Vibe OFF</button>
+</div>
+<h2>Register Tags</h2>
+<div class="reg-box">
+<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.<br>Type is written directly to the tag's memory.</p>
+<select id="btype">
+<option value="wood_plank">wood_plank</option>
+<option value="sand">sand</option>
+<option value="stick">stick</option>
+<option value="iron_ingot">iron_ingot</option>
+<option value="string">string</option>
+<option value="redstone">redstone</option>
+<option value="diamond">diamond</option>
+<option value="gold_ingot">gold_ingot</option>
+<option value="gunpowder">gunpowder</option>
+<option value="coal">coal</option>
+<option value="copper_ingot">copper_ingot</option>
+<option value="amethyst_shard">amethyst_shard</option>
+<option value="paper">paper</option>
+</select>
+<div class="btn-row">
+<button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button>
+</div>
+<div class="result" id="regres"></div>
+</div>
+<h2>Game State</h2>
+<div class="crafted" id="crafted"></div>
+<div class="btn-row">
+<button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button>
+</div>
+<h2>Slot Status</h2>
+<div class="grid" id="grid"></div>
+<div class="info">
+<span>Touch1: <span id="tv1" class="off">-</span></span>
+<span>Touch2: <span id="tv2" class="off">-</span></span>
+<span>DFPlayer: <span id="dfp" class="off">-</span></span>
+<button class="btn-refresh" onclick="refresh()">&#x1F504;</button>
+</div>
+<h2>Log</h2>
+<div id="log">Connecting...</div>
+<script>
+function cmd(c){fetch('/cmd?c='+c).then(r=>r.text()).then(t=>{refresh()})}
+function regTag(){
+let t=document.getElementById('btype').value;
+let el=document.getElementById('regres');
+el.textContent='Programming...';el.className='result';
+fetch('/register?type='+t).then(r=>r.json()).then(d=>{
+if(d.success){el.textContent='Written to tag: '+d.type;el.className='result';}
+else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}
+refresh();
+}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});
+}
+function resetGame(){
+if(confirm('Reset all recipes and close doors?')){
+fetch('/reset').then(r=>r.json()).then(d=>{refresh();});
+}}
+function refresh(){
+fetch('/status').then(r=>r.json()).then(d=>{
+let g='';
+let order=[6,7,8,3,4,5,0,1,2];
+for(let k=0;k<9;k++){let j=order[k];
+let cls='slot';
+if(!d.readers[j])cls+=' no-reader';
+else if(d.slots[j])cls+=' active';
+let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');
+let typeHtml='';
+if(d.slots[j]&&d.types){let tp=d.types[j];
+if(tp)typeHtml='<div class="stype">'+tp+'</div>';
+else typeHtml='<div class="stype unreg">???</div>';
+}
+g+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+label+typeHtml+'</div>';
+}
+document.getElementById('grid').innerHTML=g;
+let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';
+let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<1000?'on':'off';
+let df=document.getElementById('dfp');df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';
+// Crafted recipes display
+if(d.crafted){
+let names=['Pickaxe','Fish Rod','Gold Sword','TNT','Compass','Shovel'];
+let h='';
+for(let i=0;i<d.crafted.length;i++){
+h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';
+}
+document.getElementById('crafted').innerHTML=h;
+}
+});
+fetch('/log').then(r=>r.json()).then(arr=>{
+document.getElementById('log').textContent=arr.join('\n');
+let el=document.getElementById('log');el.scrollTop=el.scrollHeight;
+});}
+setInterval(refresh,2000);refresh();
+</script></body></html>)rawliteral";
 
-void writeBlockTag(uint8_t slot, const char* blockType) {
-  selectSlot(slot);
+// =============================================================================
+// Web Server Handlers
+// =============================================================================
+void handleRoot() {
+  server.send_P(200, "text/html", HTML_PAGE);
+}
+
+void handleCmd() {
+  String c = server.arg("c");
+  if (c == "L" || c == "l") {
+    server.send(200, "text/plain", "OK: Light test");
+    testAllRings();
+  } else if (c == "P" || c == "p") {
+    server.send(200, "text/plain", "OK: Pixel crawl");
+    testPixelCrawl();
+  } else if (c == "off") {
+    clearAllRings();
+    for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+      slotActive[i] = false;
+      slotUid[i] = "";
+      slotType[i] = "";
+    }
+    logMsg("[WEB] All LEDs off");
+    server.send(200, "text/plain", "OK: All off");
+  } else if (c.startsWith("sv")) {
+    int n = c.substring(2).toInt();
+    if (n >= 0 && n <= 2) {
+      server.send(200, "text/plain", "OK: Servo sweep");
+      servoSweepN(n);
+    } else {
+      server.send(400, "text/plain", "Invalid servo (0-2)");
+    }
+  } else if (c.startsWith("s")) {
+    int slot = c.substring(1).toInt();
+    if (slot >= 0 && slot < NUM_SLOTS) {
+      slotActive[slot] = !slotActive[slot];
+      int8_t ring = SLOT_TO_RING[slot];
+      if (ring >= 0) {
+        if (slotActive[slot]) {
+          setRing(ring, getSlotColor(slot));
+          playSound(slot + 1);
+        } else {
+          clearRing(ring);
+        }
+        strip.show();
+      }
+      logMsgf("[WEB] Slot %d %s", slot, slotActive[slot] ? "ON" : "OFF");
+      server.send(200, "text/plain", "OK");
+    } else {
+      server.send(400, "text/plain", "Invalid slot");
+    }
+  } else if (c == "von") {
+    digitalWrite(MOTOR_PIN, HIGH);
+    logMsg("[WEB] Vibration motor ON");
+    server.send(200, "text/plain", "OK: Motor ON");
+  } else if (c == "voff") {
+    digitalWrite(MOTOR_PIN, LOW);
+    logMsg("[WEB] Vibration motor OFF");
+    server.send(200, "text/plain", "OK: Motor OFF");
+  } else {
+    server.send(400, "text/plain", "Unknown command");
+  }
+}
+
+void handleStatus() {
+  String json = "{\"touch\":";
+  json += currentTouchState ? "true" : "false";
+  json += ",\"touchVal1\":";
+  json += currentTouchVal1;
+  json += ",\"touchVal2\":";
+  json += currentTouchVal2;
+  json += ",\"slots\":[";
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    json += slotActive[i] ? "true" : "false";
+    if (i < NUM_SLOTS - 1) json += ",";
+  }
+  json += "],\"readers\":[";
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    json += readerOk[i] ? "true" : "false";
+    if (i < NUM_SLOTS - 1) json += ",";
+  }
+  json += "],\"types\":[";
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    if (slotActive[i] && slotUid[i].length() > 0) {
+      if (slotType[i].length() > 0) {
+        String abbr = getTypeAbbrev(slotType[i]);
+        json += "\"" + abbr + "\"";
+      } else {
+        json += "null";
+      }
+    } else {
+      json += "null";
+    }
+    if (i < NUM_SLOTS - 1) json += ",";
+  }
+  json += "],\"crafted\":[";
+  for (uint8_t i = 0; i < NUM_RECIPES; i++) {
+    json += recipeCrafted[i] ? "true" : "false";
+    if (i < NUM_RECIPES - 1) json += ",";
+  }
+  json += "],\"dfplayer\":";
+  json += dfPlayerReady ? "true" : "false";
+  json += "}";
+  server.send(200, "application/json", json);
+}
+
+void handleLog() {
+  String json = "[";
+  int start = (logCount < LOG_SIZE) ? 0 : logHead;
+  int count = (logCount < LOG_SIZE) ? logCount : LOG_SIZE;
+  for (int i = 0; i < count; i++) {
+    int idx = (start + i) % LOG_SIZE;
+    String escaped = logBuffer[idx];
+    escaped.replace("\\", "\\\\");
+    escaped.replace("\"", "\\\"");
+    json += "\"" + escaped + "\"";
+    if (i < count - 1) json += ",";
+  }
+  json += "]";
+  server.send(200, "application/json", json);
+}
+
+// =============================================================================
+// Tag Registration Handler
+// =============================================================================
+void handleRegister() {
+  String type = server.arg("type");
+
+  if (!isValidBlockType(type)) {
+    String json = "{\"success\":false,\"error\":\"invalid type: " + type + "\"}";
+    server.send(400, "application/json", json);
+    logMsgf("[REG] Invalid type: %s", type.c_str());
+    return;
+  }
+
+  if (!readerOk[REGISTER_SLOT]) {
+    server.send(200, "application/json", "{\"success\":false,\"error\":\"slot 4 reader not available\"}");
+    logMsg("[REG] Slot 4 reader not available");
+    return;
+  }
+
+  selectSlot(REGISTER_SLOT);
+
+  if (SLOT_MUX[REGISTER_SLOT].pca == PCA2_ADDR) {
+    nfc.begin();
+    nfc.SAMConfig();
+  }
 
   uint8_t uid[7];
   uint8_t uidLen;
-  if (!nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, 500)) {
-    Serial.println("  No tag found — place tag on reader and try again");
+  bool tagPresent = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, 200);
+
+  if (!tagPresent) {
+    pcaDeselectAll();
+    server.send(200, "application/json", "{\"success\":false,\"error\":\"no tag on slot 4\"}");
+    logMsg("[REG] No tag detected on slot 4");
     return;
   }
 
-  // Prepare 16-byte buffer (4 pages × 4 bytes), zero-padded
-  uint8_t buf[TAG_DATA_PAGES * 4];
-  memset(buf, 0, sizeof(buf));
-  strncpy((char*)buf, blockType, sizeof(buf) - 1);
+  String uidHex = uidToHexString(uid, uidLen);
+  logMsgf("[REG] Tag found: %s — writing type '%s'...", uidHex.c_str(), type.c_str());
 
-  // Write pages 4-7
-  for (uint8_t p = 0; p < TAG_DATA_PAGES; p++) {
-    if (!nfc.ntag2xx_WritePage(TAG_DATA_PAGE + p, buf + p * 4)) {
-      Serial.printf("  Write FAILED on page %d\n", TAG_DATA_PAGE + p);
-      return;
-    }
+  bool writeOk = writeTypeToTag(type);
+  if (!writeOk) {
+    pcaDeselectAll();
+    server.send(200, "application/json", "{\"success\":false,\"error\":\"write failed\"}");
+    logMsg("[REG] FAILED to write type to tag");
+    return;
   }
 
-  Serial.printf("  Written '%s' to tag on slot %d\n", blockType, slot);
+  // Verify write
+  String readBack = readTypeFromTag();
+  pcaDeselectAll();
 
-  // Verify by reading back
-  String readBack = readBlockType(slot);
-  if (readBack == blockType) {
-    Serial.println("  Verified OK ✓");
-  } else {
-    Serial.printf("  Verify MISMATCH: read back '%s'\n", readBack.c_str());
+  if (readBack != type) {
+    logMsgf("[REG] VERIFY FAILED: wrote '%s', read back '%s'", type.c_str(), readBack.c_str());
+    String json = "{\"success\":false,\"error\":\"verify failed\"}";
+    server.send(200, "application/json", json);
+    return;
   }
+
+  // Update slot state if tag is currently active
+  if (slotActive[REGISTER_SLOT] && slotUid[REGISTER_SLOT] == uidHex) {
+    slotType[REGISTER_SLOT] = type;
+  }
+
+  logMsgf("[REG] SUCCESS: written as %s (verified)", type.c_str());
+
+  String json = "{\"success\":true,\"type\":\"" + type + "\"}";
+  server.send(200, "application/json", json);
 }
 
-void handleSerial() {
-  if (!Serial.available()) return;
-
-  String cmd = Serial.readStringUntil('\n');
-  cmd.trim();
-  if (cmd.length() == 0) return;
-
-  if (cmd == "reset") {
-    resetAllDoors();
-    craftTriggered = false;
-    return;
-  }
-
-  if (cmd == "doors") {
-    for (uint8_t i = 0; i < 3; i++) pushDoor(i);
-    return;
-  }
-
-  if (cmd == "craft") {
-    // Manual submit via serial (same as touching both pads)
-    int match = checkRecipes();
-    if (match >= 0) {
-      executeCraft(match);
-    } else {
-      Serial.println("[CRAFT] No matching recipe");
-      playSound(SND_CRAFT_FAIL);
-      flashColor(strip.Color(80, 0, 0), 2, 200, 150);
-      updateRingColors();
-    }
-    return;
-  }
-
-  if (cmd.startsWith("reg")) {
-    registrationMode = true;
-    if (cmd.length() > 4) regSlot = cmd.substring(4).toInt();
-    else regSlot = 0;
-    if (regSlot >= NUM_SLOTS) regSlot = 0;
-    Serial.printf("\n=== REGISTRATION MODE (slot %d) ===\n", regSlot);
-    Serial.println("Commands: write <type>, read, exit");
-    Serial.print("Types: ");
-    for (uint8_t i = 0; i < NUM_BLOCK_TYPES; i++) {
-      Serial.print(BLOCK_TYPES[i]);
-      if (i < NUM_BLOCK_TYPES - 1) Serial.print(", ");
-    }
-    Serial.println();
-    return;
-  }
-
-  if (cmd == "exit") {
-    registrationMode = false;
-    Serial.println("=== NORMAL MODE ===");
-    return;
-  }
-
-  if (registrationMode) {
-    if (cmd == "read") {
-      String bt = readBlockType(regSlot);
-      if (bt.length() > 0)
-        Serial.printf("  Tag on slot %d: '%s'\n", regSlot, bt.c_str());
-      else
-        Serial.printf("  No valid tag on slot %d\n", regSlot);
-    } else if (cmd.startsWith("write ")) {
-      String blockType = cmd.substring(6);
-      blockType.trim();
-      // Validate
-      bool valid = false;
-      for (uint8_t i = 0; i < NUM_BLOCK_TYPES; i++) {
-        if (blockType == BLOCK_TYPES[i]) { valid = true; break; }
-      }
-      if (valid) {
-        writeBlockTag(regSlot, blockType.c_str());
-      } else {
-        Serial.printf("  Unknown block type: '%s'\n", blockType.c_str());
-      }
-    } else {
-      Serial.println("  Unknown command. Use: write <type>, read, exit");
-    }
-  }
+// =============================================================================
+// Game Reset Handler
+// =============================================================================
+void handleReset() {
+  resetGame();
+  server.send(200, "application/json", "{\"success\":true,\"message\":\"Game reset\"}");
 }
 
 // =============================================================================
 // Setup
 // =============================================================================
 void setup() {
-  Serial.begin(9600);
-  delay(2000);
+  Serial.begin(115200);
+  delay(1000);
+
   Serial.println();
   Serial.println("========================================");
-  Serial.println("  Crafting Table Firmware v1.0");
+  Serial.println("  Crafting Table — Recipe Mode");
   Serial.println("========================================");
+  Serial.println("  Touch 3s hold -> evaluate recipes");
+  Serial.println("  RFID tags     -> colored ring + sound");
+  Serial.println("  WiFi AP       -> web control panel");
+  Serial.println("  Tag Reg       -> type written to tag");
+  Serial.println("========================================");
+  Serial.println();
 
-  // I2C
-  Wire.begin(SDA_PIN, SCL_PIN);
+  // --- WiFi AP Mode ---
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(WIFI_SSID);
+  delay(100);
+  Serial.println("[WIFI] Access Point started");
+  Serial.printf("[WIFI] SSID: %s\n", WIFI_SSID);
+  Serial.printf("[WIFI] IP: %s\n", WiFi.softAPIP().toString().c_str());
+  Serial.println("[WIFI] Connect to this network, then open http://192.168.4.1/");
+  Serial.println();
+
+  // --- Web Server Routes ---
+  server.on("/", handleRoot);
+  server.on("/cmd", handleCmd);
+  server.on("/status", handleStatus);
+  server.on("/log", handleLog);
+  server.on("/register", handleRegister);
+  server.on("/reset", handleReset);
+  server.begin();
+  Serial.println("[WEB] Server started on port 80");
+
+  // --- I2C ---
+  Wire.begin(I2C_SDA, I2C_SCL);
   Wire.setClock(100000);
 
-  // NFC readers
-  Serial.println("[RFID] Initializing 9 readers...");
-  uint8_t ok = 0;
-  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-    readerOk[i] = initReader(i);
-    if (readerOk[i]) ok++;
+  Serial.println("[I2C] Scanning bus...");
+  uint8_t devCount = 0;
+  for (uint8_t addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    uint8_t err = Wire.endTransmission();
+    if (err == 0) {
+      Serial.printf("[I2C]   Found device at 0x%02X\n", addr);
+      devCount++;
+    }
   }
-  pcaDeselectAll();
-  Serial.printf("[RFID] %d of %d readers OK\n", ok, NUM_SLOTS);
+  Serial.printf("[I2C] %d device(s) on bus\n\n", devCount);
 
-  // NeoPixels
+  // --- Motor pin ---
+  pinMode(MOTOR_PIN, OUTPUT);
+  digitalWrite(MOTOR_PIN, LOW);
+
+  // --- NeoPixels ---
   strip.begin();
   strip.setBrightness(BRIGHTNESS);
   strip.clear();
   strip.show();
-  Serial.printf("[LED] %d LEDs across %d rings\n", TOTAL_LEDS, NUM_SLOTS);
+  logMsgf("[LED] %d LEDs across %d rings initialized", TOTAL_LEDS, NUM_SLOTS);
 
-  // Startup animation — quick white pulse across all rings
-  for (uint8_t r = 0; r < NUM_SLOTS; r++) {
-    setRing(r, strip.Color(60, 60, 60));
-    strip.show();
-    delay(80);
-    clearRing(r);
-    strip.show();
-  }
-
-  // DFPlayer
-  initDFPlayer();
-
-  // Servos
-  initServos();
-
-  // WiFi
-  initWiFi();
-
-  // Touch pads
-  calibrateTouch();
-
-  // Init slot state
+  // Build SLOT_TO_RING reverse lookup from RING_ORDER
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) SLOT_TO_RING[i] = -1;
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-    slotBlock[i] = "";
-    slotPresent[i] = false;
+    if (RING_ORDER[i] >= 0) {
+      SLOT_TO_RING[RING_ORDER[i]] = i;
+    }
+  }
+  logMsg("[LED] Ring wiring map (slot -> chain position):");
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    if (SLOT_TO_RING[i] >= 0) {
+      logMsgf("[LED]   Slot %d -> Ring %d", i, SLOT_TO_RING[i]);
+    } else {
+      logMsgf("[LED]   Slot %d -> not connected", i);
+    }
   }
 
-  Serial.println();
-  Serial.println("Ready! Place blocks, then touch both pads to craft.");
-  Serial.println("Serial commands: reg, craft, reset, doors");
-  Serial.println();
+  // --- DFPlayer ---
+  logMsg("[SOUND] Initializing DFPlayer...");
+  dfSerial.begin(9600, SERIAL_8N1, -1, DFPLAYER_TX_PIN);
+  delay(500);
+  if (dfPlayer.begin(dfSerial, false)) {
+    dfPlayer.volume(20);
+    dfPlayerReady = true;
+    logMsg("[SOUND] DFPlayer OK, volume 20/30");
+  } else {
+    logMsg("[SOUND] DFPlayer NOT FOUND - sounds disabled");
+  }
+
+  // --- NFC readers ---
+  logMsg("[RFID] Initializing readers...");
+
+  Wire.beginTransmission(PCA1_ADDR);
+  uint8_t pca1Err = Wire.endTransmission();
+  logMsgf("[RFID] PCA9548A #1 (0x%02X): %s", PCA1_ADDR,
+          pca1Err == 0 ? "OK" : "NOT FOUND");
+
+  Wire.beginTransmission(PCA2_ADDR);
+  uint8_t pca2Err = Wire.endTransmission();
+  logMsgf("[RFID] PCA9548A #2 (0x%02X): %s", PCA2_ADDR,
+          pca2Err == 0 ? "OK" : "NOT FOUND");
+
+  if (pca2Err != 0) {
+    logMsg("[RFID] WARNING: 2nd PCA9548A not found!");
+    logMsg("       Check: A0 pin HIGH for addr 0x71? Power? I2C wiring?");
+  }
+
+  uint8_t ok = 0;
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    readerOk[i] = initReader(i);
+    slotActive[i] = false;
+    slotUid[i] = "";
+    slotType[i] = "";
+    if (readerOk[i]) ok++;
+  }
+  pcaDeselectAll();
+  logMsgf("[RFID] %d of %d readers OK", ok, NUM_SLOTS);
+
+  // --- Servos (verify all three, then detach) ---
+  for (uint8_t i = 0; i < 3; i++) {
+    servos[i]->attach(SERVO_PINS[i]);
+    servos[i]->write(SERVO_REST_DEG);
+  }
+  delay(300);
+  for (uint8_t i = 0; i < 3; i++) {
+    servos[i]->detach();
+  }
+  logMsgf("[SERVO] 3 servos ready on GPIO %d, %d, %d", SERVO_PIN_0, SERVO_PIN_1, SERVO_PIN_2);
+
+  // --- Recipe state ---
+  for (int i = 0; i < NUM_RECIPES; i++) {
+    recipeCrafted[i] = false;
+  }
+  logMsg("[CRAFT] 6 recipes loaded, none crafted");
+
+  // --- Touch baseline ---
+  logMsgf("[TOUCH] Threshold=%d, hold %dms to craft", TOUCH_THRESHOLD, CRAFT_HOLD_MS);
+
+  logMsg("");
+  logMsg("Running! Place blocks and hold touch pad 3s to craft.");
+  logMsgf("  Web: http://%s/", WiFi.softAPIP().toString().c_str());
+  logMsg("  Serial: 'L' = light test, 'P' = pixel crawl");
+  logMsg("");
 }
 
 // =============================================================================
 // Main Loop
 // =============================================================================
 void loop() {
-  // Handle serial commands
-  handleSerial();
-
-  // Handle HTTP requests
+  // ----- WEB SERVER -----
   server.handleClient();
 
-  // Reconnect WiFi if station mode dropped
-  static unsigned long lastWifiCheck = 0;
-  if (WiFi.getMode() == WIFI_STA && WiFi.status() != WL_CONNECTED
-      && millis() - lastWifiCheck > 5000) {
-    lastWifiCheck = millis();
-    Serial.println("[WIFI] Reconnecting...");
-    WiFi.reconnect();
+  // ----- SERIAL COMMANDS -----
+  if (Serial.available()) {
+    char c = Serial.read();
+    while (Serial.available()) Serial.read();
+    if (c == 'L' || c == 'l') {
+      testAllRings();
+    } else if (c == 'P' || c == 'p') {
+      testPixelCrawl();
+    }
   }
 
-  // Skip scanning in registration mode
-  if (registrationMode) {
-    delay(50);
-    return;
+  // ----- CAPACITIVE TOUCH → 3-SECOND HOLD TO CRAFT -----
+  int touchVal = touchRead(TOUCH_PAD);
+  int touchVal2 = touchRead(TOUCH_PAD_2);
+  currentTouchVal1 = touchVal;
+  currentTouchVal2 = touchVal2;
+  bool isTouched = (touchVal < TOUCH_THRESHOLD) || (touchVal2 < TOUCH_THRESHOLD);
+  currentTouchState = isTouched;
+
+  if (isTouched) {
+    if (!wasTouched) {
+      // Touch just started
+      touchStartMs = millis();
+      craftTriggered = false;
+      logMsgf("[TOUCH] Touched (val=%d) — hold 3s to craft", touchVal);
+    }
+    // Motor ON while touching (haptic feedback that touch is registered)
+    digitalWrite(MOTOR_PIN, HIGH);
+
+    // Check if held long enough to trigger craft
+    if (!craftTriggered && (millis() - touchStartMs >= CRAFT_HOLD_MS)) {
+      craftTriggered = true;
+      digitalWrite(MOTOR_PIN, LOW);  // Motor off before evaluation
+      logMsg("[TOUCH] 3s hold complete — evaluating recipes...");
+
+      // Evaluate recipes
+      int matchedRecipe = checkRecipes();
+      if (matchedRecipe >= 0) {
+        executeCraft(matchedRecipe);
+      } else {
+        executeCraftFail();
+      }
+    }
+  } else {
+    if (wasTouched) {
+      // Released
+      digitalWrite(MOTOR_PIN, LOW);
+      if (!craftTriggered) {
+        logMsgf("[TOUCH] Released early (val=%d) — no craft", touchVal);
+      }
+      craftTriggered = false;
+      touchStartMs = 0;
+    }
   }
+  wasTouched = isTouched;
 
-  // --- Scan all 9 slots ---
-  bool anyChange = false;
-
+  // ----- RFID SCANNING → LIGHT + SOUND + TYPE READ FROM TAG -----
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    server.handleClient();  // Keep web responsive during scan loop
+
     if (!readerOk[i]) continue;
 
-    String blockType = readBlockType(i);
-    bool present = blockType.length() > 0;
+    selectSlot(i);
 
-    if (blockType != slotBlock[i]) {
-      anyChange = true;
-      slotBlock[i] = blockType;
+    if (SLOT_MUX[i].pca == PCA2_ADDR) {
+      nfc.begin();
+      nfc.SAMConfig();
+    }
 
-      if (present && !slotPresent[i]) {
-        Serial.printf("[SLOT %d] %s\n", i, blockType.c_str());
-        playSound(SND_BLOCK_PLACE);
-      } else if (!present && slotPresent[i]) {
-        Serial.printf("[SLOT %d] removed\n", i);
+    uint8_t uid[7];
+    uint8_t uidLen;
+    bool tagPresent = nfc.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLen, TAG_READ_TIMEOUT);
+
+    if (tagPresent && !slotActive[i]) {
+      slotActive[i] = true;
+
+      // Store UID
+      String uidHex = uidToHexString(uid, uidLen);
+      slotUid[i] = uidHex;
+
+      // Read type from tag memory
+      String tagType = readTypeFromTag();
+      if (tagType.length() > 0 && isValidBlockType(tagType)) {
+        slotType[i] = tagType;
+      } else {
+        slotType[i] = "";
       }
-      slotPresent[i] = present;
+
+      int8_t ring = SLOT_TO_RING[i];
+      if (ring >= 0) {
+        uint32_t color;
+        if (slotType[i].length() > 0) {
+          color = getTypeColor(slotType[i]);
+        } else {
+          color = 0xFFFFFF;  // White for unregistered
+        }
+        setRing(ring, color);
+        strip.show();
+      }
+
+      playSound(i + 1);
+
+      String uidDisp = uidToDisplayString(uid, uidLen);
+      if (slotType[i].length() > 0) {
+        logMsgf("[SLOT %d] Tag %s -> type: %s (ring %d)",
+                i, uidDisp.c_str(), slotType[i].c_str(), ring);
+      } else {
+        logMsgf("[SLOT %d] Tag %s -> UNREGISTERED (ring %d)",
+                i, uidDisp.c_str(), ring);
+      }
+
+    } else if (!tagPresent && slotActive[i]) {
+      slotActive[i] = false;
+      slotUid[i] = "";
+      slotType[i] = "";
+      int8_t ring = SLOT_TO_RING[i];
+      if (ring >= 0) {
+        clearRing(ring);
+        strip.show();
+      }
+      logMsgf("[SLOT %d] Tag removed - ring %d OFF", i, ring);
     }
   }
   pcaDeselectAll();
 
-  if (anyChange) {
-    craftTriggered = false;  // Grid changed — allow new submit
-    updateRingColors();
-  }
-
-  // --- Touch-to-craft: both pads must be touched simultaneously ---
-  // Short touch = craft submit, long hold (2s) = game master reset
-  if (bothPadsTouched()) {
-    delay(TOUCH_DEBOUNCE_MS);
-    if (!bothPadsTouched()) {
-      delay(SCAN_INTERVAL_MS);
-      return;
-    }
-
-    // Time how long both pads are held
-    unsigned long holdStart = millis();
-    while (bothPadsTouched() && millis() - holdStart < 2000) delay(50);
-
-    if (bothPadsTouched()) {
-      // Held 2+ seconds — game master reset
-      Serial.println("[TOUCH] Long hold — RESET");
-      resetAllDoors();
-      craftTriggered = false;
-      lastCraftedRecipe = "";
-      flashColor(strip.Color(80, 0, 80), 3, 150, 100);  // Purple flash = reset
-      updateRingColors();
-      while (bothPadsTouched()) delay(50);  // Wait for release
-    } else if (!craftTriggered) {
-      // Short touch — craft submit
-      Serial.println("[TOUCH] Submit!");
-      int match = checkRecipes();
-
-      if (match >= 0) {
-        executeCraft(match);
-      } else {
-        Serial.println("[CRAFT] No matching recipe");
-        playSound(SND_CRAFT_FAIL);
-        flashColor(strip.Color(80, 0, 0), 2, 200, 150);
-        updateRingColors();
-      }
-    }
-  }
-
-  delay(SCAN_INTERVAL_MS);
+  // Small delay between scan cycles
+  delay(10);
 }
