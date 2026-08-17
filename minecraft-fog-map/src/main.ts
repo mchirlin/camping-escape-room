@@ -585,6 +585,26 @@ async function main(): Promise<void> {
         case '_':
           mapInteraction.setZoomLevel(mapInteraction.getViewport().zoomLevel - 0.5);
           break;
+        case 'w':
+        case 'W':
+        case 'ArrowUp':
+          simulation?.handleKeyboard('up', simHeading);
+          break;
+        case 's':
+        case 'S':
+        case 'ArrowDown':
+          simulation?.handleKeyboard('down', simHeading);
+          break;
+        case 'a':
+        case 'A':
+        case 'ArrowLeft':
+          simulation?.handleKeyboard('left', simHeading);
+          break;
+        case 'd':
+        case 'D':
+        case 'ArrowRight':
+          simulation?.handleKeyboard('right', simHeading);
+          break;
       }
     });
 
@@ -1033,10 +1053,19 @@ async function main(): Promise<void> {
       for (const marker of markerStore.getAll()) {
         const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
 
-        // Check if this marker's tile is revealed
-        const tileCol = Math.floor(worldPos.x / TILE_SCREEN_SIZE);
-        const tileRow = Math.floor(worldPos.y / TILE_SCREEN_SIZE);
-        if (!fogEngine.isRevealed(4, tileCol, tileRow)) continue;
+        // Check if this marker's map segment (quadrant) is discovered
+        const currentLevelConfig = MAP_LEVEL_CONFIG.find(c => c.display === currentDisplayLevel);
+        const quads = discoveredQuadrants.get(currentDisplayLevel);
+        if (quads && currentLevelConfig) {
+          const levelData = terrainData.zoomLevels.find((zl: any) => zl.level === currentLevelConfig.internal);
+          if (levelData) {
+            const quadWorldW = Math.round(levelData.cols * currentLevelConfig.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - currentLevelConfig.internal);
+            const quadWorldH = Math.round(levelData.rows * currentLevelConfig.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - currentLevelConfig.internal);
+            const qx = Math.floor(worldPos.x / quadWorldW);
+            const qy = Math.floor(worldPos.y / quadWorldH);
+            if (!quads.has(`${qx},${qy}`)) continue;
+          }
+        }
 
         const screenX = (worldPos.x - viewLeft) * scale;
         const screenY = (worldPos.y - viewTop) * scale;
