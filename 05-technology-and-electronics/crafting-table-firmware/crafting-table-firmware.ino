@@ -648,13 +648,16 @@ uint32_t getTypeColor(const String &type) {
 //                  ...URL...
 //                  FE            (terminator TLV)
 // =============================================================================
-bool writeTypeToTag(const String &type) {
+bool writeTypeToTag(const String &type, const String &uid) {
   uint8_t typeLen = type.length();
   if (typeLen > TAG_TYPE_MAX_LEN) typeLen = TAG_TYPE_MAX_LEN;
 
-  // Build the URI payload: prefix code + base URL + block type
-  // URI payload = 0x04 + "mchirlin.github.io/camping-escape-room/?scan=" + type
-  uint8_t uriPayloadLen = 1 + TAG_URL_BASE_LEN + typeLen;
+  // Build the URI payload: prefix code + base URL + type + "&uid=" + uid
+  // URI payload = 0x04 + "mchirlin.github.io/camping-escape-room/?scan=" + type + "&uid=" + uid
+  const char* uidParam = "&uid=";
+  uint8_t uidParamLen = 5;
+  uint8_t uidLen = uid.length();
+  uint8_t uriPayloadLen = 1 + TAG_URL_BASE_LEN + typeLen + uidParamLen + uidLen;
 
   // NDEF record: header(1) + type_len(1) + payload_len(1) + type(1) + payload
   // Since SR (Short Record) flag is set, payload_len is 1 byte
@@ -666,7 +669,7 @@ bool writeTypeToTag(const String &type) {
   uint8_t ndefMsgLen = ndefRecordLen;  // Length field in TLV = size of NDEF record
 
   // Build the full byte buffer (page 4 onward)
-  uint8_t buf[80];  // Max ~68 bytes needed
+  uint8_t buf[100];  // Max ~88 bytes needed (type + uid)
   memset(buf, 0, sizeof(buf));
   uint8_t idx = 0;
 
@@ -686,6 +689,12 @@ bool writeTypeToTag(const String &type) {
   idx += TAG_URL_BASE_LEN;
   for (uint8_t i = 0; i < typeLen; i++) {
     buf[idx++] = (uint8_t)type.charAt(i);
+  }
+  // Append &uid=XXXX
+  memcpy(&buf[idx], uidParam, uidParamLen);
+  idx += uidParamLen;
+  for (uint8_t i = 0; i < uidLen; i++) {
+    buf[idx++] = (uint8_t)uid.charAt(i);
   }
 
   // Terminator TLV
@@ -1214,7 +1223,7 @@ void handleRegister() {
   String uidHex = uidToHexString(uid, uidLen);
   logMsgf("[REG] Tag found: %s — writing type '%s'...", uidHex.c_str(), type.c_str());
 
-  bool writeOk = writeTypeToTag(type);
+  bool writeOk = writeTypeToTag(type, uidHex);
   if (!writeOk) {
     pcaDeselectAll();
     server.send(200, "application/json", "{\"success\":false,\"error\":\"write failed\"}");

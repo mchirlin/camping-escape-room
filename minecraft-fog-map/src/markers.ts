@@ -10,6 +10,7 @@ export interface MapMarker {
   tag: MarkerTag;
   count: number;
   label?: string;
+  uid?: string;
 }
 
 export type MarkerTag =
@@ -145,7 +146,7 @@ export class MarkerStore {
     return [...this.markers];
   }
 
-  add(position: GeoPosition, tag: MarkerTag, label?: string): { marker: MapMarker; incremented: boolean } {
+  add(position: GeoPosition, tag: MarkerTag, label?: string, uid?: string): { marker: MapMarker; incremented: boolean } {
     const nearby = this.markers.find((m) => {
       if (m.tag !== tag) return false;
       const dLat = Math.abs(m.position.latitude - position.latitude) * 111320;
@@ -167,6 +168,7 @@ export class MarkerStore {
       tag,
       count: 1,
       label,
+      uid,
     };
     this.markers.push(marker);
     this.saveLocal();

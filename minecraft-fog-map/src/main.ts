@@ -451,6 +451,7 @@ async function main(): Promise<void> {
   const scanParam = new URLSearchParams(window.location.search).get('scan');
   if (scanParam) {
     const scanType = scanParam as MarkerTag;
+    const scanUid = new URLSearchParams(window.location.search).get('uid') || undefined;
     const tagInfo = MARKER_TAGS.find((t) => t.tag === scanType);
     if (tagInfo) {
       // Get current GPS position
@@ -460,34 +461,43 @@ async function main(): Promise<void> {
           return;
         }
 
-        // Check if there's already a marker of this type nearby (within 15m)
+        // Check if there's already a marker with this UID (exact match)
         const existingMarkers = markerStore.getAll();
-        const nearby = existingMarkers.find((m) => {
-          if (m.tag !== scanType) return false;
-          const dLat = Math.abs(m.position.latitude - pos.latitude) * 111320;
-          const dLng = Math.abs(m.position.longitude - pos.longitude) * 111320 *
-            Math.cos(pos.latitude * Math.PI / 180);
-          return Math.sqrt(dLat * dLat + dLng * dLng) < 15;
-        });
+        let existing: typeof existingMarkers[0] | undefined;
 
-        if (nearby) {
+        if (scanUid) {
+          // Match by UID — finds the exact tag regardless of proximity
+          existing = existingMarkers.find((m) => m.uid === scanUid);
+        } else {
+          // Fallback: match by type + proximity (for tags without UID)
+          existing = existingMarkers.find((m) => {
+            if (m.tag !== scanType) return false;
+            const dLat = Math.abs(m.position.latitude - pos.latitude) * 111320;
+            const dLng = Math.abs(m.position.longitude - pos.longitude) * 111320 *
+              Math.cos(pos.latitude * Math.PI / 180);
+            return Math.sqrt(dLat * dLat + dLng * dLng) < 15;
+          });
+        }
+
+        if (existing) {
           // Second scan — collect it (remove from map)
-          markerStore.remove(nearby.id);
-          if (leafletMarkerLayers[nearby.id] && leafletMap) {
-            leafletMap.removeLayer(leafletMarkerLayers[nearby.id]);
-            delete leafletMarkerLayers[nearby.id];
+          markerStore.remove(existing.id);
+          if (leafletMarkerLayers[existing.id] && leafletMap) {
+            leafletMap.removeLayer(leafletMarkerLayers[existing.id]);
+            delete leafletMarkerLayers[existing.id];
           }
           uiOverlay.showToast(`✅ Collected: ${tagInfo.label}`);
         } else {
-          // First scan — place marker at current position
-          const { marker } = markerStore.add(pos, scanType);
+          // First scan — place marker at current position with UID
+          const { marker } = markerStore.add(pos, scanType, undefined, scanUid);
           addLeafletMarker(marker.id, pos.latitude, pos.longitude, tagInfo, marker.count);
           uiOverlay.showToast(`📌 Placed: ${tagInfo.label}`);
         }
 
-        // Clean the URL (remove ?scan= param so refresh doesn't re-trigger)
+        // Clean the URL (remove scan params so refresh doesn't re-trigger)
         const cleanParams = new URLSearchParams(window.location.search);
         cleanParams.delete('scan');
+        cleanParams.delete('uid');
         const cleanUrl = cleanParams.toString()
           ? `${window.location.pathname}?${cleanParams.toString()}`
           : window.location.pathname;

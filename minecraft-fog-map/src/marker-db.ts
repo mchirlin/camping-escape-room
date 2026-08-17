@@ -23,6 +23,7 @@ export interface DbMarker {
   tag: string;
   count: number;
   label?: string;
+  uid?: string;
   collected: boolean;
   createdAt: number;
 }
