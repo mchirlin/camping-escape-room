@@ -1044,8 +1044,8 @@ async function main(): Promise<void> {
         // Draw marker icon (texture or fallback color square)
         const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
         const markerImg = getMarkerImage(marker.tag);
-        const size = 24;
         const slotSize = 32;
+        const iconSize = 24;
         const slotX = screenX - slotSize / 2;
         const slotY = screenY - slotSize / 2;
 
@@ -1067,14 +1067,20 @@ async function main(): Promise<void> {
         ctx!.lineTo(slotX, slotY + slotSize);
         ctx!.stroke();
 
+        // Draw icon centered, preserving aspect ratio (like object-fit:contain)
         ctx!.imageSmoothingEnabled = false;
         if (markerImg) {
-          ctx!.drawImage(markerImg, screenX - size / 2, screenY - size / 2, size, size);
+          const imgW = markerImg.naturalWidth || iconSize;
+          const imgH = markerImg.naturalHeight || iconSize;
+          const scale = Math.min(iconSize / imgW, iconSize / imgH);
+          const drawW = imgW * scale;
+          const drawH = imgH * scale;
+          ctx!.drawImage(markerImg, screenX - drawW / 2, screenY - drawH / 2, drawW, drawH);
         } else {
           // Fallback: colored square
           const color = tagInfo?.color ?? '#FFFFFF';
           ctx!.fillStyle = color;
-          ctx!.fillRect(screenX - size / 2, screenY - size / 2, size, size);
+          ctx!.fillRect(screenX - iconSize / 2, screenY - iconSize / 2, iconSize, iconSize);
         }
 
         // Draw count badge if > 1
