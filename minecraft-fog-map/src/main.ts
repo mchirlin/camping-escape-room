@@ -1045,6 +1045,27 @@ async function main(): Promise<void> {
         const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
         const markerImg = getMarkerImage(marker.tag);
         const size = 24;
+        const slotSize = 32;
+        const slotX = screenX - slotSize / 2;
+        const slotY = screenY - slotSize / 2;
+
+        // Draw inventory slot background
+        ctx!.fillStyle = '#8b8b8b';
+        ctx!.fillRect(slotX, slotY, slotSize, slotSize);
+        // Beveled border: dark top/left, light bottom/right
+        ctx!.strokeStyle = '#555555';
+        ctx!.lineWidth = 2;
+        ctx!.beginPath();
+        ctx!.moveTo(slotX, slotY + slotSize);
+        ctx!.lineTo(slotX, slotY);
+        ctx!.lineTo(slotX + slotSize, slotY);
+        ctx!.stroke();
+        ctx!.strokeStyle = '#ffffff';
+        ctx!.beginPath();
+        ctx!.moveTo(slotX + slotSize, slotY);
+        ctx!.lineTo(slotX + slotSize, slotY + slotSize);
+        ctx!.lineTo(slotX, slotY + slotSize);
+        ctx!.stroke();
 
         ctx!.imageSmoothingEnabled = false;
         if (markerImg) {
