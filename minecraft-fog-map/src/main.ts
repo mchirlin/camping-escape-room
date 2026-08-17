@@ -332,7 +332,7 @@ async function main(): Promise<void> {
     const badge = count > 1 ? `<span style="position:absolute;bottom:-2px;right:-2px;background:#000;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;font-family:monospace;">${count}</span>` : '';
     const icon = L.divIcon({
       className: 'marker-icon-pixelated',
-      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#fff #555 #555 #fff;padding:3px;"><img src="${tagInfo.texture}" style="width:24px;height:24px;image-rendering:pixelated;">${badge}</div>`,
+      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;display:flex;align-items:center;justify-content:center;"><img src="${tagInfo.texture}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">${badge}</div>`,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
@@ -363,7 +363,7 @@ async function main(): Promise<void> {
     const badge = count > 1 ? `<span style="position:absolute;bottom:-2px;right:-2px;background:#000;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;font-family:monospace;">${count}</span>` : '';
     const icon = L.divIcon({
       className: 'marker-icon-pixelated',
-      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#fff #555 #555 #fff;padding:3px;"><img src="${tagInfo.texture}" style="width:24px;height:24px;image-rendering:pixelated;">${badge}</div>`,
+      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;display:flex;align-items:center;justify-content:center;"><img src="${tagInfo.texture}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">${badge}</div>`,
       iconSize: [32, 32],
       iconAnchor: [16, 16],
     });
