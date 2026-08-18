@@ -38,7 +38,7 @@ function getBBox(): BoundingBox {
 
 const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
 const OUTPUT_DIR = path.resolve('public');
-const OUTPUT_FILE = path.join(OUTPUT_DIR, 'terrain-data.json');
+const OUTPUT_FILE = path.join(OUTPUT_DIR, process.env.TERRAIN_OUTPUT || 'terrain-data.json');
 
 // Single-character terrain codes for compact JSON storage
 type TerrainCode = 'g' | 'f' | 'w' | 'p' | 'r' | 'b' | 's' | 'k';
@@ -738,7 +738,7 @@ async function main() {
   // Build output matching TerrainData interface (with compact single-char codes)
   const terrainData = {
     version: 1,
-    regionId: 'lake-fairfax-campsite',
+    regionId: process.env.TERRAIN_REGION_ID || 'lake-fairfax-campsite',
     boundingBox: bbox,
     zoomLevels,
   };

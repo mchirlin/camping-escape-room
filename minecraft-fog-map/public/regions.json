@@ -13,5 +13,10 @@
     "id": "appian-hq",
     "name": "Appian HQ",
     "file": "terrain-appian.json"
+  },
+  {
+    "id": "farroks-house",
+    "name": "Farrok's House",
+    "file": "terrain-farroks.json"
   }
 ]

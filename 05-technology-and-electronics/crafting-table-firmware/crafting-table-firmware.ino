@@ -145,15 +145,17 @@ const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
 const char* BLOCK_TYPES[] = {
   "wood_plank", "sand", "stick", "iron_ingot", "string",
   "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
-  "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook", "emerald"
+  "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook", "emerald",
+  "compass"
 };
-#define NUM_BLOCK_TYPES 16
+#define NUM_BLOCK_TYPES 17
 
 // Abbreviated display names (for web grid)
 const char* BLOCK_ABBREV[] = {
   "wood", "sand", "stick", "iron", "str",
   "red", "dia", "gold", "gun", "coal",
-  "cop", "ame", "paper", "cob", "trip", "emer"
+  "cop", "ame", "paper", "cob", "trip", "emer",
+  "comp"
 };
 
 // Colors for each block type (RGB) — average pixel color from texture
@@ -174,6 +176,7 @@ const uint32_t BLOCK_COLORS[] = {
   0x7F7F7F,  // cobblestone
   0x8E8576,  // tripwire_hook
   0x17DD62,  // emerald
+  0xC03030,  // compass
 };
 
 // =============================================================================
@@ -274,7 +277,7 @@ const Recipe RECIPES[NUM_RECIPES] = {
   // Recipe 12: Map → door 1
   {
     "Map",
-    {"paper", "paper", "paper", "paper", "redstone", "paper", "paper", "paper", "paper"},
+    {"paper", "paper", "paper", "paper", "compass", "paper", "paper", "paper", "paper"},
     1
   },
   // Recipe 13: Spyglass → door 2
@@ -1003,7 +1006,7 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
 <p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
-<select id="btype"><option value="wood_plank">-- Blocks --</option><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="cobblestone">cobblestone</option><option value="iron_ingot">-- Ingots --</option><option value="iron_ingot">iron_ingot</option><option value="gold_ingot">gold_ingot</option><option value="copper_ingot">copper_ingot</option><option value="diamond">-- Gems --</option><option value="diamond">diamond</option><option value="redstone">redstone</option><option value="amethyst_shard">amethyst_shard</option><option value="emerald">emerald</option><option value="coal">coal</option><option value="stick">-- Materials --</option><option value="stick">stick</option><option value="string">string</option><option value="paper">paper</option><option value="gunpowder">gunpowder</option><option value="tripwire_hook">tripwire_hook</option></select>
+<select id="btype"><option value="wood_plank">-- Blocks --</option><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="cobblestone">cobblestone</option><option value="iron_ingot">-- Ingots --</option><option value="iron_ingot">iron_ingot</option><option value="gold_ingot">gold_ingot</option><option value="copper_ingot">copper_ingot</option><option value="diamond">-- Gems --</option><option value="diamond">diamond</option><option value="redstone">redstone</option><option value="amethyst_shard">amethyst_shard</option><option value="emerald">emerald</option><option value="coal">coal</option><option value="stick">-- Materials --</option><option value="stick">stick</option><option value="string">string</option><option value="paper">paper</option><option value="gunpowder">gunpowder</option><option value="tripwire_hook">tripwire_hook</option><option value="compass">-- Crafted --</option><option value="compass">compass</option></select>
 <div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
 </div>
@@ -1032,7 +1035,7 @@ function regTag(){let t=document.getElementById('btype').value;let el=document.g
 function resetGame(){if(confirm('Reset all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
 function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Wood Pick','Stone Pick','Dia Pick','Shovel','Fish Rod','Torch','Gold Sword','Iron Sword','Bow','Crossbow','TNT','Compass','Map','Spyglass'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
 setInterval(refresh,2000);refresh();
-fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
+fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
 </script></body></html>)rawliteral";
 
 // =============================================================================
