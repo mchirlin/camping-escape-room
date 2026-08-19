@@ -140,6 +140,13 @@ export class TileRenderer {
     bgImg.src = `${import.meta.env.BASE_URL}map-background.png`;
   }
 
+  /** Switch the player marker to a different skin */
+  setPlayerSkin(skinName: string): void {
+    if (!this.atlasManifest) return;
+    const entry = this.atlasManifest.textures[`player_${skinName}`];
+    if (entry) this.playerEntry = entry;
+  }
+
   /**
    * Render the current frame.
    * Renders terrain from the selected mapLevel's grid directly.

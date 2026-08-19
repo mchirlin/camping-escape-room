@@ -22,6 +22,7 @@ export interface UIOverlay {
   onZoomOut: () => void;
   onResetFog: () => void;
   onHeadingChange: (degrees: number) => void;
+  onAvatarChange: (skinName: string) => void;
 }
 
 const GPS_STATUS_LABELS: Record<GPSStatus, string> = {
@@ -51,6 +52,7 @@ export class UIOverlayImpl implements UIOverlay {
   onHeadingChange: (degrees: number) => void = () => {};
   onRegionChange: (regionId: string) => void = () => {};
   onExitSimulation: () => void = () => {};
+  onAvatarChange: (skinName: string) => void = () => {};
 
   // DOM element references
   private container: HTMLElement | null = null;
@@ -104,7 +106,8 @@ export class UIOverlayImpl implements UIOverlay {
     this.createCraftingStatus();
     this.createSimulationBanner();
 
-    // Top-right: compass, map level, toggle map
+    // Top-right: avatar picker, compass, map level, toggle map
+    this.createAvatarPicker();
     this.createCompass();
     this.createMapLevel();
     this.createToggleMapButton();
@@ -197,6 +200,141 @@ export class UIOverlayImpl implements UIOverlay {
   }
 
   // --- Private creation methods ---
+
+  private createAvatarPicker(): void {
+    const SKINS = ['alex', 'steve', 'ari', 'efe', 'kai', 'makena', 'noor', 'sunny', 'zuri'];
+    const SKIN_LABELS: Record<string, string> = {
+      alex: 'Alex', steve: 'Steve', ari: 'Ari', efe: 'Efe',
+      kai: 'Kai', makena: 'Makena', noor: 'Noor', sunny: 'Sunny', zuri: 'Zuri',
+    };
+
+    const saved = (() => {
+      try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; }
+    })();
+
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('ui-avatar-picker');
+    wrapper.style.cssText = 'position:relative;';
+
+    // Current face button
+    const btn = document.createElement('button');
+    btn.classList.add('ui-btn', 'ui-avatar-btn');
+    btn.setAttribute('aria-label', 'Change avatar');
+    btn.style.cssText = 'width:36px;height:36px;padding:2px;image-rendering:pixelated;overflow:hidden;border-radius:4px;';
+    btn.innerHTML = `<img src="" style="width:100%;height:100%;image-rendering:pixelated;" />`;
+
+    const btnImg = btn.querySelector('img')!;
+
+    // Dropdown panel
+    const dropdown = document.createElement('div');
+    dropdown.classList.add('ui-avatar-dropdown');
+    dropdown.style.cssText = `
+      display:none;position:absolute;top:40px;right:0;z-index:100;
+      background:#2a2a2a;border:2px solid #555;border-radius:4px;padding:6px;
+      display:none;grid-template-columns:repeat(3,1fr);gap:4px;width:132px;
+    `;
+
+    // Create face options
+    for (const skin of SKINS) {
+      const option = document.createElement('button');
+      option.classList.add('ui-avatar-option');
+      option.setAttribute('aria-label', SKIN_LABELS[skin]);
+      option.setAttribute('title', SKIN_LABELS[skin]);
+      option.style.cssText = `
+        width:36px;height:36px;padding:2px;cursor:pointer;border:2px solid transparent;
+        background:#1a1a1a;border-radius:3px;image-rendering:pixelated;
+      `;
+      option.innerHTML = `<img src="" data-skin="${skin}" style="width:100%;height:100%;image-rendering:pixelated;" />`;
+      if (skin === saved) option.style.borderColor = '#5b8731';
+
+      option.addEventListener('click', () => {
+        try { localStorage.setItem('fogmap:avatar', skin); } catch { /* ignore */ }
+        this.onAvatarChange(skin);
+        // Update selection highlight
+        dropdown.querySelectorAll('.ui-avatar-option').forEach((el) => {
+          (el as HTMLElement).style.borderColor = 'transparent';
+        });
+        option.style.borderColor = '#5b8731';
+        // Update button face
+        this.updateAvatarImages(btnImg, dropdown, skin);
+        dropdown.style.display = 'none';
+      });
+
+      dropdown.appendChild(option);
+    }
+
+    // Toggle dropdown on button click
+    let open = false;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      open = !open;
+      dropdown.style.display = open ? 'grid' : 'none';
+    });
+
+    // Close on outside click
+    document.addEventListener('click', () => {
+      open = false;
+      dropdown.style.display = 'none';
+    });
+    dropdown.addEventListener('click', (e) => e.stopPropagation());
+
+    wrapper.appendChild(btn);
+    wrapper.appendChild(dropdown);
+    this.topRightGroup!.appendChild(wrapper);
+
+    // Store references for updating images once atlas loads
+    (this as any)._avatarBtn = btnImg;
+    (this as any)._avatarDropdown = dropdown;
+    (this as any)._avatarSkin = saved;
+
+    // Fire initial avatar change so renderer uses saved skin
+    setTimeout(() => this.onAvatarChange(saved), 0);
+  }
+
+  /** Update avatar images from the atlas. Call after atlas is loaded. */
+  setAvatarAtlas(atlas: HTMLImageElement, manifest: Record<string, { x: number; y: number; w: number; h: number }>): void {
+    const SKINS = ['alex', 'steve', 'ari', 'efe', 'kai', 'makena', 'noor', 'sunny', 'zuri'];
+    const canvas = document.createElement('canvas');
+    canvas.width = 16;
+    canvas.height = 16;
+    const ctx2 = canvas.getContext('2d')!;
+
+    // Generate data URLs for each skin face from the atlas
+    const faceUrls: Record<string, string> = {};
+    for (const skin of SKINS) {
+      const entry = manifest[`player_${skin}`];
+      if (!entry) continue;
+      ctx2.clearRect(0, 0, 16, 16);
+      ctx2.drawImage(atlas, entry.x, entry.y, entry.w, entry.h, 0, 0, 16, 16);
+      faceUrls[skin] = canvas.toDataURL();
+    }
+
+    // Update button and dropdown images
+    const btnImg = (this as any)._avatarBtn as HTMLImageElement | undefined;
+    const dropdown = (this as any)._avatarDropdown as HTMLElement | undefined;
+    const currentSkin = (this as any)._avatarSkin as string || 'alex';
+
+    if (btnImg && faceUrls[currentSkin]) {
+      btnImg.src = faceUrls[currentSkin];
+    }
+    if (dropdown) {
+      dropdown.querySelectorAll<HTMLImageElement>('img[data-skin]').forEach((img) => {
+        const skin = img.dataset.skin!;
+        if (faceUrls[skin]) img.src = faceUrls[skin];
+      });
+    }
+
+    // Store for future updates
+    (this as any)._avatarFaceUrls = faceUrls;
+  }
+
+  private updateAvatarImages(btnImg: HTMLImageElement, _dropdown: HTMLElement, skin: string): void {
+    const faceUrls = (this as any)._avatarFaceUrls as Record<string, string> | undefined;
+    if (faceUrls && faceUrls[skin]) {
+      btnImg.src = faceUrls[skin];
+    }
+    (this as any)._avatarSkin = skin;
+  }
 
   private createCompass(): void {
     const btn = document.createElement('button');

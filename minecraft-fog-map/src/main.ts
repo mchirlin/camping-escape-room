@@ -272,6 +272,12 @@ async function main(): Promise<void> {
   const tileRenderer = new TileRenderer();
   tileRenderer.init(terrainData, atlasImage, atlasManifest);
 
+  // Load saved avatar and apply
+  const savedAvatar = (() => {
+    try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; }
+  })();
+  tileRenderer.setPlayerSkin(savedAvatar);
+
   // 6. Determine level-4 grid size
   const level4Data = terrainData.zoomLevels.find((zl) => zl.level === 4);
   const level4Grid = level4Data
@@ -304,6 +310,12 @@ async function main(): Promise<void> {
   // 9. Create UIOverlay
   const uiOverlay = new UIOverlayImpl();
   uiOverlay.init(uiContainer);
+
+  // Wire avatar picker — pass atlas to overlay for face thumbnails
+  uiOverlay.setAvatarAtlas(atlasImage, atlasManifest.textures);
+  uiOverlay.onAvatarChange = (skinName: string) => {
+    tileRenderer.setPlayerSkin(skinName);
+  };
 
   // Wire FogEngine storage warnings to toast notifications
   fogConfig.onStorageWarning = (msg: string) => uiOverlay.showToast(msg);

@@ -13,7 +13,7 @@ import fs from 'fs/promises';
 import type { TextureAtlasManifest, AtlasEntry } from '../src/types.js';
 
 const TILE_SIZE = 16;
-const TEXTURE_DIR = new URL('../../textures', import.meta.url).pathname;
+const TEXTURE_DIR = new URL('../../minecraft/textures', import.meta.url).pathname;
 const BLOCK_DIR = path.join(TEXTURE_DIR, 'block');
 const OUTPUT_DIR = path.resolve('public');
 
@@ -54,6 +54,9 @@ const TINTED_TEXTURES: Record<string, { colormap?: string; x?: number; y?: numbe
 /** Order of textures in the horizontal strip */
 const TEXTURE_ORDER = ['grass', 'forest', 'water', 'path', 'building', 'sand', 'fog', 'player'];
 
+/** All player skins to include in the atlas */
+const PLAYER_SKINS = ['alex', 'steve', 'ari', 'efe', 'kai', 'makena', 'noor', 'sunny', 'zuri'];
+
 /**
  * Generate a 16×16 fog texture: dark gray (#1a1a1a) with subtle noise.
  */
@@ -78,15 +81,15 @@ async function createFogTexture(): Promise<Buffer> {
 }
 
 /**
- * Extract a 16×16 player marker from Alex's face on the 64×64 skin texture.
- * Alex's face is at (8,8) to (16,16) in the skin layout — 8×8 pixels.
+ * Extract a 16×16 player marker from a skin's face on the 64×64 skin texture.
+ * The face is at (8,8) to (16,16) in the standard Minecraft skin layout — 8×8 pixels.
  * We scale it up to 16×16 with nearest-neighbor for pixel-art crispness.
  */
-async function createPlayerMarker(): Promise<Buffer> {
-  const alexPath = path.join(TEXTURE_DIR, 'entity', 'player', 'wide', 'alex.png');
+async function createPlayerMarker(skinName = 'alex'): Promise<Buffer> {
+  const skinPath = path.join(TEXTURE_DIR, 'entity', 'player', 'wide', `${skinName}.png`);
 
   try {
-    return await sharp(alexPath)
+    return await sharp(skinPath)
       .extract({ left: 8, top: 8, width: 8, height: 8 })
       .resize(TILE_SIZE, TILE_SIZE, { kernel: sharp.kernel.nearest })
       .png()
@@ -243,8 +246,11 @@ async function main() {
       console.log(`  Creating fog texture (programmatic)`);
       textures.push(await createFogTexture());
     } else if (key === 'player') {
-      console.log(`  Creating player marker (from alex.png)`);
-      textures.push(await createPlayerMarker());
+      // Add all player skin faces
+      for (const skin of PLAYER_SKINS) {
+        console.log(`  Creating player marker: ${skin}`);
+        textures.push(await createPlayerMarker(skin));
+      }
     } else {
       const filename = TERRAIN_TEXTURES[key];
       console.log(`  Loading ${key} ← ${filename}`);
@@ -252,8 +258,8 @@ async function main() {
     }
   }
 
-  // Compose into a horizontal strip: 8 textures × 16px = 128×16
-  const atlasWidth = TEXTURE_ORDER.length * TILE_SIZE;
+  // Compose into a horizontal strip
+  const atlasWidth = textures.length * TILE_SIZE;
   const atlasHeight = TILE_SIZE;
 
   const compositeInputs = textures.map((buf, i) => ({
@@ -283,15 +289,31 @@ async function main() {
     textures: {},
   };
 
-  for (let i = 0; i < TEXTURE_ORDER.length; i++) {
-    const key = TEXTURE_ORDER[i];
-    const entry: AtlasEntry = {
-      x: i * TILE_SIZE,
-      y: 0,
-      w: TILE_SIZE,
-      h: TILE_SIZE,
-    };
-    manifest.textures[key] = entry;
+  let idx = 0;
+  for (const key of TEXTURE_ORDER) {
+    if (key === 'player') {
+      // Add entry for each skin
+      for (const skin of PLAYER_SKINS) {
+        const atlasKey = `player_${skin}`;
+        manifest.textures[atlasKey] = {
+          x: idx * TILE_SIZE,
+          y: 0,
+          w: TILE_SIZE,
+          h: TILE_SIZE,
+        };
+        idx++;
+      }
+      // Keep a "player" alias pointing to the first skin (alex) for backwards compat
+      manifest.textures['player'] = manifest.textures['player_alex'];
+    } else {
+      manifest.textures[key] = {
+        x: idx * TILE_SIZE,
+        y: 0,
+        w: TILE_SIZE,
+        h: TILE_SIZE,
+      };
+      idx++;
+    }
   }
 
   await fs.writeFile(
