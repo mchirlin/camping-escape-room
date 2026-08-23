@@ -144,8 +144,8 @@
 - [x] Wire 9x PN532 readers to PCA9548A multiplexer to ESP32
 - [x] Wire 9x NeoPixel rings (daisy-chained, single GPIO)
 - [x] Wire DFPlayer Mini + speaker
-- [ ] Install power toggle switch (inline with 5V power to ESP32)
-- [ ] Write ESP32 firmware:
+- [x] Install power toggle switch (inline with 5V power to ESP32)
+- [x] Write ESP32 firmware:
   - [x] Sequential I2C scanning of 9 readers
   - [x] NFC tag reading + block type parsing
   - [x] Recipe matching (6 recipes: pickaxe, fishing rod, gold sword, TNT, compass, diamond shovel)
@@ -153,7 +153,7 @@
   - [x] Sound playback on successful craft
   - [x] Empty-grid detection (prevent re-triggering)
   - [x] Tag registration/writing mode
-  - [ ] Dynamic recipe creation from web UI (define patterns via phone)
+  - [ ] Dynamic recipe creation from web UI (define patterns via phone) [optional]
 - [ ] Write all block tags using registration program
   - [x] Stick × 11
   - [x] Iron Ingot × 6
@@ -166,21 +166,20 @@
   - [x] String × 3
   - [x] Coal × 2
   - [x] Copper Ingot × 2
-  - [ ] Wood Plank × 4
-  - [ ] Sand × 4
-  - [ ] Cobblestone × 3
-  - [ ] Paper × 8
-  - [ ] Cobblestone × 3
-  - [ ] Tripwire Hook × 1
-- [ ] Print and sticker new items:
-  - [ ] Print tripwire_hook item slab
-  - [ ] Print cobblestone cubes × 3
-  - [ ] Sticker cobblestone cubes (sticker-block-cobblestone.pdf)
-  - [ ] Sticker tripwire_hook item (sticker-tripwire_hook.pdf)
-- [ ] Copy updated mp3/ folder to DFPlayer SD card (now 20 tracks)
-- [ ] Test every block on every grid slot
+  - [x] Wood Plank × 4
+  - [x] Sand × 4
+  - [x] Cobblestone × 3
+  - [x] Paper × 8
+  - [x] Tripwire Hook × 1
+- [x] Print and sticker new items:
+  - [x] Print tripwire_hook item slab
+  - [x] Print cobblestone cubes × 3
+  - [x] Sticker cobblestone cubes (sticker-block-cobblestone.pdf)
+  - [x] Sticker tripwire_hook item (sticker-tripwire_hook.pdf)
+- [x] Copy updated mp3/ folder to DFPlayer SD card (now 20 tracks)
+- [x] Test every block on every grid slot
 - [ ] Test all 13 recipes
-- [ ] Test wrong recipe rejection
+- [x] Test wrong recipe rejection
 
 ## 🪑 Crafting Table — Physical Build
 
@@ -199,8 +198,8 @@
 - [x] Mount PN532 + NeoPixel ring units under each slot
 - [x] Route wiring underneath
 - [x] Test read range through frosted acrylic
-- [ ] Finish/wrap table with pleather
-- [ ] Apply dark brown pleather edging
+- [x] Finish/wrap table with pleather
+- [x] Apply dark brown pleather edging
 - [x] Add black edging
 - [ ] Paint pixel color variation on planks
 
@@ -227,16 +226,16 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 - [x] **Electronics**
   - [x] Wire 3 servos directly to ESP32 GPIO pins
   - [x] Route all wiring inside the table
-- [ ] **Firmware**
-  - [ ] Map each recipe to a door (door 1 = pickaxe, door 2 = fishing rod, etc.)
-  - [ ] On successful craft: servo pushes door open past magnets
-  - [ ] Servo returns to rest position after push
-  - [ ] "Reset all doors" command for between-run resets
+- [x] **Firmware**
+  - [x] Map each recipe to a door (door 1 = pickaxe, door 2 = fishing rod, etc.)
+  - [x] On successful craft: servo pushes door open past magnets
+  - [x] Servo returns to rest position after push
+  - [x] "Reset all doors" command for between-run resets
 - [x] **Testing**
   - [x] Verify magnets hold door securely
   - [x] Verify servo pushes door open cleanly
   - [x] Verify door clicks shut when pushed closed
-  - [ ] Test full cycle: craft → door opens → grab prop → push door shut
+  - [x] Test full cycle: craft → door opens → grab prop → push door shut
 
 ## 🧭 MCompass Setup
 
@@ -285,10 +284,10 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 ## 🎣 Props Assembly
 
-- [ ] **Fishing Rod** — attach string + magnet to a stick
+- [x] **Fishing Rod** — attach string + magnet to a stick
 - [ ] **Gold fishing target** — waterproof container with metal ring/washer in stream
 - [ ] **Creeper** — stack 4 boxes, paint green, paint face on top box, pre-score tape
-- [ ] **Creeper loot** — put 5 gunpowder blocks + Recipe Card #4 inside head box
+- [x] **Creeper loot** — put 5 gunpowder blocks + Recipe Card #4 inside head box
 - [ ] **TNT chest** — locked/chained container with "⚠ TNT Required" sign, containing diamond, redstone, 4 iron, Recipe Cards #5 + #6
 - [ ] **Diamond Shovel** — paint kid garden shovel diamond blue/teal
 - [ ] **Explorer's Diary** — write last journal entry about Ender Dragon egg sighting
@@ -298,12 +297,12 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 ## 🔊 Sound & Atmosphere
 
-- [ ] Download Minecraft sound effects (crafting, creeper hiss, explosion, victory)
-- [ ] Load sounds onto DFPlayer micro SD card
-- [ ] Install soundboard app on phone
-- [ ] Load remote sounds (creeper hiss, explosion, fanfare)
-- [ ] Test Bluetooth speaker for background Minecraft music
-- [ ] Create Minecraft soundtrack playlist
+- [x] Download Minecraft sound effects (crafting, creeper hiss, explosion, victory)
+- [x] Load sounds onto DFPlayer micro SD card
+- [o] Install soundboard app on phone
+- [o] Load remote sounds (creeper hiss, explosion, fanfare)
+- [o] Test Bluetooth speaker for background Minecraft music
+- [o] Create Minecraft soundtrack playlist
 
 ## 🏕️ Pre-Trip Prep
 

@@ -11,6 +11,7 @@ export interface MapMarker {
   count: number;
   label?: string;
   uid?: string;
+  hidden?: boolean;
 }
 
 export type MarkerTag =
@@ -108,6 +109,7 @@ import {
   dbCollectMarker,
   dbUpdatePosition,
   dbUpdateCount,
+  dbUpdateHidden,
   dbPollMarkers,
   type DbMarker,
 } from './marker-db';
@@ -116,10 +118,12 @@ const STORAGE_KEY = 'fogmap:markers';
 
 export class MarkerStore {
   private markers: MapMarker[] = [];
+  private isAdmin = false;
   /** Called whenever markers change (local or remote) */
   onChange: ((markers: MapMarker[]) => void) | null = null;
 
-  constructor() {
+  constructor(admin = false) {
+    this.isAdmin = admin;
     this.load();
   }
 
@@ -136,17 +140,93 @@ export class MarkerStore {
           tag: m.tag as MarkerTag,
           count: m.count,
           label: m.label,
+          hidden: m.hidden ?? false,
         }));
       this.saveLocal();
       this.onChange?.(this.getAll());
     });
   }
 
+  /** Get visible markers (hidden markers excluded unless admin) */
   getAll(): MapMarker[] {
+    if (this.isAdmin) {
+      return [...this.markers];
+    }
+    return this.markers.filter((m) => !m.hidden);
+  }
+
+  /** Get all markers including hidden (for admin rendering) */
+  getAllIncludingHidden(): MapMarker[] {
     return [...this.markers];
   }
 
-  add(position: GeoPosition, tag: MarkerTag, label?: string, uid?: string): { marker: MapMarker; incremented: boolean } {
+  /** Get unique tags that have hidden markers */
+  getHiddenTags(): MarkerTag[] {
+    const tags = new Set<MarkerTag>();
+    for (const m of this.markers) {
+      if (m.hidden) tags.add(m.tag);
+    }
+    return [...tags];
+  }
+
+  /** Get unique tags that have visible markers */
+  getVisibleTags(): MarkerTag[] {
+    const tags = new Set<MarkerTag>();
+    for (const m of this.markers) {
+      if (!m.hidden) tags.add(m.tag);
+    }
+    return [...tags];
+  }
+
+  /** Reveal all markers of a given tag (set hidden=false) */
+  revealByTag(tag: MarkerTag): void {
+    for (const m of this.markers) {
+      if (m.tag === tag && m.hidden) {
+        m.hidden = false;
+        dbUpdateHidden(m.id, false);
+      }
+    }
+    this.saveLocal();
+    this.onChange?.(this.getAll());
+  }
+
+  /** Hide all markers of a given tag (set hidden=true) */
+  hideByTag(tag: MarkerTag): void {
+    for (const m of this.markers) {
+      if (m.tag === tag && !m.hidden) {
+        m.hidden = true;
+        dbUpdateHidden(m.id, true);
+      }
+    }
+    this.saveLocal();
+    this.onChange?.(this.getAll());
+  }
+
+  /** Reveal all hidden markers */
+  revealAll(): void {
+    for (const m of this.markers) {
+      if (m.hidden) {
+        m.hidden = false;
+        dbUpdateHidden(m.id, false);
+      }
+    }
+    this.saveLocal();
+    this.onChange?.(this.getAll());
+  }
+
+  /** Hide all markers */
+  hideAll(): void {
+    for (const m of this.markers) {
+      if (!m.hidden) {
+        m.hidden = true;
+        dbUpdateHidden(m.id, true);
+      }
+    }
+    this.saveLocal();
+    this.onChange?.(this.getAll());
+  }
+
+  add(position: GeoPosition, tag: MarkerTag, label?: string, uid?: string, hidden = false): { marker: MapMarker; incremented: boolean } {
     const nearby = this.markers.find((m) => {
       if (m.tag !== tag) return false;
       const dLat = Math.abs(m.position.latitude - position.latitude) * 111320;
@@ -169,12 +249,14 @@ export class MarkerStore {
       count: 1,
       label,
       uid,
+      hidden,
     };
     this.markers.push(marker);
     this.saveLocal();
     dbPutMarker({
       ...marker,
       collected: false,
+      hidden,
       createdAt: Date.now(),
     });
     return { marker, incremented: false };

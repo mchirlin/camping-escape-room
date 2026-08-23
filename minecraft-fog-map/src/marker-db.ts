@@ -25,6 +25,7 @@ export interface DbMarker {
   label?: string;
   uid?: string;
   collected: boolean;
+  hidden: boolean;
   createdAt: number;
 }
 
@@ -78,6 +79,7 @@ export async function dbPutMarker(marker: DbMarker): Promise<void> {
       count: marker.count,
       label: marker.label || null,
       collected: marker.collected,
+      hidden: marker.hidden ?? false,
       createdAt: marker.createdAt,
     });
   } catch (err) {
@@ -121,6 +123,15 @@ export async function dbUpdateCount(id: string, count: number): Promise<void> {
   }
 }
 
+export async function dbUpdateHidden(id: string, hidden: boolean): Promise<void> {
+  if (!apiAvailable || !db) return;
+  try {
+    await updateDoc(doc(db, COLLECTION_NAME, id), { hidden });
+  } catch (err) {
+    console.warn('Failed to update marker hidden state', err);
+  }
+}
+
 /**
  * Subscribe to real-time marker updates from Firestore.
  * Calls the callback whenever markers change on any device.
@@ -145,6 +156,7 @@ export function dbPollMarkers(
         count: data.count || 1,
         label: data.label || undefined,
         collected: data.collected || false,
+        hidden: data.hidden ?? false,
         createdAt: data.createdAt || 0,
       });
     });

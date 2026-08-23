@@ -122,10 +122,11 @@ export function createSimulationMode(config: SimulationModeConfig): SimulationMo
 }
 
 /**
- * Check whether simulation mode should be activated based on the URL query string.
+ * Check whether admin/simulation mode should be activated based on the URL query string.
+ * Accepts both ?admin=true (preferred) and ?simulate=true (legacy).
  */
 export function shouldActivateSimulation(): boolean {
   if (typeof window === 'undefined') return false;
   const params = new URLSearchParams(window.location.search);
-  return params.get('simulate') === 'true';
+  return params.get('admin') === 'true' || params.get('simulate') === 'true';
 }

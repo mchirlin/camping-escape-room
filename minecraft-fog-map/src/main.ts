@@ -171,7 +171,7 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
 // ---- Main bootstrap ----
 
 async function main(): Promise<void> {
-  // Swap favicons for simulation mode so iPhone home screen icon differs
+  // Swap favicons for admin mode so iPhone home screen icon differs
   if (shouldActivateSimulation()) {
     document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]').forEach((el) => {
       el.href = el.href.replace(/favicon(-16)?\.png/, 'favicon-sim$1.png');
@@ -180,7 +180,7 @@ async function main(): Promise<void> {
       el.href = el.href.replace('apple-touch-icon.png', 'apple-touch-icon-sim.png');
     });
     const titleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-    if (titleMeta) titleMeta.setAttribute('content', 'Fog Map (Sim)');
+    if (titleMeta) titleMeta.setAttribute('content', 'Fog Map (Admin)');
   }
 
   showLoading('Loading map data...');
@@ -326,7 +326,8 @@ async function main(): Promise<void> {
   let lastGeoPos: GeoPosition | null = null;
 
   // Marker store for user-placed points of interest
-  const markerStore = new MarkerStore();
+  const isAdminMode = shouldActivateSimulation();
+  const markerStore = new MarkerStore(isAdminMode);
   const leafletMarkerLayers: Record<string, any> = {}; // id → Leaflet marker
 
   // Initialize Firebase sync (falls back to localStorage if not configured)
@@ -576,9 +577,10 @@ async function main(): Promise<void> {
     uiOverlay.setGPSStatus('simulation');
     uiOverlay.setSimulationVisible(true);
 
-    // Wire exit-simulation button to reload without simulate param
+    // Wire exit-admin button to reload without admin param
     uiOverlay.onExitSimulation = () => {
       const params = new URLSearchParams(window.location.search);
+      params.delete('admin');
       params.delete('simulate');
       window.location.search = params.toString();
     };
@@ -591,7 +593,7 @@ async function main(): Promise<void> {
         try { localStorage.setItem('fogmap:region', regionId); } catch { /* ignore */ }
         const params = new URLSearchParams(window.location.search);
         params.set('region', regionId);
-        params.set('simulate', 'true');
+        params.set('admin', 'true');
         window.location.search = params.toString();
       };
     }
@@ -652,7 +654,7 @@ async function main(): Promise<void> {
             'Location access is needed to explore the map. Please enable location in your browser settings.'
           );
           // Offer simulation fallback
-          uiOverlay.showToast('Tip: Add ?simulate=true to the URL to use simulation mode.');
+          uiOverlay.showToast('Tip: Add ?admin=true to the URL to use admin mode.');
         } else if (err === 'signal_lost') {
           uiOverlay.setGPSStatus('lost');
         }
@@ -744,6 +746,72 @@ async function main(): Promise<void> {
       delete leafletMarkerLayers[id];
     }
   };
+
+  // --- Admin: marker visibility triggers ---
+  function updateMarkerPanel() {
+    if (!isAdminMode) return;
+    const allMarkers = markerStore.getAllIncludingHidden();
+    // Group by tag with counts and hidden state
+    const tagMap = new Map<string, { count: number; hidden: boolean }>();
+    for (const m of allMarkers) {
+      const existing = tagMap.get(m.tag);
+      if (existing) {
+        existing.count += m.count;
+        // If any marker of this tag is hidden, show as hidden
+        if (m.hidden) existing.hidden = true;
+      } else {
+        tagMap.set(m.tag, { count: m.count, hidden: !!m.hidden });
+      }
+    }
+    const tagInfos = [...tagMap.entries()].map(([tag, info]) => {
+      const tagDef = MARKER_TAGS.find((t) => t.tag === tag);
+      return {
+        tag,
+        label: tagDef?.label ?? tag,
+        color: tagDef?.color ?? '#888',
+        hidden: info.hidden,
+        count: info.count,
+      };
+    });
+    uiOverlay.updateMarkerVisibilityPanel(tagInfos);
+  }
+
+  uiOverlay.onRevealTag = (tag: string) => {
+    markerStore.revealByTag(tag as any);
+    updateMarkerPanel();
+    uiOverlay.showToast(`👁 Revealed: ${MARKER_TAGS.find(t => t.tag === tag)?.label ?? tag}`);
+  };
+
+  uiOverlay.onHideTag = (tag: string) => {
+    markerStore.hideByTag(tag as any);
+    updateMarkerPanel();
+    uiOverlay.showToast(`🙈 Hidden: ${MARKER_TAGS.find(t => t.tag === tag)?.label ?? tag}`);
+  };
+
+  uiOverlay.onRevealAllMarkers = () => {
+    markerStore.revealAll();
+    updateMarkerPanel();
+    uiOverlay.showToast('👁 All markers revealed');
+  };
+
+  uiOverlay.onHideAllMarkers = () => {
+    markerStore.hideAll();
+    updateMarkerPanel();
+    uiOverlay.showToast('🙈 All markers hidden');
+  };
+
+  // Update panel whenever markers change (from sync)
+  const originalOnChange = markerStore.onChange;
+  markerStore.onChange = (markers) => {
+    originalOnChange?.(markers);
+    updateMarkerPanel();
+  };
+
+  // Initial panel render
+  if (isAdminMode) {
+    // Delay to let Firebase sync populate markers first
+    setTimeout(updateMarkerPanel, 2000);
+  }
 
   // Toggle between Minecraft map and real OpenStreetMap view
   let showingRealMap = false;

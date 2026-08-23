@@ -24,19 +24,22 @@
 //     3  4  5      ← middle row
 //     0  1  2      ← bottom row
 //
-// Recipes:
-//   1. Wooden Pickaxe (door 0): wood_plank×3 top + stick×2 center column
-//   2. Fishing Rod (door 1): sticks diagonal + strings right column
-//   3. Gold Sword (door 2): gold_ingot×2 + stick center column
-//   4. TNT (door 0): gunpowder/sand checkerboard
-//   5. Compass (door 1): iron_ingot cross + redstone center
-//   6. Diamond Shovel (door 2): diamond + stick×2 center column
+// Recipes (storyline order):
+//   1. Compass (door 2): iron_ingot cross + redstone center
+//   2. Stone Pickaxe (door 0): cobblestone×3 top + stick×2 center column
+//   3. Map (no door): paper×8 + compass center
+//   4. Fishing Rod (door 1): sticks diagonal + strings right column
+//   5. Diamond Pickaxe (door 0): diamond×3 top + stick×2 center column
+//   6. Torch (door 2): coal + stick center column
+//   7. Iron Sword (door 1): iron_ingot×2 + stick center column
+//   8. Spyglass (door 2): amethyst + copper×2 center column
+//   9. TNT (door 1): gunpowder/sand checkerboard
 //
 // Pin assignments:
 //   GPIO 18 — NeoPixel DIN
-//   GPIO 17 — Servo 0 (door 0)
+//   GPIO 4  — Servo 0 (door 0)
 //   GPIO 16 — Servo 1 (door 1)
-//   GPIO 4  — Servo 2 (door 2)
+//   GPIO 17 — Servo 2 (door 2)
 //   GPIO 25 — DFPlayer TX (ESP32 TX → DFPlayer RX)
 //   GPIO 21 — I2C SDA
 //   GPIO 22 — I2C SCL
@@ -84,9 +87,9 @@
 // Pin Definitions
 // =============================================================================
 #define NEOPIXEL_PIN    18
-#define SERVO_PIN_0     17   // Servo 0 — J14 (door 0)
+#define SERVO_PIN_0     4    // Servo 0 — J16 (door 0)
 #define SERVO_PIN_1     16   // Servo 1 — J15 (door 1)
-#define SERVO_PIN_2     4    // Servo 2 — J16 (door 2)
+#define SERVO_PIN_2     17   // Servo 2 — J14 (door 2)
 #define DFPLAYER_TX_PIN 25   // ESP32 TX → DFPlayer RX
 #define I2C_SDA         21
 #define I2C_SCL         22
@@ -126,7 +129,7 @@ const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
 
 // Touch config
 #define TOUCH_THRESHOLD  700  // Below this = touched
-#define CRAFT_HOLD_MS    3000 // Hold 3 seconds to trigger crafting
+#define CRAFT_HOLD_MS    2000 // Hold 2 seconds to trigger crafting
 
 // Servo config
 #define SERVO_REST_DEG   90   // Resting: perpendicular (blocking door)
@@ -137,7 +140,7 @@ const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
 #define TAG_READ_TIMEOUT 50
 
 // Number of recipes
-#define NUM_RECIPES      14
+#define NUM_RECIPES      13
 
 // =============================================================================
 // Block Types — valid types for tag registration
@@ -146,37 +149,38 @@ const char* BLOCK_TYPES[] = {
   "wood_plank", "sand", "stick", "iron_ingot", "string",
   "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
   "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook", "emerald",
-  "compass"
+  "compass", "steve"
 };
-#define NUM_BLOCK_TYPES 17
+#define NUM_BLOCK_TYPES 18
 
 // Abbreviated display names (for web grid)
 const char* BLOCK_ABBREV[] = {
   "wood", "sand", "stick", "iron", "str",
   "red", "dia", "gold", "gun", "coal",
   "cop", "ame", "paper", "cob", "trip", "emer",
-  "comp"
+  "comp", "steve"
 };
 
 // Colors for each block type (RGB) — average pixel color from texture
 const uint32_t BLOCK_COLORS[] = {
-  0xA2824E,  // wood_plank
-  0xDBCFA3,  // sand
-  0x4B3815,  // stick
-  0x9C9C9C,  // iron_ingot
-  0x8F9A9B,  // string
-  0x6B0500,  // redstone
-  0x54BDB4,  // diamond
-  0xDCB342,  // gold_ingot
-  0x535353,  // gunpowder
-  0x232124,  // coal
-  0xB65C3E,  // copper_ingot
-  0x9370C0,  // amethyst_shard
-  0xD5D5D1,  // paper
-  0x7F7F7F,  // cobblestone
-  0x8E8576,  // tripwire_hook
-  0x17DD62,  // emerald
-  0xC03030,  // compass
+  0xC8820A,  // wood_plank — warm oak brown
+  0xE8D44D,  // sand — bright sandy yellow
+  0x6B3A00,  // stick — dark brown
+  0xD0D0D0,  // iron_ingot — bright silver
+  0x40B0B0,  // string — teal/cyan
+  0xFF0000,  // redstone — pure red
+  0x00E5CC,  // diamond — bright cyan/aqua
+  0xFFD700,  // gold_ingot — rich gold
+  0x404040,  // gunpowder — dark grey
+  0x1A1A1A,  // coal — near black (dim warm white on LEDs)
+  0xE05820,  // copper_ingot — bright copper orange
+  0xAA44FF,  // amethyst_shard — vivid purple
+  0xF0F0E0,  // paper — warm white
+  0x808080,  // cobblestone — medium grey
+  0x8B7355,  // tripwire_hook — tan/khaki
+  0x00FF40,  // emerald — vivid green
+  0xE02020,  // compass — deep red
+  0x00AAFF,  // steve — bright blue (Steve's shirt)
 };
 
 // =============================================================================
@@ -192,99 +196,88 @@ const uint32_t BLOCK_COLORS[] = {
 struct Recipe {
   const char* name;
   const char* pattern[NUM_SLOTS];  // [0]-[8], "" means slot must be empty
-  uint8_t doorIndex;               // Which door to open (0, 1, or 2)
+  uint8_t doorIndex;               // Which door to open (0, 1, 2, or 255=none)
+  int8_t craftGroup;               // Recipes with same group share crafted state (-1 = standalone)
 };
 
 const Recipe RECIPES[NUM_RECIPES] = {
-  // === TOOLS (Pickaxes, Shovel, Torch) ===
-  // Recipe 0: Wooden Pickaxe → door 0
+  // === Storyline order (matches FLOW-v2.md) ===
+
+  // Recipe 0-3: Crafting Table — 4 wood planks in any 2×2 corner (no door, Step 1)
+  // All 4 share craftGroup 0 — crafting any one marks them all as crafted
   {
-    "Wooden Pickaxe",
-    {"", "stick", "", "", "stick", "", "wood_plank", "wood_plank", "wood_plank"},
-    0
+    "Crafting Table",
+    {"wood_plank", "wood_plank", "", "wood_plank", "wood_plank", "", "", "", ""},
+    255, 0
   },
-  // Recipe 1: Stone Pickaxe → door 0
   {
-    "Stone Pickaxe",
-    {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
-    0
+    "Crafting Table",
+    {"", "wood_plank", "wood_plank", "", "wood_plank", "wood_plank", "", "", ""},
+    255, 0
   },
-  // Recipe 2: Diamond Pickaxe → door 0
   {
-    "Diamond Pickaxe",
-    {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
-    0
+    "Crafting Table",
+    {"", "", "", "wood_plank", "wood_plank", "", "wood_plank", "wood_plank", ""},
+    255, 0
   },
-  // Recipe 3: Diamond Shovel → door 2
   {
-    "Diamond Shovel",
-    {"", "stick", "", "", "stick", "", "", "diamond", ""},
-    2
+    "Crafting Table",
+    {"", "", "", "", "wood_plank", "wood_plank", "", "wood_plank", "wood_plank"},
+    255, 0
   },
-  // Recipe 4: Fishing Rod → door 1
-  {
-    "Fishing Rod",
-    {"stick", "", "string", "", "stick", "string", "", "", "stick"},
-    1
-  },
-  // Recipe 5: Torch → door 0
-  {
-    "Torch",
-    {"", "", "", "", "stick", "", "", "coal", ""},
-    0
-  },
-  // === WEAPONS ===
-  // Recipe 6: Gold Sword → door 2
-  {
-    "Gold Sword",
-    {"", "stick", "", "", "gold_ingot", "", "", "gold_ingot", ""},
-    2
-  },
-  // Recipe 7: Iron Sword → door 2
-  {
-    "Iron Sword",
-    {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
-    2
-  },
-  // Recipe 8: Bow → door 1
-  // [    ]  [stick]  [string]
-  // [stick] [    ]   [string]
-  // [    ]  [stick]  [string]
-  {
-    "Bow",
-    {"", "stick", "string", "stick", "", "string", "", "stick", "string"},
-    1
-  },
-  // Recipe 9: Crossbow → door 1
-  {
-    "Crossbow",
-    {"", "stick", "", "string", "tripwire_hook", "string", "stick", "iron_ingot", "stick"},
-    1
-  },
-  // Recipe 10: TNT → door 0
-  {
-    "TNT",
-    {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
-    0
-  },
-  // === NAVIGATION & UTILITY ===
-  // Recipe 11: Compass → door 1
+  // Recipe 4: Compass → door 2 (Step 2)
   {
     "Compass",
     {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
-    1
+    2, -1
   },
-  // Recipe 12: Map → door 1
+  // Recipe 5: Stone Pickaxe → door 0 (Step 4 — "Cobblestone Pickaxe")
+  {
+    "Stone Pickaxe",
+    {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
+    0, -1
+  },
+  // Recipe 6: Map (no door — iPad activates) (Step 6)
   {
     "Map",
     {"paper", "paper", "paper", "paper", "compass", "paper", "paper", "paper", "paper"},
-    1
+    255, -1
   },
-  // Recipe 13: Spyglass → door 2
+  // Recipe 7: Fishing Rod → door 1 (Step 8)
+  {
+    "Fishing Rod",
+    {"stick", "", "string", "", "stick", "string", "", "", "stick"},
+    1, -1
+  },
+  // Recipe 8: Diamond Pickaxe → door 0 (Step 10)
+  {
+    "Diamond Pickaxe",
+    {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
+    0, -1
+  },
+  // Recipe 9: Torch → door 2 (Step 13)
+  {
+    "Torch",
+    {"", "", "", "", "stick", "", "", "coal", ""},
+    2, -1
+  },
+  // Recipe 10: Iron Sword → door 1 (Step 14)
+  {
+    "Iron Sword",
+    {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
+    1, -1
+  },
+  // Recipe 11: Spyglass → door 2 (Step 16)
   {
     "Spyglass",
     {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
-    2
+    2, -1
+  },
+  // Recipe 12: TNT → door 1 (Step 20)
+  {
+    "TNT",
+    {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
+    1, -1
   },
 };
 
@@ -361,6 +354,14 @@ bool wasTouched = false;           // Previous touch state for edge detection
 
 // Recipe state
 bool recipeCrafted[NUM_RECIPES];   // Once crafted, don't re-trigger
+
+// Jukebox state (Steve figurine cycles through music tracks)
+#define JUKEBOX_NUM_TRACKS 10
+uint8_t jukeboxTrack = 1;          // Current track (1-10, folder 03)
+String lastSteveUid = "";          // Prevent re-trigger while Steve stays on table
+
+// LED spin mode — disabled, using solid color
+// (spin code removed — too slow due to NFC scan cycle timing)
 
 // =============================================================================
 // Circular Log Buffer
@@ -774,11 +775,11 @@ String readTypeFromTag() {
 
   if (startPos < 0) return "";
 
-  // Extract type string
+  // Extract type string (stop at '&' which starts the uid parameter)
   String type = "";
   for (uint8_t i = startPos; i < 16; i++) {
     uint8_t c = buf[i];
-    if (c == 0xFE || c == 0x00 || c < 0x20 || c > 0x7E) break;
+    if (c == '&' || c == 0xFE || c == 0x00 || c < 0x20 || c > 0x7E) break;
     type += (char)c;
     if (type.length() >= TAG_TYPE_MAX_LEN) break;
   }
@@ -824,8 +825,15 @@ void executeCraft(int recipeIndex) {
   logMsgf("[CRAFT] === RECIPE MATCHED: %s (door %d) ===",
           RECIPES[recipeIndex].name, RECIPES[recipeIndex].doorIndex);
 
-  // Mark as crafted
+  // Mark as crafted (and all recipes in the same craftGroup)
   recipeCrafted[recipeIndex] = true;
+  if (RECIPES[recipeIndex].craftGroup >= 0) {
+    for (int i = 0; i < NUM_RECIPES; i++) {
+      if (RECIPES[i].craftGroup == RECIPES[recipeIndex].craftGroup) {
+        recipeCrafted[i] = true;
+      }
+    }
+  }
 
   // Play success sound
   playCraftSound(recipeIndex);
@@ -833,8 +841,10 @@ void executeCraft(int recipeIndex) {
   // Rainbow sweep animation (~2 seconds)
   rainbowSweep();
 
-  // Open the corresponding door
-  servoSweepN(RECIPES[recipeIndex].doorIndex);
+  // Open the corresponding door (skip if no door assigned)
+  if (RECIPES[recipeIndex].doorIndex < 3) {
+    servoSweepN(RECIPES[recipeIndex].doorIndex);
+  }
 
   // Haptic feedback: 3 short pulses
   vibeBuzzSuccess();
@@ -997,16 +1007,24 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 <h2>Game State</h2>
 <div class="crafted" id="crafted"></div>
 <div class="btn-row"><button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button></div>
-<h2>Volume</h2>
-<div class="btn-row"><input type="range" id="vol" min="0" max="30" value="25" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">25</span></div>
-<div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Music ON</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Music OFF</button></div>
+<h2>Music</h2>
+<div class="btn-row"><input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span></div>
+<div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Play</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Stop</button></div>
+<div id="tracklist" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;"></div>
+<script>
+var trackNames=['Sweden','Wet Hands','Mice on Venus','Haggstrom','Living Mice','Subwoofer Lullaby','Danny','Dry Hands','Clark','Minecraft Calm'];
+var currentTrackNum=0;
+function buildTracks(){var h='';for(var i=0;i<trackNames.length;i++){var n=i+1;var cls=n===currentTrackNum?'background:#5b8731;color:#fff;border-color:#5b8731':'background:#333;color:#aaa;border-color:#555';h+='<button style="font-family:var(--mc-font,monospace);font-size:7px;padding:4px 6px;cursor:pointer;border:1px solid;border-radius:2px;'+cls+'" onclick="playTrack('+n+')">'+n+'. '+trackNames[i]+'</button>';}document.getElementById('tracklist').innerHTML=h;}
+function playTrack(n){fetch('/cmd?c=trk'+n).then(function(){currentTrackNum=n;buildTracks();});}
+buildTracks();
+</script>
 </div>
 <div class="panel" id="tab1">
 <h2>Register Tags</h2>
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
 <p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
-<select id="btype"><option value="wood_plank">-- Blocks --</option><option value="wood_plank">wood_plank</option><option value="sand">sand</option><option value="cobblestone">cobblestone</option><option value="iron_ingot">-- Ingots --</option><option value="iron_ingot">iron_ingot</option><option value="gold_ingot">gold_ingot</option><option value="copper_ingot">copper_ingot</option><option value="diamond">-- Gems --</option><option value="diamond">diamond</option><option value="redstone">redstone</option><option value="amethyst_shard">amethyst_shard</option><option value="emerald">emerald</option><option value="coal">coal</option><option value="stick">-- Materials --</option><option value="stick">stick</option><option value="string">string</option><option value="paper">paper</option><option value="gunpowder">gunpowder</option><option value="tripwire_hook">tripwire_hook</option><option value="compass">-- Crafted --</option><option value="compass">compass</option></select>
+<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
 <div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
 </div>
@@ -1033,9 +1051,9 @@ function setVol(v){document.getElementById('volval').textContent=v;fetch('/volum
 function setMtr(v){document.getElementById('mtrval').textContent=v;fetch('/motor?pwm='+v);}
 function regTag(){let t=document.getElementById('btype').value;let el=document.getElementById('regres');el.textContent='Programming...';el.className='result';fetch('/register?type='+t).then(r=>r.json()).then(d=>{if(d.success){el.textContent='Written: '+d.type;el.className='result';}else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}refresh();}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});}
 function resetGame(){if(confirm('Reset all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
-function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Wood Pick','Stone Pick','Dia Pick','Shovel','Fish Rod','Torch','Gold Sword','Iron Sword','Bow','Crossbow','TNT','Compass','Map','Spyglass'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
+function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Craft Table','Compass','Stone Pick','Map','Fish Rod','Dia Pick','Torch','Iron Sword','Spyglass','TNT'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}if(typeof d.musicTrack!=='undefined'){currentTrackNum=d.musicTrack;buildTracks();}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
 setInterval(refresh,2000);refresh();
-fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
+fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp','emerald':'emer'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
 </script></body></html>)rawliteral";
 
 // =============================================================================
@@ -1098,12 +1116,12 @@ void handleCmd() {
     logMsg("[WEB] Vibration motor OFF");
     server.send(200, "text/plain", "OK: Motor OFF");
   } else if (c == "mon") {
-    // Music on
+    // Music on — play current jukebox track
     if (dfPlayerReady) {
       dfPlayer.enableLoop();
-      dfPlayer.playFolder(3, 1);
+      dfPlayer.playFolder(3, jukeboxTrack);
       musicPlaying = true;
-      logMsg("[SOUND] Music ON");
+      logMsgf("[SOUND] Music ON — track %d", jukeboxTrack);
     }
     server.send(200, "text/plain", "OK: Music ON");
   } else if (c == "moff") {
@@ -1115,6 +1133,21 @@ void handleCmd() {
       logMsg("[SOUND] Music OFF");
     }
     server.send(200, "text/plain", "OK: Music OFF");
+  } else if (c.startsWith("trk")) {
+    // Play specific track: trk1, trk2, ..., trk10
+    int trackNum = c.substring(3).toInt();
+    if (trackNum >= 1 && trackNum <= JUKEBOX_NUM_TRACKS) {
+      jukeboxTrack = trackNum;
+      if (dfPlayerReady) {
+        dfPlayer.enableLoop();
+        dfPlayer.playFolder(3, trackNum);
+        musicPlaying = true;
+      }
+      logMsgf("[SOUND] Playing track %d", trackNum);
+      server.send(200, "text/plain", "OK: Track " + String(trackNum));
+    } else {
+      server.send(400, "text/plain", "Invalid track number");
+    }
   } else {
     server.send(400, "text/plain", "Unknown command");
   }
@@ -1152,9 +1185,19 @@ void handleStatus() {
     if (i < NUM_SLOTS - 1) json += ",";
   }
   json += "],\"crafted\":[";
-  for (uint8_t i = 0; i < NUM_RECIPES; i++) {
-    json += recipeCrafted[i] ? "true" : "false";
-    if (i < NUM_RECIPES - 1) json += ",";
+  {
+    bool seenGroup[10];
+    memset(seenGroup, 0, sizeof(seenGroup));
+    bool first = true;
+    for (uint8_t i = 0; i < NUM_RECIPES; i++) {
+      if (RECIPES[i].craftGroup >= 0) {
+        if (seenGroup[RECIPES[i].craftGroup]) continue;
+        seenGroup[RECIPES[i].craftGroup] = true;
+      }
+      if (!first) json += ",";
+      first = false;
+      json += recipeCrafted[i] ? "true" : "false";
+    }
   }
   json += "],\"dfplayer\":";
   json += dfPlayerReady ? "true" : "false";
@@ -1166,6 +1209,8 @@ void handleStatus() {
   } else {
     json += "null";
   }
+  json += ",\"musicTrack\":";
+  json += musicPlaying ? String(jukeboxTrack) : "0";
   json += "}";
   server.send(200, "application/json", json);
 }
@@ -1255,6 +1300,13 @@ void handleRegister() {
     slotType[REGISTER_SLOT] = type;
   }
 
+  // Immediately show the new block color on the register slot ring
+  int8_t ring = SLOT_TO_RING[REGISTER_SLOT];
+  if (ring >= 0) {
+    setRing(ring, getTypeColor(type));
+    strip.show();
+  }
+
   logMsgf("[REG] SUCCESS: written as %s (verified)", type.c_str());
 
   String json = "{\"success\":true,\"type\":\"" + type + "\"}";
@@ -1274,7 +1326,17 @@ void handleReset() {
 // =============================================================================
 void handleRecipes() {
   String json = "[";
+  bool seenGroup[10];
+  memset(seenGroup, 0, sizeof(seenGroup));
+  bool first = true;
   for (int r = 0; r < NUM_RECIPES; r++) {
+    // Skip duplicate craftGroup entries (only show first variant)
+    if (RECIPES[r].craftGroup >= 0) {
+      if (seenGroup[RECIPES[r].craftGroup]) continue;
+      seenGroup[RECIPES[r].craftGroup] = true;
+    }
+    if (!first) json += ",";
+    first = false;
     json += "{\"name\":\"";
     json += RECIPES[r].name;
     json += "\",\"door\":";
@@ -1291,7 +1353,6 @@ void handleRecipes() {
       if (i < NUM_SLOTS - 1) json += ",";
     }
     json += "]}";
-    if (r < NUM_RECIPES - 1) json += ",";
   }
   json += "]";
   server.send(200, "application/json", json);
@@ -1412,9 +1473,9 @@ void setup() {
   dfSerial.begin(9600, SERIAL_8N1, -1, DFPLAYER_TX_PIN);
   delay(500);
   if (dfPlayer.begin(dfSerial, false)) {
-    dfPlayer.volume(25);
+    dfPlayer.volume(30);
     dfPlayerReady = true;
-    logMsg("[SOUND] DFPlayer OK, volume 25/30");
+    logMsg("[SOUND] DFPlayer OK, volume 30/30");
     // Start background music (sweden — folder 03, track 001, looping)
     dfPlayer.enableLoop();
     dfPlayer.playFolder(3, 1);
@@ -1592,7 +1653,23 @@ void loop() {
         strip.show();
       }
 
-      playSound(i + 1);
+      if (slotType[i] != "steve") {
+        playSound(i + 1);
+      }
+
+      // Jukebox mode: Steve figurine cycles background music
+      if (slotType[i] == "steve" && slotUid[i] != lastSteveUid) {
+        lastSteveUid = slotUid[i];
+        logMsgf("[JUKEBOX] Steve detected! Playing track %d/10", jukeboxTrack);
+        if (dfPlayerReady) {
+          dfPlayer.enableLoop();
+          delay(50);
+          dfPlayer.playFolder(3, jukeboxTrack);
+          musicPlaying = true;
+        }
+        // Advance to next track for next placement
+        jukeboxTrack = (jukeboxTrack % JUKEBOX_NUM_TRACKS) + 1;
+      }
 
       String uidDisp = uidToDisplayString(uid, uidLen);
       if (slotType[i].length() > 0) {
@@ -1604,6 +1681,10 @@ void loop() {
       }
 
     } else if (!tagPresent && slotActive[i]) {
+      // Clear Steve jukebox state if Steve was removed
+      if (slotType[i] == "steve") {
+        lastSteveUid = "";
+      }
       slotActive[i] = false;
       slotUid[i] = "";
       slotType[i] = "";

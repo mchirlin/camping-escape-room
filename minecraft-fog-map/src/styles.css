@@ -323,6 +323,21 @@
   padding: 5px 8px !important;
 }
 
+/* --- Marker Visibility Panel (admin mode) --- */
+.ui-marker-panel {
+  background: rgba(0, 0, 0, 0.75);
+  border: 2px solid var(--mc-btn-shadow);
+  padding: 8px;
+  border-radius: 4px;
+  max-width: 300px;
+}
+
+.ui-marker-panel-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* --- Region Selector (bottom-left group) --- */
 .ui-region-select {
   display: flex;

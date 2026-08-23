@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="790" height="440">
+<style>
+  .header { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; }
+  .subheader { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: #333; }
+  .item { font-family: Arial, sans-serif; font-size: 12px; }
+  .recipe { font-family: monospace; font-size: 11px; fill: #666; }
+  .checkbox { font-family: Arial, sans-serif; font-size: 14px; }
+</style>
+<rect width="100%" height="100%" fill="white"/>
+<text x="395.0" y="40" text-anchor="middle" class="header">🎮 Minecraft Escape Room - Game Master Cheat Sheet</text>
+<text x="30" y="70" class="subheader">📋 FLOW (check as completed)</text>
+<rect x="30" y="78" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="90" class="item" fill="#333" font-weight="normal">0. 🎮 START</text>
+<rect x="30" y="102" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="114" class="item" fill="#333" font-weight="normal">1. 📦 Find Oak Planks</text>
+<rect x="30" y="126" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="138" class="item" fill="#4CAF50" font-weight="bold">2. ⚒️ CRAFT: Crafting Table</text>
+<rect x="30" y="150" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="162" class="item" fill="#333" font-weight="normal">3. 📍 Explorer Tent</text>
+<rect x="30" y="174" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="186" class="item" fill="#4CAF50" font-weight="bold">4. ⚒️ CRAFT: Compass</text>
+<rect x="30" y="198" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="210" class="item" fill="#333" font-weight="normal">5. 📍 Follow Waypoints</text>
+<rect x="30" y="222" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="234" class="item" fill="#4CAF50" font-weight="bold">6. ⚒️ CRAFT: Stone Pickaxe</text>
+<rect x="30" y="246" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="258" class="item" fill="#333" font-weight="normal">7. 📍 Old Mine</text>
+<rect x="30" y="270" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="282" class="item" fill="#4CAF50" font-weight="bold">8. ⚒️ CRAFT: Map</text>
+<rect x="30" y="294" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="306" class="item" fill="#333" font-weight="normal">9. 📍 Villager (1st)</text>
+<rect x="30" y="318" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="330" class="item" fill="#4CAF50" font-weight="bold">10. ⚒️ CRAFT: Fishing Pole</text>
+<rect x="30" y="342" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="354" class="item" fill="#333" font-weight="normal">11. 📍 Stream - Fish!</text>
+<rect x="30" y="366" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="378" class="item" fill="#4CAF50" font-weight="bold">12. ⚒️ CRAFT: Diamond Pickaxe</text>
+<rect x="30" y="390" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="402" class="item" fill="#333" font-weight="normal">13. 📍 Ancient Quarry</text>
+<rect x="30" y="414" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="426" class="item" fill="#333" font-weight="normal">14. 📍 Villager (Trade)</text>
+<rect x="30" y="438" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="450" class="item" fill="#4CAF50" font-weight="bold">15. ⚒️ CRAFT: Torch</text>
+<rect x="30" y="462" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="474" class="item" fill="#4CAF50" font-weight="bold">16. ⚒️ CRAFT: Iron Sword</text>
+<rect x="30" y="486" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="498" class="item" fill="#333" font-weight="normal">17. 📍 Dark Cave</text>
+<rect x="30" y="510" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="522" class="item" fill="#4CAF50" font-weight="bold">18. ⚒️ CRAFT: Spyglass</text>
+<rect x="30" y="534" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="546" class="item" fill="#333" font-weight="normal">19. ⚡ Tall Hill</text>
+<rect x="30" y="558" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="570" class="item" fill="#333" font-weight="normal">20. ⚡ Defeat Creeper!</text>
+<rect x="30" y="582" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="594" class="item" fill="#333" font-weight="normal">21. 📦 Collect Items</text>
+<rect x="30" y="606" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="618" class="item" fill="#4CAF50" font-weight="bold">22. ⚒️ CRAFT: TNT</text>
+<rect x="30" y="630" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="642" class="item" fill="#333" font-weight="normal">23. ⚡ BOOM!</text>
+<rect x="30" y="654" width="14" height="14" fill="none" stroke="#333" stroke-width="1"/>
+<text x="50" y="666" class="item" fill="#333" font-weight="normal">24. 🏆 TREASURE!</text>
+<text x="410" y="70" class="subheader">⚒️ CRAFTS (10 total)</text>
+<rect x="410" y="78" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="90" class="item" font-weight="bold">Crafting Table</text>
+<text x="430" y="104" class="recipe">4 Oak Planks</text>
+<rect x="410" y="110" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="122" class="item" font-weight="bold">Compass</text>
+<text x="430" y="136" class="recipe">4 Iron + 1 Redstone</text>
+<rect x="410" y="142" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="154" class="item" font-weight="bold">Stone Pickaxe</text>
+<text x="430" y="168" class="recipe">3 Cobblestone + 2 Sticks</text>
+<rect x="410" y="174" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="186" class="item" font-weight="bold">Map</text>
+<text x="430" y="200" class="recipe">8 Paper + Compass</text>
+<rect x="410" y="206" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="218" class="item" font-weight="bold">Fishing Pole</text>
+<text x="430" y="232" class="recipe">3 Sticks + 2 String</text>
+<rect x="410" y="238" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="250" class="item" font-weight="bold">Diamond Pickaxe</text>
+<text x="430" y="264" class="recipe">3 Diamonds + 2 Sticks</text>
+<rect x="410" y="270" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="282" class="item" font-weight="bold">Torch</text>
+<text x="430" y="296" class="recipe">1 Coal + 1 Stick</text>
+<rect x="410" y="302" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="314" class="item" font-weight="bold">Iron Sword</text>
+<text x="430" y="328" class="recipe">2 Iron + 1 Stick</text>
+<rect x="410" y="334" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="346" class="item" font-weight="bold">Spyglass</text>
+<text x="430" y="360" class="recipe">1 Amethyst + 2 Copper</text>
+<rect x="410" y="366" width="14" height="14" fill="none" stroke="#4CAF50" stroke-width="2"/>
+<text x="430" y="378" class="item" font-weight="bold">TNT</text>
+<text x="430" y="392" class="recipe">5 Gunpowder + 4 Sand</text>
+<text x="410" y="440" class="subheader">📍 MAP REVEALS</text>
+<text x="410" y="460" class="item">• After Map craft: Stream, Cave, Quarry, Villager</text>
+<text x="410" y="480" class="item">• After Fishing: 4 Sand locations</text>
+<text x="410" y="500" class="item">• After Creeper: 5 Gunpowder locations</text>
+</svg>

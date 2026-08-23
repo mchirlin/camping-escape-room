@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="2310" viewBox="0 0 360 2310">
+<style>
+  .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; }
+  .details { font-family: Arial, sans-serif; font-size: 11px; }
+  .recipe { font-family: monospace; font-size: 10px; fill: #666; }
+</style>
+<rect width="100%" height="100%" fill="white"/>
+<rect x="40" y="40" width="280" height="70" rx="8" ry="8" fill="#607D8B" stroke="#455A64" stroke-width="2"/>
+<text x="50" y="62" fill="white" class="title">🎮 START</text>
+<text x="50" y="80" fill="white" class="details">Kids receive Explorer's Journal</text>
+<line x1="180.0" y1="110" x2="180.0" y2="130" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,130 172.0,122 188.0,122" fill="#333"/>
+<rect x="40" y="130" width="280" height="70" rx="8" ry="8" fill="#FF9800" stroke="#EF6C00" stroke-width="2"/>
+<text x="50" y="152" fill="white" class="title">📦 Find Oak Planks</text>
+<text x="50" y="170" fill="white" class="details">4 Oak Planks + Sticks near campsite</text>
+<line x1="180.0" y1="200" x2="180.0" y2="220" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,220 172.0,212 188.0,212" fill="#333"/>
+<rect x="40" y="220" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="242" fill="white" class="title">⚒️ CRAFT: Crafting Table</text>
+<text x="50" y="260" fill="white" class="details">Unlocks Explorer Tent</text>
+<text x="50" y="275" class="recipe">Recipe: 4 Oak Planks</text>
+<line x1="180.0" y1="290" x2="180.0" y2="310" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,310 172.0,302 188.0,302" fill="#333"/>
+<rect x="40" y="310" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="332" fill="white" class="title">📍 Explorer Tent</text>
+<text x="50" y="350" fill="white" class="details">Loot: 4 Iron, Redstone, Coal, Sticks</text>
+<line x1="180.0" y1="380" x2="180.0" y2="400" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,400 172.0,392 188.0,392" fill="#333"/>
+<rect x="40" y="400" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="422" fill="white" class="title">⚒️ CRAFT: Compass</text>
+<text x="50" y="440" fill="white" class="details">Get Direction Card #1</text>
+<text x="50" y="455" class="recipe">Recipe: 4 Iron + 1 Redstone</text>
+<line x1="180.0" y1="470" x2="180.0" y2="490" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,490 172.0,482 188.0,482" fill="#333"/>
+<rect x="40" y="490" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="512" fill="white" class="title">📍 Follow Waypoints</text>
+<text x="50" y="530" fill="white" class="details">Find: 3 Cobblestone, 2 String, Sticks</text>
+<line x1="180.0" y1="560" x2="180.0" y2="580" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,580 172.0,572 188.0,572" fill="#333"/>
+<rect x="40" y="580" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="602" fill="white" class="title">⚒️ CRAFT: Stone Pickaxe</text>
+<text x="50" y="620" fill="white" class="details">Unlocks Old Mine</text>
+<text x="50" y="635" class="recipe">Recipe: 3 Cobblestone + 2 Sticks</text>
+<line x1="180.0" y1="650" x2="180.0" y2="670" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,670 172.0,662 188.0,662" fill="#333"/>
+<rect x="40" y="670" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="692" fill="white" class="title">📍 Old Mine</text>
+<text x="50" y="710" fill="white" class="details">Find: 8 Paper, String, 2 Copper</text>
+<line x1="180.0" y1="740" x2="180.0" y2="760" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,760 172.0,752 188.0,752" fill="#333"/>
+<rect x="40" y="760" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="782" fill="white" class="title">⚒️ CRAFT: Map</text>
+<text x="50" y="800" fill="white" class="details">Reveals locations on iPad!</text>
+<text x="50" y="815" class="recipe">Recipe: 8 Paper + Compass</text>
+<line x1="180.0" y1="830" x2="180.0" y2="850" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,850 172.0,842 188.0,842" fill="#333"/>
+<rect x="40" y="850" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="872" fill="white" class="title">📍 Villager (1st)</text>
+<text x="50" y="890" fill="white" class="details">Get Fishing Pole recipe</text>
+<line x1="180.0" y1="920" x2="180.0" y2="940" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,940 172.0,932 188.0,932" fill="#333"/>
+<rect x="40" y="940" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="962" fill="white" class="title">⚒️ CRAFT: Fishing Pole</text>
+<text x="50" y="995" class="recipe">Recipe: 3 Sticks + 2 String</text>
+<line x1="180.0" y1="1010" x2="180.0" y2="1030" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1030 172.0,1022 188.0,1022" fill="#333"/>
+<rect x="40" y="1030" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="1052" fill="white" class="title">📍 Stream - Fish!</text>
+<text x="50" y="1070" fill="white" class="details">Catch: 3 Diamonds! Map shows Sand</text>
+<line x1="180.0" y1="1100" x2="180.0" y2="1120" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1120 172.0,1112 188.0,1112" fill="#333"/>
+<rect x="40" y="1120" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="1142" fill="white" class="title">⚒️ CRAFT: Diamond Pickaxe</text>
+<text x="50" y="1160" fill="white" class="details">Unlocks Ancient Quarry</text>
+<text x="50" y="1175" class="recipe">Recipe: 3 Diamonds + 2 Sticks</text>
+<line x1="180.0" y1="1190" x2="180.0" y2="1210" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1210 172.0,1202 188.0,1202" fill="#333"/>
+<rect x="40" y="1210" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="1232" fill="white" class="title">📍 Ancient Quarry</text>
+<text x="50" y="1250" fill="white" class="details">Find: Emerald, Amethyst, 2 Iron</text>
+<line x1="180.0" y1="1280" x2="180.0" y2="1300" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1300 172.0,1292 188.0,1292" fill="#333"/>
+<rect x="40" y="1300" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="1322" fill="white" class="title">📍 Villager (Trade)</text>
+<text x="50" y="1340" fill="white" class="details">Trade Emerald → Torch & Sword recipes</text>
+<line x1="180.0" y1="1370" x2="180.0" y2="1390" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1390 172.0,1382 188.0,1382" fill="#333"/>
+<rect x="40" y="1390" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="1412" fill="white" class="title">⚒️ CRAFT: Torch</text>
+<text x="50" y="1430" fill="white" class="details">Unlocks Dark Cave</text>
+<text x="50" y="1445" class="recipe">Recipe: 1 Coal + 1 Stick</text>
+<line x1="180.0" y1="1460" x2="180.0" y2="1480" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1480 172.0,1472 188.0,1472" fill="#333"/>
+<rect x="40" y="1480" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="1502" fill="white" class="title">⚒️ CRAFT: Iron Sword</text>
+<text x="50" y="1520" fill="white" class="details">For defeating Creeper</text>
+<text x="50" y="1535" class="recipe">Recipe: 2 Iron + 1 Stick</text>
+<line x1="180.0" y1="1550" x2="180.0" y2="1570" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1570 172.0,1562 188.0,1562" fill="#333"/>
+<rect x="40" y="1570" width="280" height="70" rx="8" ry="8" fill="#2196F3" stroke="#1565C0" stroke-width="2"/>
+<text x="50" y="1592" fill="white" class="title">📍 Dark Cave</text>
+<text x="50" y="1610" fill="white" class="details">Find: Spyglass recipe</text>
+<line x1="180.0" y1="1640" x2="180.0" y2="1660" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1660 172.0,1652 188.0,1652" fill="#333"/>
+<rect x="40" y="1660" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="1682" fill="white" class="title">⚒️ CRAFT: Spyglass</text>
+<text x="50" y="1715" class="recipe">Recipe: 1 Amethyst + 2 Copper</text>
+<line x1="180.0" y1="1730" x2="180.0" y2="1750" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1750 172.0,1742 188.0,1742" fill="#333"/>
+<rect x="40" y="1750" width="280" height="70" rx="8" ry="8" fill="#9C27B0" stroke="#6A1B9A" stroke-width="2"/>
+<text x="50" y="1772" fill="white" class="title">⚡ Tall Hill</text>
+<text x="50" y="1790" fill="white" class="details">Use Spyglass to spot Creeper</text>
+<line x1="180.0" y1="1820" x2="180.0" y2="1840" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1840 172.0,1832 188.0,1832" fill="#333"/>
+<rect x="40" y="1840" width="280" height="70" rx="8" ry="8" fill="#9C27B0" stroke="#6A1B9A" stroke-width="2"/>
+<text x="50" y="1862" fill="white" class="title">⚡ Defeat Creeper!</text>
+<text x="50" y="1880" fill="white" class="details">Map shows Gunpowder. Get TNT recipe.</text>
+<line x1="180.0" y1="1910" x2="180.0" y2="1930" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,1930 172.0,1922 188.0,1922" fill="#333"/>
+<rect x="40" y="1930" width="280" height="70" rx="8" ry="8" fill="#FF9800" stroke="#EF6C00" stroke-width="2"/>
+<text x="50" y="1952" fill="white" class="title">📦 Collect Items</text>
+<text x="50" y="1970" fill="white" class="details">4 Sand (stream) + 5 Gunpowder (creeper area)</text>
+<line x1="180.0" y1="2000" x2="180.0" y2="2020" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,2020 172.0,2012 188.0,2012" fill="#333"/>
+<rect x="40" y="2020" width="280" height="70" rx="8" ry="8" fill="#4CAF50" stroke="#2E7D32" stroke-width="2"/>
+<text x="50" y="2042" fill="white" class="title">⚒️ CRAFT: TNT</text>
+<text x="50" y="2075" class="recipe">Recipe: 5 Gunpowder + 4 Sand</text>
+<line x1="180.0" y1="2090" x2="180.0" y2="2110" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,2110 172.0,2102 188.0,2102" fill="#333"/>
+<rect x="40" y="2110" width="280" height="70" rx="8" ry="8" fill="#9C27B0" stroke="#6A1B9A" stroke-width="2"/>
+<text x="50" y="2132" fill="white" class="title">⚡ BOOM!</text>
+<text x="50" y="2150" fill="white" class="details">Blow open the treasure chest</text>
+<line x1="180.0" y1="2180" x2="180.0" y2="2200" stroke="#333" stroke-width="2"/>
+<polygon points="180.0,2200 172.0,2192 188.0,2192" fill="#333"/>
+<rect x="40" y="2200" width="280" height="70" rx="8" ry="8" fill="#FFD700" stroke="#B8860B" stroke-width="2"/>
+<text x="50" y="2222" fill="black" class="title">🏆 TREASURE!</text>
+<text x="50" y="2240" fill="black" class="details">Dragon Egg + Treats for everyone!</text>
+</svg>

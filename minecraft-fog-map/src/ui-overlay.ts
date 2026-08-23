@@ -15,6 +15,7 @@ export interface UIOverlay {
   setSimulationVisible(visible: boolean): void;
   setMapLevel(level: number): void;
   showToast(message: string): void;
+  updateMarkerVisibilityPanel(tags: Array<{ tag: string; label: string; color: string; hidden: boolean; count: number }>): void;
   onCenterOnMe: () => void;
   onMapLevelChange: (level: number) => void;
   onToggleRealMap: () => void;
@@ -29,7 +30,7 @@ const GPS_STATUS_LABELS: Record<GPSStatus, string> = {
   active: 'GPS Active',
   lost: 'GPS Signal Lost',
   denied: 'GPS Denied',
-  simulation: 'Simulation',
+  simulation: 'Admin',
 };
 
 const GPS_STATUS_ICONS: Record<GPSStatus, string> = {
@@ -53,6 +54,10 @@ export class UIOverlayImpl implements UIOverlay {
   onRegionChange: (regionId: string) => void = () => {};
   onExitSimulation: () => void = () => {};
   onAvatarChange: (skinName: string) => void = () => {};
+  onRevealTag: (tag: string) => void = () => {};
+  onHideTag: (tag: string) => void = () => {};
+  onRevealAllMarkers: () => void = () => {};
+  onHideAllMarkers: () => void = () => {};
 
   // DOM element references
   private container: HTMLElement | null = null;
@@ -74,6 +79,7 @@ export class UIOverlayImpl implements UIOverlay {
   private toastContainer: HTMLElement | null = null;
   private toggleMapBtn: HTMLElement | null = null;
   private regionSelect: HTMLElement | null = null;
+  private markerPanel: HTMLElement | null = null;
 
   private topLeftGroup: HTMLElement | null = null;
   private topRightGroup: HTMLElement | null = null;
@@ -112,9 +118,10 @@ export class UIOverlayImpl implements UIOverlay {
     this.createMapLevel();
     this.createToggleMapButton();
 
-    // Bottom-left: region selector, action buttons row, fullscreen
+    // Bottom-left: region selector, action buttons row, marker panel, fullscreen
     this.createRegionSelector();
     this.createActionButtonsRow();
+    this.createMarkerVisibilityPanel();
     this.createFullscreenButton();
 
     // Bottom-right: center button, zoom controls
@@ -172,6 +179,9 @@ export class UIOverlayImpl implements UIOverlay {
     }
     if (this.actionRow) {
       this.actionRow.style.display = visible ? 'flex' : 'none';
+    }
+    if (this.markerPanel) {
+      this.markerPanel.style.display = visible ? 'block' : 'none';
     }
     if (this.regionSelect) {
       this.regionSelect.style.display = visible ? 'flex' : 'none';
@@ -524,14 +534,14 @@ export class UIOverlayImpl implements UIOverlay {
     banner.style.display = 'none';
 
     const text = document.createElement('span');
-    text.textContent = 'SIMULATION MODE';
+    text.textContent = 'ADMIN MODE';
     banner.appendChild(text);
 
     const btn = document.createElement('button');
     btn.classList.add('ui-sim-exit-btn');
     btn.setAttribute('data-testid', 'exit-simulation');
-    btn.setAttribute('aria-label', 'Switch to real GPS mode');
-    btn.textContent = '📡 Go Real';
+    btn.setAttribute('aria-label', 'Switch to player GPS mode');
+    btn.textContent = '📡 Player View';
     btn.addEventListener('click', () => this.onExitSimulation());
     banner.appendChild(btn);
 
@@ -618,6 +628,67 @@ export class UIOverlayImpl implements UIOverlay {
 
     this.bottomLeftGroup!.appendChild(row);
     this.actionRow = row;
+  }
+
+  private createMarkerVisibilityPanel(): void {
+    const panel = document.createElement('div');
+    panel.classList.add('ui-marker-panel');
+    panel.style.display = 'none';
+    panel.innerHTML = `
+      <div style="font-family:var(--mc-font);font-size:7px;color:#aaa;margin-bottom:4px;">MARKER VISIBILITY</div>
+      <div class="ui-marker-panel-buttons"></div>
+      <div style="display:flex;gap:4px;margin-top:6px;">
+        <button class="ui-btn ui-action-btn ui-reveal-all-markers" style="font-size:7px;padding:4px 6px;">👁 Reveal All</button>
+        <button class="ui-btn ui-action-btn ui-hide-all-markers" style="font-size:7px;padding:4px 6px;">🙈 Hide All</button>
+      </div>
+    `;
+
+    panel.querySelector('.ui-reveal-all-markers')!.addEventListener('click', () => {
+      this.onRevealAllMarkers();
+    });
+    panel.querySelector('.ui-hide-all-markers')!.addEventListener('click', () => {
+      this.onHideAllMarkers();
+    });
+
+    this.bottomLeftGroup!.appendChild(panel);
+    this.markerPanel = panel;
+  }
+
+  /** Update the marker visibility panel buttons based on current marker states */
+  updateMarkerVisibilityPanel(tags: Array<{ tag: string; label: string; color: string; hidden: boolean; count: number }>): void {
+    if (!this.markerPanel) return;
+    const container = this.markerPanel.querySelector('.ui-marker-panel-buttons');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (tags.length === 0) {
+      container.innerHTML = '<div style="font-family:var(--mc-font);font-size:7px;color:#666;padding:4px;">No markers placed</div>';
+      return;
+    }
+
+    for (const t of tags) {
+      const btn = document.createElement('button');
+      btn.style.cssText = `
+        font-family:var(--mc-font);font-size:7px;padding:4px 8px;cursor:pointer;
+        border:2px solid ${t.hidden ? '#555' : t.color};
+        background:${t.hidden ? '#2a2a2a' : t.color + '33'};
+        color:${t.hidden ? '#888' : '#fff'};
+        opacity:${t.hidden ? '0.6' : '1'};
+        border-radius:3px;
+        transition:all 0.2s;
+      `;
+      btn.textContent = `${t.hidden ? '🙈' : '👁'} ${t.label} (${t.count})`;
+      btn.title = t.hidden ? `Click to reveal ${t.label}` : `Click to hide ${t.label}`;
+      btn.addEventListener('click', () => {
+        if (t.hidden) {
+          this.onRevealTag(t.tag);
+        } else {
+          this.onHideTag(t.tag);
+        }
+      });
+      container.appendChild(btn);
+    }
   }
 
   private createFullscreenButton(): void {
