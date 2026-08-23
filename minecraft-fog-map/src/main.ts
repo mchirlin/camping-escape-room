@@ -161,9 +161,13 @@ function loadAtlasImage(): Promise<HTMLImageElement> {
 
 function resizeCanvas(canvas: HTMLCanvasElement): void {
   const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
+  // Use window inner dimensions to avoid layout race conditions on reload
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
   const ctx = canvas.getContext('2d');
   if (ctx) ctx.scale(dpr, dpr);
 }
@@ -250,6 +254,8 @@ async function main(): Promise<void> {
 
   // 3. Set up canvas sizing
   resizeCanvas(canvas);
+  // Delayed re-resize to catch iOS address bar/layout settling after reload
+  setTimeout(() => resizeCanvas(canvas), 300);
 
   // 3b. Handle font load failure — fall back to system monospace silently
   if (document.fonts) {
@@ -1143,6 +1149,89 @@ async function main(): Promise<void> {
     handleMarkerClick(e.clientX, e.clientY);
   });
 
+  // Admin: long-press on canvas to add items
+  if (isAdminMode) {
+    let longPressTimer: ReturnType<typeof setTimeout> | null = null;
+    let longPressPos = { x: 0, y: 0 };
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      longPressPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      longPressTimer = setTimeout(() => {
+        showAddItemPopup(longPressPos.x, longPressPos.y);
+      }, 600); // 600ms long press
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (longPressTimer && e.touches.length === 1) {
+        const dx = e.touches[0].clientX - longPressPos.x;
+        const dy = e.touches[0].clientY - longPressPos.y;
+        if (Math.sqrt(dx * dx + dy * dy) > 10) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+      }
+    });
+
+    canvas.addEventListener('touchend', () => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    });
+
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      showAddItemPopup(e.clientX, e.clientY);
+    });
+  }
+
+  function showAddItemPopup(screenX: number, screenY: number) {
+    hideMarkerPopup();
+
+    // Convert screen position to geo
+    const viewport = mapInteraction.getViewport();
+    const scale = Math.pow(2, viewport.zoomLevel);
+    const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
+    const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
+    const worldX = viewLeft + screenX / scale;
+    const worldY = viewTop + screenY / scale;
+    const geo = worldToGeo({ x: worldX, y: worldY }, bbox, level4Grid, TILE_SCREEN_SIZE);
+
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+      position:absolute;left:${screenX}px;top:${Math.max(0, screenY - 120)}px;z-index:50;
+      background:rgba(0,0,0,0.95);border:2px solid #555;padding:8px;
+      font-family:var(--mc-font);font-size:7px;color:#fff;pointer-events:auto;
+      display:flex;flex-direction:column;gap:6px;max-width:240px;
+    `;
+
+    let html = '<div style="color:#aaa;margin-bottom:4px;">Add Item:</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:3px;">';
+    for (const t of MARKER_TAGS) {
+      html += `<button data-tag="${t.tag}" style="font-family:var(--mc-font);font-size:6px;padding:3px 5px;cursor:pointer;background:${t.color};color:#000;border:1px solid #333;border-radius:2px;">${t.label}</button>`;
+    }
+    html += '</div>';
+    html += '<button data-action="close" style="font-family:var(--mc-font);font-size:6px;padding:3px 6px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;margin-top:4px;align-self:flex-end;">Cancel</button>';
+    popup.innerHTML = html;
+
+    // Wire tag buttons
+    popup.querySelectorAll('[data-tag]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tag = (btn as HTMLElement).getAttribute('data-tag') as MarkerTag;
+        const { marker, incremented } = markerStore.add(geo, tag, undefined, undefined, true);
+        if (!incremented) {
+          uiOverlay.showToast(`📌 Placed: ${MARKER_TAGS.find(t => t.tag === tag)?.label ?? tag} (hidden)`);
+        }
+        popup.remove();
+        updateMarkerPanel();
+      });
+    });
+
+    popup.querySelector('[data-action="close"]')?.addEventListener('click', () => {
+      popup.remove();
+    });
+
+    document.getElementById('app')!.appendChild(popup);
+  }
+
   // Wire tap for mobile marker interaction
   const existingOnTap = mapInteraction.onTap;
   mapInteraction.onTap = (screenX: number, screenY: number) => {
@@ -1354,24 +1443,6 @@ async function main(): Promise<void> {
           ctx!.beginPath();
           ctx!.arc(opScreenX, opScreenY, 8, 0, Math.PI * 2);
           ctx!.fill();
-        }
-      }
-      // Render local player avatar on top of everything
-      if (playerWorldPos) {
-        const localEntry = atlasManifest.textures[`player_${(() => { try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; } })()}`] ?? atlasManifest.textures['player'];
-        if (localEntry && atlasImage) {
-          const localSize = 32;
-          const lpx = (playerWorldPos.x - vpLeft) * vpScale;
-          const lpy = (playerWorldPos.y - vpTop) * vpScale;
-          ctx!.save();
-          ctx!.imageSmoothingEnabled = false;
-          ctx!.translate(lpx, lpy);
-          ctx!.drawImage(
-            atlasImage,
-            localEntry.x, localEntry.y, localEntry.w, localEntry.h,
-            -localSize / 2, -localSize / 2, localSize, localSize
-          );
-          ctx!.restore();
         }
       }
     }
