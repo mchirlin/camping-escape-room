@@ -365,10 +365,17 @@ async function main(): Promise<void> {
             otherPlayers = players;
           });
 
-          // Clean up on page unload
-          window.addEventListener('beforeunload', () => {
+          // Clean up on page unload (multiple events for mobile reliability)
+          const cleanup = () => {
             stopBroadcast();
             removePlayer(playerId);
+          };
+          window.addEventListener('beforeunload', cleanup);
+          window.addEventListener('pagehide', cleanup);
+          document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+              removePlayer(playerId);
+            }
           });
         });
       }

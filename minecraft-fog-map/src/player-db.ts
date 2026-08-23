@@ -24,7 +24,7 @@ export interface PlayerData {
 }
 
 const COLLECTION_NAME = 'players';
-const STALE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const STALE_TIMEOUT_MS = 10 * 1000; // 10 seconds — avatar disappears almost immediately when device stops broadcasting
 
 let db: ReturnType<typeof getFirestore> | null = null;
 let unsubscribe: Unsubscribe | null = null;

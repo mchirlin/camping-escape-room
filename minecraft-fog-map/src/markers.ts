@@ -16,12 +16,12 @@ export interface MapMarker {
 
 export type MarkerTag =
   // Blocks
-  | 'wood'
+  | 'wood_plank'
   | 'sand'
   | 'cobblestone'
   // Ingots
-  | 'iron'
-  | 'gold'
+  | 'iron_ingot'
+  | 'gold_ingot'
   | 'copper_ingot'
   // Gems
   | 'diamond'
@@ -45,12 +45,12 @@ const BASE = import.meta.env.BASE_URL;
 
 export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; texture: string }[] = [
   // Blocks
-  { tag: 'wood',          label: 'Wood Plank',      color: '#8B6914', texture: `${BASE}markers/wood.png` },
+  { tag: 'wood_plank',    label: 'Wood Plank',      color: '#8B6914', texture: `${BASE}markers/wood.png` },
   { tag: 'sand',          label: 'Sand',            color: '#E8D8A0', texture: `${BASE}markers/sand.png` },
   { tag: 'cobblestone',   label: 'Cobblestone',     color: '#7A7A7A', texture: `${BASE}markers/cobblestone.png` },
   // Ingots
-  { tag: 'iron',          label: 'Iron Ingot',      color: '#D8D8D8', texture: `${BASE}markers/iron.png` },
-  { tag: 'gold',          label: 'Gold Ingot',      color: '#FAEE57', texture: `${BASE}markers/gold.png` },
+  { tag: 'iron_ingot',    label: 'Iron Ingot',      color: '#D8D8D8', texture: `${BASE}markers/iron.png` },
+  { tag: 'gold_ingot',    label: 'Gold Ingot',      color: '#FAEE57', texture: `${BASE}markers/gold.png` },
   { tag: 'copper_ingot',  label: 'Copper Ingot',    color: '#C87533', texture: `${BASE}markers/copper_ingot.png` },
   // Gems
   { tag: 'diamond',       label: 'Diamond',         color: '#5CDBD5', texture: `${BASE}markers/diamond.png` },

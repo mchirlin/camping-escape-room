@@ -83,10 +83,10 @@ BG_COLOR = "#D4A96A"         # Parchment/leather tan (fallback)
 BG_TEXTURE = os.path.join(PROJECT, "minecraft", "textures", "block", "orange_terracotta.png")
 BORDER_DARK = "#4A2E0A"     # Dark leather brown
 BORDER_LIGHT = "#E8C992"    # Highlight edge
-SLOT_BG = "#6B4226"         # Slot fill — dark brown
-SLOT_DARK = "#3A1F0A"       # Slot top/left border (shadow)
-SLOT_LIGHT = "#9C6B3A"      # Slot bottom/right border (highlight)
-ARROW_COLOR = "#6B4226"     # Same as slot background brown
+SLOT_BG = "#8B6B4A"         # Slot fill — lighter brown for better item contrast
+SLOT_DARK = "#5A3A1A"       # Slot top/left border (shadow)
+SLOT_LIGHT = "#B89060"      # Slot bottom/right border (highlight)
+ARROW_COLOR = "#8B6B4A"     # Same as slot background
 TITLE_COLOR = "#D4A96A"     # Light brown for title text
 TITLE_SHADOW = "#3A1F0A"    # Dark brown shadow
 
@@ -281,8 +281,10 @@ def minecraft_title(text, x, y, size=28, color=None, shadow_color=None):
 
 def generate_card(recipe):
     """Generate a single recipe card SVG."""
-    W, H = 612, 396
-    CELL = 72
+    # 100×148mm postcard (landscape: 148mm wide × 100mm tall)
+    # 1mm = 2.83465pt → 148mm = 419.5pt, 100mm = 283.5pt
+    W, H = 419.5, 283.5
+    CELL = 62
     GRID_W = CELL * 3  # No gaps!
     GRID_H = CELL * 3
 
@@ -317,8 +319,8 @@ def generate_card(recipe):
                f'fill="none" stroke="{BORDER_LIGHT}" stroke-width="2" opacity="0.5"/>')
 
     # Title at top
-    title_y = 55
-    els.append(minecraft_title(recipe["title"], W / 2, title_y, size=26))
+    title_y = 45
+    els.append(minecraft_title(recipe["title"], W / 2, title_y, size=22))
 
     # Grid — centered vertically below title, horizontally centered with arrow + output
     grid_top = title_y + 15
