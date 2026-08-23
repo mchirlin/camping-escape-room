@@ -11,6 +11,7 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        admin: resolve(__dirname, 'admin.html'),
         'block-nets': resolve(__dirname, 'block-nets.html'),
       },
       output: {

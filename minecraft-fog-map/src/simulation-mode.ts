@@ -122,11 +122,12 @@ export function createSimulationMode(config: SimulationModeConfig): SimulationMo
 }
 
 /**
- * Check whether admin/simulation mode should be activated based on the URL query string.
- * Accepts both ?admin=true (preferred) and ?simulate=true (legacy).
+ * Check whether admin/simulation mode should be activated.
+ * Detects via: window.__FOGMAP_ADMIN__ (admin.html), ?admin=true, or ?simulate=true.
  */
 export function shouldActivateSimulation(): boolean {
   if (typeof window === 'undefined') return false;
+  if ((window as any).__FOGMAP_ADMIN__ === true) return true;
   const params = new URLSearchParams(window.location.search);
   return params.get('admin') === 'true' || params.get('simulate') === 'true';
 }

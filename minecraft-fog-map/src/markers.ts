@@ -140,6 +140,7 @@ export class MarkerStore {
           tag: m.tag as MarkerTag,
           count: m.count,
           label: m.label,
+          uid: m.uid,
           hidden: m.hidden ?? false,
         }));
       this.saveLocal();

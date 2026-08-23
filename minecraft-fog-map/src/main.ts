@@ -522,7 +522,7 @@ async function main(): Promise<void> {
         }
 
         // Check if there's already a marker with this UID (exact match)
-        const existingMarkers = markerStore.getAll();
+        const existingMarkers = markerStore.getAllIncludingHidden();
         let existing: typeof existingMarkers[0] | undefined;
 
         if (scanUid) {
@@ -1314,24 +1314,35 @@ async function main(): Promise<void> {
         }
       }
 
-      // Render other players' avatars
+      ctx!.restore();
+
+      // Render other players' avatars (on top of everything)
+      const vpScale = Math.pow(2, viewport.zoomLevel);
+      const vpLeft = viewport.centerX - (viewport.screenWidth / vpScale) / 2;
+      const vpTop = viewport.centerY - (viewport.screenHeight / vpScale) / 2;
       for (const op of otherPlayers) {
         const opWorld = geoToWorld(op.position, bbox, level4Grid, TILE_SCREEN_SIZE);
-        const opScreenX = (opWorld.x - viewLeft) * scale;
-        const opScreenY = (opWorld.y - viewTop) * scale;
+        let opScreenX = (opWorld.x - vpLeft) * vpScale;
+        let opScreenY = (opWorld.y - vpTop) * vpScale;
 
-        // Look up the avatar skin in the atlas
+        // Apply same rotation as the map if heading is active
+        if (simHeading !== 0 && playerWorldPos) {
+          const pivotX = (playerWorldPos.x - vpLeft) * vpScale;
+          const pivotY = (playerWorldPos.y - vpTop) * vpScale;
+          const angle = (-simHeading * Math.PI) / 180;
+          const dx = opScreenX - pivotX;
+          const dy = opScreenY - pivotY;
+          opScreenX = pivotX + dx * Math.cos(angle) - dy * Math.sin(angle);
+          opScreenY = pivotY + dx * Math.sin(angle) + dy * Math.cos(angle);
+        }
+
         const skinKey = `player_${op.avatar}`;
         const entry = atlasManifest.textures[skinKey] ?? atlasManifest.textures['player'];
         if (entry && atlasImage) {
-          const markerSize = 28; // Slightly smaller than local player (32)
+          const markerSize = 28;
           ctx!.save();
           ctx!.imageSmoothingEnabled = false;
           ctx!.translate(opScreenX, opScreenY);
-          // Counter-rotate so avatar face stays upright
-          if (simHeading !== 0) {
-            ctx!.rotate((simHeading * Math.PI) / 180);
-          }
           ctx!.drawImage(
             atlasImage,
             entry.x, entry.y, entry.w, entry.h,
@@ -1339,15 +1350,30 @@ async function main(): Promise<void> {
           );
           ctx!.restore();
         } else {
-          // Fallback: colored circle
           ctx!.fillStyle = '#55FF55';
           ctx!.beginPath();
           ctx!.arc(opScreenX, opScreenY, 8, 0, Math.PI * 2);
           ctx!.fill();
         }
       }
-
-      ctx!.restore();
+      // Render local player avatar on top of everything
+      if (playerWorldPos) {
+        const localEntry = atlasManifest.textures[`player_${(() => { try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; } })()}`] ?? atlasManifest.textures['player'];
+        if (localEntry && atlasImage) {
+          const localSize = 32;
+          const lpx = (playerWorldPos.x - vpLeft) * vpScale;
+          const lpy = (playerWorldPos.y - vpTop) * vpScale;
+          ctx!.save();
+          ctx!.imageSmoothingEnabled = false;
+          ctx!.translate(lpx, lpy);
+          ctx!.drawImage(
+            atlasImage,
+            localEntry.x, localEntry.y, localEntry.w, localEntry.h,
+            -localSize / 2, -localSize / 2, localSize, localSize
+          );
+          ctx!.restore();
+        }
+      }
     }
     requestAnimationFrame(renderLoop);
   }
