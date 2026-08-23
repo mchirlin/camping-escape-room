@@ -324,6 +324,8 @@ async function main(): Promise<void> {
   let playerWorldPos: WorldPosition | null = null;
   // Track current player geo position for crafting-link marker collection
   let lastGeoPos: GeoPosition | null = null;
+  // Other players from Firebase (multiplayer)
+  let otherPlayers: Array<{ id: string; position: GeoPosition; avatar: string; updatedAt: number }> = [];
 
   // Marker store for user-placed points of interest
   const isAdminMode = shouldActivateSimulation();
@@ -332,7 +334,45 @@ async function main(): Promise<void> {
 
   // Initialize Firebase sync (falls back to localStorage if not configured)
   import('./marker-db').then(({ initMarkerDb }) => {
-    initMarkerDb().then(() => markerStore.startSync());
+    initMarkerDb().then(() => {
+      markerStore.startSync();
+
+      // Multiplayer: broadcast position and listen for other players (non-admin only)
+      if (!isAdminMode) {
+        import('./player-db').then(({ initPlayerDb, startBroadcasting, listenForPlayers, removePlayer }) => {
+          if (!initPlayerDb()) return;
+
+          // Persistent player ID per device
+          let playerId: string;
+          try {
+            playerId = localStorage.getItem('fogmap:playerId') || '';
+            if (!playerId) {
+              playerId = crypto.randomUUID();
+              localStorage.setItem('fogmap:playerId', playerId);
+            }
+          } catch {
+            playerId = crypto.randomUUID();
+          }
+
+          // Start broadcasting position every 3 seconds
+          const getAvatar = () => {
+            try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; }
+          };
+          const stopBroadcast = startBroadcasting(playerId, () => lastGeoPos, getAvatar, 3000);
+
+          // Listen for other players
+          listenForPlayers(playerId, (players) => {
+            otherPlayers = players;
+          });
+
+          // Clean up on page unload
+          window.addEventListener('beforeunload', () => {
+            stopBroadcast();
+            removePlayer(playerId);
+          });
+        });
+      }
+    });
   });
 
   // Preload marker textures
@@ -992,10 +1032,11 @@ async function main(): Promise<void> {
   // Marker popup on the Minecraft canvas map
   let markerPopupEl: HTMLElement | null = null;
 
-  function showMarkerPopup(marker: { id: string; tag: string; count: number }, screenX: number, screenY: number) {
+  function showMarkerPopup(marker: { id: string; tag: string; count: number; hidden?: boolean }, screenX: number, screenY: number) {
     hideMarkerPopup();
     const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
     const label = tagInfo?.label ?? marker.tag;
+    const isHidden = !!marker.hidden;
 
     const popup = document.createElement('div');
     popup.style.cssText = `
@@ -1004,20 +1045,50 @@ async function main(): Promise<void> {
       font-family:var(--mc-font);font-size:8px;color:#fff;pointer-events:auto;
       display:flex;flex-direction:column;gap:6px;align-items:center;
     `;
+
+    let buttonsHtml = '';
+    if (isAdminMode && isHidden) {
+      buttonsHtml += `<button data-action="reveal" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#5b8731;color:#fff;border:1px solid #333;cursor:pointer;">👁 Reveal</button>`;
+    } else if (isAdminMode && !isHidden) {
+      buttonsHtml += `<button data-action="hide" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#AA3333;color:#fff;border:1px solid #333;cursor:pointer;">🙈 Hide</button>`;
+    }
+    buttonsHtml += `<button data-action="collect" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#55FF55;color:#000;border:1px solid #333;cursor:pointer;">✅ Collect</button>`;
+    buttonsHtml += `<button data-action="close" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;">✕</button>`;
+
     popup.innerHTML = `
-      <div>${label}${marker.count > 1 ? ' x' + marker.count : ''}</div>
-      <div style="display:flex;gap:4px;">
-        <button data-action="collect" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#55FF55;color:#000;border:1px solid #333;cursor:pointer;">✅ Collect</button>
-        <button data-action="close" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;">✕</button>
+      <div>${label}${marker.count > 1 ? ' x' + marker.count : ''}${isHidden ? ' (hidden)' : ''}</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">
+        ${buttonsHtml}
       </div>
     `;
 
-    popup.querySelector('[data-action="collect"]')!.addEventListener('click', () => {
+    popup.querySelector('[data-action="collect"]')?.addEventListener('click', () => {
       markerStore.collect(marker.id);
       hideMarkerPopup();
     });
-    popup.querySelector('[data-action="close"]')!.addEventListener('click', () => {
+    popup.querySelector('[data-action="close"]')?.addEventListener('click', () => {
       hideMarkerPopup();
+    });
+    popup.querySelector('[data-action="reveal"]')?.addEventListener('click', () => {
+      import('./marker-db').then(({ dbUpdateHidden }) => {
+        dbUpdateHidden(marker.id, false);
+      });
+      // Update local state
+      const m = markerStore.getAllIncludingHidden().find(x => x.id === marker.id);
+      if (m) m.hidden = false;
+      hideMarkerPopup();
+      updateMarkerPanel();
+      uiOverlay.showToast(`👁 Revealed: ${label}`);
+    });
+    popup.querySelector('[data-action="hide"]')?.addEventListener('click', () => {
+      import('./marker-db').then(({ dbUpdateHidden }) => {
+        dbUpdateHidden(marker.id, true);
+      });
+      const m = markerStore.getAllIncludingHidden().find(x => x.id === marker.id);
+      if (m) m.hidden = true;
+      hideMarkerPopup();
+      updateMarkerPanel();
+      uiOverlay.showToast(`🙈 Hidden: ${label}`);
     });
 
     document.getElementById('app')!.appendChild(popup);
@@ -1043,7 +1114,7 @@ async function main(): Promise<void> {
       const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
       const tileCol = Math.floor(worldPos.x / TILE_SCREEN_SIZE);
       const tileRow = Math.floor(worldPos.y / TILE_SCREEN_SIZE);
-      if (!fogEngine.isRevealed(4, tileCol, tileRow)) continue;
+      if (!isAdminMode && !fogEngine.isRevealed(4, tileCol, tileRow)) continue;
 
       const mx = (worldPos.x - viewLeft) * scale;
       const my = (worldPos.y - viewTop) * scale;
@@ -1168,6 +1239,10 @@ async function main(): Promise<void> {
         const slotX = screenX - slotSize / 2;
         const slotY = screenY - slotSize / 2;
 
+        // Hidden markers in admin mode: draw semi-transparent
+        const isHidden = !!(marker.hidden && isAdminMode);
+        if (isHidden) ctx!.globalAlpha = 0.4;
+
         // Draw inventory slot background
         ctx!.fillStyle = '#8b8b8b';
         ctx!.fillRect(slotX, slotY, slotSize, slotSize);
@@ -1202,6 +1277,22 @@ async function main(): Promise<void> {
           ctx!.fillRect(screenX - iconSize / 2, screenY - iconSize / 2, iconSize, iconSize);
         }
 
+        // Hidden indicator: red "X" over the icon
+        if (isHidden) {
+          ctx!.globalAlpha = 0.8;
+          ctx!.strokeStyle = '#FF0000';
+          ctx!.lineWidth = 3;
+          ctx!.beginPath();
+          ctx!.moveTo(slotX + 4, slotY + 4);
+          ctx!.lineTo(slotX + slotSize - 4, slotY + slotSize - 4);
+          ctx!.moveTo(slotX + slotSize - 4, slotY + 4);
+          ctx!.lineTo(slotX + 4, slotY + slotSize - 4);
+          ctx!.stroke();
+          ctx!.globalAlpha = 1.0;
+        } else if (isAdminMode) {
+          ctx!.globalAlpha = 1.0;
+        }
+
         // Draw count badge if > 1
         if (marker.count > 1) {
           const text = String(marker.count);
@@ -1209,12 +1300,46 @@ async function main(): Promise<void> {
           ctx!.fillStyle = '#FFFFFF';
           ctx!.strokeStyle = '#000000';
           ctx!.lineWidth = 2;
-          const tx = screenX + size / 2 - 2;
-          const ty = screenY + size / 2;
+          const tx = screenX + slotSize / 2 - 2;
+          const ty = screenY + slotSize / 2;
           ctx!.strokeText(text, tx, ty);
           ctx!.fillText(text, tx, ty);
         }
       }
+
+      // Render other players' avatars
+      for (const op of otherPlayers) {
+        const opWorld = geoToWorld(op.position, bbox, level4Grid, TILE_SCREEN_SIZE);
+        const opScreenX = (opWorld.x - viewLeft) * scale;
+        const opScreenY = (opWorld.y - viewTop) * scale;
+
+        // Look up the avatar skin in the atlas
+        const skinKey = `player_${op.avatar}`;
+        const entry = atlasManifest.textures[skinKey] ?? atlasManifest.textures['player'];
+        if (entry && atlasImage) {
+          const markerSize = 28; // Slightly smaller than local player (32)
+          ctx!.save();
+          ctx!.imageSmoothingEnabled = false;
+          ctx!.translate(opScreenX, opScreenY);
+          // Counter-rotate so avatar face stays upright
+          if (simHeading !== 0) {
+            ctx!.rotate((simHeading * Math.PI) / 180);
+          }
+          ctx!.drawImage(
+            atlasImage,
+            entry.x, entry.y, entry.w, entry.h,
+            -markerSize / 2, -markerSize / 2, markerSize, markerSize
+          );
+          ctx!.restore();
+        } else {
+          // Fallback: colored circle
+          ctx!.fillStyle = '#55FF55';
+          ctx!.beginPath();
+          ctx!.arc(opScreenX, opScreenY, 8, 0, Math.PI * 2);
+          ctx!.fill();
+        }
+      }
+
       ctx!.restore();
     }
     requestAnimationFrame(renderLoop);

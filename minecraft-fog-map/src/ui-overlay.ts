@@ -122,7 +122,6 @@ export class UIOverlayImpl implements UIOverlay {
     this.createRegionSelector();
     this.createActionButtonsRow();
     this.createMarkerVisibilityPanel();
-    this.createFullscreenButton();
 
     // Bottom-right: center button, zoom controls
     this.createCenterButton();
