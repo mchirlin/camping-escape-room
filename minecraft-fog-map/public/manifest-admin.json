@@ -1,0 +1,23 @@
+{
+  "name": "Minecraft Fog Map (Admin)",
+  "short_name": "Fog Map Admin",
+  "description": "Escape room fog-of-war map — admin controls",
+  "start_url": "./admin.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#1a1a1a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "apple-touch-icon-sim.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "favicon-sim.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ]
+}
