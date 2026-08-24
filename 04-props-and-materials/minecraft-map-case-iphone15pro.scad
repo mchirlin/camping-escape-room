@@ -139,9 +139,9 @@ module case_body() {
             map_shape_2d();
         
         // Screen bezel parameters
-        screen_bezel_top = 18;     // hides status bar, Dynamic Island, time, wifi, battery
-        screen_bezel_bot = lip;    // standard lip at bottom
-        screen_bezel_side = lip;   // narrow side retention lip
+        screen_bezel_top = 3;      // same 3mm lip all around
+        screen_bezel_bot = 3;      // 3mm lip at bottom
+        screen_bezel_side = 3;     // 3mm side retention lip
         
         // Phone pocket — centered, shifted up so visible screen appears centered
         pocket_shift_y = (screen_bezel_top - lip) / 2;

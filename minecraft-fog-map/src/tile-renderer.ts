@@ -192,8 +192,8 @@ export class TileRenderer {
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
-    // 1. Parchment brown background (matches Minecraft map paper color)
-    ctx.fillStyle = '#c6a264';
+    // 1. Parchment background (inner map color from map_background.png)
+    ctx.fillStyle = '#d6be96';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
 
     ctx.save();
@@ -231,32 +231,7 @@ export class TileRenderer {
     const minQY = Math.max(0, Math.floor(visTop / quadWorldH));
     const maxQY = Math.min(numQuadY - 1, Math.floor(visBottom / quadWorldH));
 
-    // 2. Draw map background textures for each visible quadrant
-    if (this.mapBgImage) {
-      const borderFrac = 3 / 64;
-      const mapScreenW = quadWorldW * scale;
-      const mapScreenH = quadWorldH * scale;
-      const bw = mapScreenW * borderFrac / (1 - 2 * borderFrac);
-      const bh = mapScreenH * borderFrac / (1 - 2 * borderFrac);
-
-      for (let qy = minQY; qy <= maxQY; qy++) {
-        for (let qx = minQX; qx <= maxQX; qx++) {
-          // Only draw parchment for discovered quadrants (or all if no tracking)
-          if (discoveredQuadrants && !discoveredQuadrants.has(`${qx},${qy}`)) continue;
-
-          const qWorldX = qx * quadWorldW;
-          const qWorldY = qy * quadWorldH;
-          const mapScreenL = (qWorldX - viewLeft) * scale;
-          const mapScreenT = (qWorldY - viewTop) * scale;
-
-          ctx.drawImage(
-            this.mapBgImage,
-            mapScreenL - bw, mapScreenT - bh,
-            mapScreenW + 2 * bw, mapScreenH + 2 * bh
-          );
-        }
-      }
-    }
+    // 2. (Map background texture removed — uniform brown parchment is the background now)
 
     // Expand tile range to cover rotated view (render extra tiles around edges)
     const extraTiles = playerHeading !== 0 ? Math.ceil(Math.max(viewport.screenWidth, viewport.screenHeight) / tileScreenPx / 2) : 0;
