@@ -2,7 +2,7 @@
 
 ## 🛒 Ordering & Sourcing
 
-- [ ] **Electronics**
+- [x] **Electronics**
   - [x] PN532 NFC/RFID modules (10-pack) — $32
   - [x] NeoPixel WS2812B 24-LED rings (2x 5-pack) — $38
   - [x] NTAG215 NFC coin tags (50-pack, 25mm) — ~$10
@@ -38,14 +38,14 @@
   - [x] Small piano hinges for doors (3)
   - [x] Ball catches for doors (3-6)
   - [x] Wood/MDF for door blocks (3 pieces, 2"×5"×9")
-- [ ] **Crafting Table — Finishing**
+- [x] **Crafting Table — Finishing**
   - [x] 2.5' square of camel pleather
   - [x] 3" strips of dark brown pleather
   - [x] 1'×1' frosted acrylic
   - [x] Danish oil (for wood planks — natural finish)
-  - [ ] Watered-down acrylic paints (for pixel color variation on planks)
+  - [x] Watered-down acrylic paints (for pixel color variation on planks)
   - [x] Wood stain — dark (espresso) for plywood backing
-- [ ] **3D Printing supplies**
+- [x] **3D Printing supplies**
   - [x] Black PLA filament (1-2 spools)
   - [x] Printable vinyl sticker paper (matte, waterproof, 25-pack)
   - [x] Matte clear coat spray
@@ -53,27 +53,24 @@
   - [x] Neodymium disc magnets (for fishing rod)
   - [ ] Parchment paper (recipe scrolls)
   - [ ] Spray paint — diamond blue/teal (shovel)
-  - [ ] Green spray paint (creeper)
-  - [ ] Black acrylic paint (creeper face)
-  - [ ] Cardboard boxes for creeper (free — grocery store)
-  - [ ] Waterproof container for buried treasure
-  - [ ] Waterproof container / chest for TNT chest prop
-  - [ ] Chain or tape for TNT chest lock
+  - [ ] Green wrapping paper (creeper)
+  - [x] Cardboard boxes for creeper
+  - [x] Waterproof container for buried treasure
+  - [x] Chain or tape for TNT chest lock
   - [ ] Candy/treats for finale
-  - [ ] Foam board for signs
-- [ ] **Wooden prop materials**
+  - [x] Wood boards for signs
+- [x] **Wooden prop materials**
   - [x] 1/4" plywood sheet (for sword, pickaxe, shovel, fishing rod cutouts)
 - [x] **Foam gold sword** — check friends first, Amazon backup
 - [x] **Printer** — Epson EcoTank ET-2850 (if not already owned)
 
 ## 🧊 3D Printing
 
-- [ ] **Blocks — 2.5" cubes** (11 total)
+- [x] **Blocks — 2.5" cubes** (11 total)
   - [x] Wood Plank × 4
-  - [ ] Sand × 4
-  - [x] Cobblestone × 1
-  - [ ] Cobblestone × 2
-- [ ] **Items — 3" × 3" × 1.5" flat slabs** (30 total)
+  - [x] Sand × 4
+  - [x] Cobblestone × 3
+- [x] **Items — 3" × 3" × 1.5" flat slabs** (30 total)
   - [x] Stick × 10
   - [x] Iron Ingot × 6
   - [x] String × 3
@@ -94,8 +91,8 @@
 - [x] Design texture sheets for each block type (Minecraft textures)
 - [x] Print textures on vinyl sticker paper
 - [x] Cut to 3" squares (6 faces per block, 5 visible)
-- [ ] Apply stickers to all printed blocks
-- [ ] Clear coat spray over stickers
+- [x] Apply stickers to all printed blocks
+- [ ] Acrylic over all stickers
 
 ## 🔌 Crafting Table — PCB
 
@@ -239,21 +236,18 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 ## 🧭 MCompass Setup
 
-- [ ] Receive compass from Etsy (or build from PCB order)
-- [ ] Flash GPS-WIFI firmware (if not pre-flashed)
-- [ ] Configure WiFi + set spawn point to **buried treasure dig site coordinates** (compass points to treasure)
-- [ ] Test compass pointing accuracy outdoors
+- [x] Receive compass from Etsy (or build from PCB order)
+- [ ] Test compass pointing north outdoors
 - [ ] Calibrate (6 quick presses, figure-8 motion)
-- [ ] Compass is given to kids after they craft the Compass recipe (Step 5)
 
 ## 🗺️ Fog-of-War Map (Digital)
 
 - [x] Finalize map bounding box for campsite
 - [x] Generate terrain data for final location
 - [x] Multi-region support (Lake Fairfax + Depaul Dr)
-- [x] Region selector in simulation UI
+- [x] Region selector in admin UI
 - [x] Map rotation with device compass heading
-- [x] WASD movement relative to heading (simulation mode)
+- [x] WASD movement relative to heading (admin mode)
 - [x] Map quadrant discovery (parchments appear as you explore)
 - [x] Forest/park/campsite terrain classification
 - [x] Sports fields rendering
@@ -263,37 +257,33 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 - [x] Heading resets to north-up when leaving orientation mode
 - [x] Favicon + iOS home screen icon
 - [x] Deploy to GitHub Pages
+- [x] Admin mode (separate admin.html for iOS home screen)
+- [x] Marker hidden/reveal system (admin triggers visibility)
+- [x] Multiplayer avatar sync via Firebase
+- [x] NFC scan to place/collect markers
 - [ ] Place markers on real-world map for block hiding spots
-- [ ] Place markers for key locations (mine, creeper, dig site)
+- [ ] Place markers for key locations (mine, quarry, cave, creeper, villager)
 - [ ] Test on iPad (Safari, performance)
 - [ ] Test GPS tracking at campsite
-- [ ] Clear fog state before each game run
 
-## 📜 Recipe Cards & Map
+## 📜 Recipe Cards
 
-- [ ] Design recipe scroll template (3×3 grid with block icons)
-- [ ] Print/write 6 recipe cards:
-  - [ ] #1 Wooden Pickaxe (3 wood plank + 2 stick) — given with crafting table
-  - [ ] #2 Fishing Rod (3 stick + 2 string + 1 iron) — after pickaxe craft
-  - [ ] #3 Gold Sword (2 gold + 1 stick) — found with gold in stream
-  - [ ] #4 TNT (5 gunpowder + 4 sand) — found in creeper loot
-  - [ ] #5 Compass (4 iron + 1 redstone) — found in TNT chest
-  - [ ] #6 Diamond Shovel (1 diamond + 2 stick) — found in TNT chest
-- [ ] Tea-stain parchment paper for aged look
-- [ ] Roll into scroll format
+- [x] Design recipe card template (Minecraft bitmap font, leather texture background)
+- [x] Generate all 10 recipe cards (storyline order)
+- [x] Generate PDFs (1-up for Selphy, 2-up, 4-up for letter paper)
+- [x] Print recipe cards on Selphy (100×148mm postcard paper)
 
 ## 🎣 Props Assembly
 
 - [x] **Fishing Rod** — attach string + magnet to a stick
-- [ ] **Gold fishing target** — waterproof container with metal ring/washer in stream
+- [ ] **Fishing target** — waterproof container with magnet/washer in stream (holds 3 diamonds + recipe page)
 - [ ] **Creeper** — stack 4 boxes, paint green, paint face on top box, pre-score tape
-- [x] **Creeper loot** — put 5 gunpowder blocks + Recipe Card #4 inside head box
-- [ ] **TNT chest** — locked/chained container with "⚠ TNT Required" sign, containing diamond, redstone, 4 iron, Recipe Cards #5 + #6
-- [ ] **Diamond Shovel** — paint kid garden shovel diamond blue/teal
-- [ ] **Explorer's Diary** — write last journal entry about Ender Dragon egg sighting
-- [ ] **Buried treasure** — waterproof container with dragon egg + candy
-- [ ] **Mine sign** — "⛏ Abandoned Mine — Wooden Pickaxe Required"
-- [ ] **Biome signs** (optional) — pixel font Minecraft-style
+- [x] **Creeper loot** — 5 gunpowder blocks + TNT recipe page inside head box
+- [ ] **Treasure chest** — locked/chained container in tent with "TNT Required" sign, holds dragon egg + candy
+- [ ] **Explorer's Journal** — notebook with intro pages + slots for found pages
+- [ ] **12 journal pages** — write recipe/lore content for each step
+- [ ] **Direction cards** — 3-4 cards with compass directions for waypoint navigation
+- [x] **Signs** — all 6 lock-out signs generated (print on foam board)
 
 ## 🔊 Sound & Atmosphere
 
@@ -309,58 +299,91 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 - [ ] Wife playtest — full walkthrough at home
 - [ ] Pack checklist:
   - [ ] Crafting table + DeWalt battery + buck converter
-  - [ ] All 44 blocks/items (in labeled bags by biome/step)
-  - [ ] 6 recipe cards
-  - [ ] Fishing rod + gold target
-  - [ ] Foam gold sword
-  - [ ] Diamond shovel
-  - [ ] Creeper boxes (flat-packed) + paint touch-up
-  - [ ] Dragon egg + candy in waterproof container
-  - [ ] Explorer's diary
-  - [ ] Mine sign + biome signs
-  - [ ] Minecraft fox stuffed animal
-  - [ ] Phone with soundboard app
-  - [ ] Bluetooth speaker
-  - [ ] MCompass (charged, spawn set to dig site)
-  - [ ] iPad(s) with fog map loaded (1–2 devices)
-  - [ ] Phone charger / power bank for map devices
-  - [ ] TNT chest + chain/tape + sign
-  - [ ] Spare blocks
-  - [ ] Tape, markers, zip ties (field repairs)
-- [ ] Prep two dig sites (for running twice)
-- [ ] Prep two waterproof treasure containers
+  - [ ] All 54 blocks/items (in labeled bags by step)
+    - [ ] 4 Wood Plank (start area)
+    - [ ] 11 Stick (scattered)
+    - [ ] 6 Iron Ingot (4 tent + 2 quarry)
+    - [ ] 1 Redstone (tent pillow)
+    - [ ] 1 Coal (tent pillow)
+    - [ ] 3 Cobblestone (waypoint chest)
+    - [ ] 3 String (2 waypoint + 1 mine)
+    - [ ] 8 Paper (mine)
+    - [ ] 2 Copper Ingot (mine)
+    - [ ] 1 Compass block (crafted, then used in Map recipe)
+    - [ ] 3 Diamond (stream fishing)
+    - [ ] 1 Emerald (quarry)
+    - [ ] 1 Amethyst Shard (quarry)
+    - [ ] 4 Sand (stream shore)
+    - [ ] 5 Gunpowder (creeper)
+  - [ ] 10 recipe cards (Selphy prints)
+  - [ ] Explorer's Journal (notebook with starter pages)
+  - [ ] 12 journal pages (to find throughout adventure)
+  - [ ] Direction cards for compass navigation (3-4 cards)
+  - [ ] Physical props:
+    - [ ] Cobblestone Pickaxe
+    - [ ] Diamond Pickaxe
+    - [ ] Fishing Pole (stick + string + magnet)
+    - [ ] Torch
+    - [ ] Iron Sword
+    - [ ] Spyglass
+    - [ ] TNT prop
+    - [ ] MCompass (charged)
+  - [ ] Creeper boxes (flat-packed) + green paint
+  - [ ] Dragon egg + candy
+  - [ ] Treasure chest + chain + "TNT Required" sign
+  - [ ] 6 lock-out signs (tent, mine, quarry, cave, creeper, treasure)
+  - [ ] Gold fishing target (waterproof container + magnet/washer)
+  - [ ] iPad(s) with fog map loaded (1-2 devices)
+  - [ ] Phone with admin fog map app
+  - [ ] Phone charger / power bank
+  - [ ] Spare blocks + tape + zip ties (field repairs)
+- [ ] Prep two treasure chests (for running twice)
 
 ## 🎮 Game Day Setup
 
 - [ ] Walk route — check for hazards, poison ivy
 - [ ] Check stream level
 - [ ] Set up crafting table in tent + power on
+- [ ] Place treasure chest in tent (chained, "TNT Required" sign)
 - [ ] Test all readers one more time
-- [ ] Hide blocks by biome:
-  - [ ] Forest: wood planks (4 for trade + 3 for pickaxe), sticks (near trees)
-  - [ ] Mine/bathroom: iron ingot, string (inside stall)
-  - [ ] Stream: gold target in water (with Recipe Card #3)
-  - [ ] Scattered: sand blocks along trails
-- [ ] Set up creeper along trail (hidden from initial view, loaded with 5 gunpowder + Recipe Card #4)
-- [ ] Set up TNT chest (loaded with diamond, redstone, 4 iron, Recipe Cards #5 + #6)
-- [ ] Bury treasure at dig site
-- [ ] Place mine sign on bathroom door
-- [ ] Set MCompass spawn point to buried treasure dig site
-- [ ] Start fog map on iPad(s) — load Lake Fairfax region
-- [ ] Pre-place item markers on fog map for block hiding spots (via real map view, right-click)
-- [ ] Set up TNT chest along trail (locked/chained)
-- [ ] Queue up Minecraft music on speaker
-- [ ] Load soundboard on phone
+- [ ] Hide blocks by step:
+  - [ ] Start area: 4 wood planks + 3 sticks (easy to find)
+  - [ ] Tent: Small Chest #1 (4 iron + 2 sticks), under pillow (1 redstone + 1 coal), Small Chest #2 (compass recipe page)
+  - [ ] Compass waypoints: direction cards leading to waypoint chest
+  - [ ] Waypoint chest: 3 cobblestone + 2 sticks + 2 string + pickaxe recipe page
+  - [ ] Mine (bathroom): 8 paper + 1 string + 2 copper + map recipe page
+  - [ ] Stream shore: 4 sand blocks (visible on map after Step 6)
+  - [ ] Stream fishing target: waterproof container with 3 diamonds + diamond pickaxe recipe page
+  - [ ] Quarry: 1 emerald + 1 amethyst + 2 iron + journal page
+  - [ ] Creeper: stack 4 boxes, 5 gunpowder + TNT recipe page inside head
+- [ ] Place lock-out signs:
+  - [ ] "Explorer Tent — 4 Oak Planks Required"
+  - [ ] "Abandoned Mine — Cobblestone Pickaxe Required"
+  - [ ] "Ancient Quarry — Diamond Pickaxe Required"
+  - [ ] "Dark Cave — Torch Required"
+  - [ ] "Creeper Lair — Iron Sword Required"
+  - [ ] "Treasure Chest — TNT Required" (on chest in tent)
+- [ ] Set up fog map:
+  - [ ] Start fog map on iPad(s)
+  - [ ] Open admin map on phone
+  - [ ] Pre-place item markers (sand, gunpowder, key locations)
+  - [ ] Hide all markers (reveal during gameplay)
+- [ ] Queue up Minecraft music on crafting table (Steve figurine or Music ON)
+- [ ] Load soundboard on phone (explosion, creeper hiss)
 
 ## 🔄 Reset Between Runs
 
 - [ ] Collect all blocks from first group
 - [ ] Re-hide blocks in same spots
-- [ ] Re-stack creeper, reload loot
-- [ ] Re-bury treasure at second dig site
-- [ ] Reset fog map (🔄 Reset Fog button — also resets discovered quadrants)
-- [ ] Re-place item markers on fog map (or use 🗑 Remove Items + re-add)
-- [ ] Reload recipe scrolls
+- [ ] Re-stock tent chests + pillow items
+- [ ] Replace compass block (consumed into Map recipe)
+- [ ] Re-stack creeper, reload 5 gunpowder + recipe page
+- [ ] Re-chain treasure chest
+- [ ] Reset fog map (Reset Fog button)
+- [ ] Hide all markers again on admin map
+- [ ] Re-place fishing target in stream
+- [ ] Reload journal pages at each station
+- [ ] Reset crafting table (Reset Game button on web UI)
 - [ ] Verify crafting table still working
 
 ## ⭐ Stretch Goals

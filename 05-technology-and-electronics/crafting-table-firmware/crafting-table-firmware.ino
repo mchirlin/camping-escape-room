@@ -30,7 +30,7 @@
 //   3. Map (no door): paper×8 + compass center
 //   4. Fishing Rod (door 1): sticks diagonal + strings right column
 //   5. Diamond Pickaxe (door 0): diamond×3 top + stick×2 center column
-//   6. Torch (door 2): coal + stick center column
+//   6. Torch (door 2): coal directly above stick, any of 6 grid positions
 //   7. Iron Sword (door 1): iron_ingot×2 + stick center column
 //   8. Spyglass (door 2): amethyst + copper×2 center column
 //   9. TNT (door 1): gunpowder/sand checkerboard
@@ -140,7 +140,7 @@ const char* TAG_URL_BASE = "mchirlin.github.io/camping-escape-room/?scan=";
 #define TAG_READ_TIMEOUT 50
 
 // Number of recipes
-#define NUM_RECIPES      13
+#define NUM_RECIPES      20
 
 // =============================================================================
 // Block Types — valid types for tag registration
@@ -149,16 +149,16 @@ const char* BLOCK_TYPES[] = {
   "wood_plank", "sand", "stick", "iron_ingot", "string",
   "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
   "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook", "emerald",
-  "compass", "steve"
+  "compass", "steve", "tnt"
 };
-#define NUM_BLOCK_TYPES 18
+#define NUM_BLOCK_TYPES 19
 
 // Abbreviated display names (for web grid)
 const char* BLOCK_ABBREV[] = {
   "wood", "sand", "stick", "iron", "str",
   "red", "dia", "gold", "gun", "coal",
   "cop", "ame", "paper", "cob", "trip", "emer",
-  "comp", "steve"
+  "comp", "steve", "tnt"
 };
 
 // Colors for each block type (RGB) — average pixel color from texture
@@ -181,6 +181,7 @@ const uint32_t BLOCK_COLORS[] = {
   0x00FF40,  // emerald — vivid green
   0xE02020,  // compass — deep red
   0x00AAFF,  // steve — bright blue (Steve's shirt)
+  0xFF2200,  // tnt — red
 };
 
 // =============================================================================
@@ -255,29 +256,69 @@ const Recipe RECIPES[NUM_RECIPES] = {
     {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
     0, -1
   },
-  // Recipe 9: Torch → door 2 (Step 13)
+  // Recipe 9-14: Torch → door 2 (Step 13)
+  // Coal directly above a stick, valid in any of 6 grid positions
+  // (3 columns × 2 vertical row-pairs). Orientation still matters —
+  // coal must be on top, stick immediately below. All share craftGroup 1.
   {
-    "Torch",
-    {"", "", "", "", "stick", "", "", "coal", ""},
-    2, -1
+    "Torch",  // left column, top pair: coal@6 / stick@3
+    {"", "", "", "stick", "", "", "coal", "", ""},
+    2, 1
   },
-  // Recipe 10: Iron Sword → door 1 (Step 14)
+  {
+    "Torch",  // left column, bottom pair: coal@3 / stick@0
+    {"stick", "", "", "coal", "", "", "", "", ""},
+    2, 1
+  },
+  {
+    "Torch",  // center column, top pair: coal@7 / stick@4
+    {"", "", "", "", "stick", "", "", "coal", ""},
+    2, 1
+  },
+  {
+    "Torch",  // center column, bottom pair: coal@4 / stick@1
+    {"", "stick", "", "", "coal", "", "", "", ""},
+    2, 1
+  },
+  {
+    "Torch",  // right column, top pair: coal@8 / stick@5
+    {"", "", "", "", "", "stick", "", "", "coal"},
+    2, 1
+  },
+  {
+    "Torch",  // right column, bottom pair: coal@5 / stick@2
+    {"", "", "stick", "", "", "coal", "", "", ""},
+    2, 1
+  },
+  // Recipe 15: Iron Sword → door 1 (Step 14)
   {
     "Iron Sword",
     {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
     1, -1
   },
-  // Recipe 11: Spyglass → door 2 (Step 16)
+  // Recipe 16: Spyglass → door 2 (Step 16)
   {
     "Spyglass",
     {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
     2, -1
   },
-  // Recipe 12: TNT → door 1 (Step 20)
+  // Recipe 17: TNT → door 1 (Step 20)
   {
     "TNT",
     {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
     1, -1
+  },
+  // Recipe 18: Bow (no door — bonus)
+  {
+    "Bow",
+    {"", "stick", "string", "stick", "", "string", "", "stick", "string"},
+    255, -1
+  },
+  // Recipe 19: Crossbow (no door — bonus)
+  {
+    "Crossbow",
+    {"", "stick", "", "string", "tripwire_hook", "string", "stick", "iron_ingot", "stick"},
+    255, -1
   },
 };
 
@@ -1024,7 +1065,7 @@ buildTracks();
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
 <p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
-<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
+<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tnt">tnt</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
 <div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
 </div>
@@ -1051,7 +1092,7 @@ function setVol(v){document.getElementById('volval').textContent=v;fetch('/volum
 function setMtr(v){document.getElementById('mtrval').textContent=v;fetch('/motor?pwm='+v);}
 function regTag(){let t=document.getElementById('btype').value;let el=document.getElementById('regres');el.textContent='Programming...';el.className='result';fetch('/register?type='+t).then(r=>r.json()).then(d=>{if(d.success){el.textContent='Written: '+d.type;el.className='result';}else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}refresh();}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});}
 function resetGame(){if(confirm('Reset all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
-function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Craft Table','Compass','Stone Pick','Map','Fish Rod','Dia Pick','Torch','Iron Sword','Spyglass','TNT'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}if(typeof d.musicTrack!=='undefined'){currentTrackNum=d.musicTrack;buildTracks();}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
+function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Craft Table','Compass','Stone Pick','Map','Fish Rod','Dia Pick','Torch','Iron Sword','Spyglass','TNT','Bow','Crossbow'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}if(typeof d.musicTrack!=='undefined'){currentTrackNum=d.musicTrack;buildTracks();}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
 setInterval(refresh,2000);refresh();
 fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp','emerald':'emer'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
 </script></body></html>)rawliteral";

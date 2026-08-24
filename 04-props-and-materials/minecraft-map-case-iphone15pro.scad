@@ -83,10 +83,11 @@ module case_body() {
                 rotate([0, 0, -phone_angle])
                     rounded_rect_2d(pocket_w - lip*2, pocket_h - lip*2, corner_r - lip);
         
-        // Camera module cutout (back face, top-left of phone when face-down)
-        // iPhone 15 Pro: ~38x36mm rounded square, offset from top-left corner
+        // Camera module cutout (back face, top-right of phone when face-down)
+        // iPhone 15 Pro: ~38x36mm rounded square, offset from top-right corner
+        // (camera is top-left on the phone's back, which mirrors to the right when face-down)
         rotate([0, 0, -phone_angle])
-            translate([-pocket_w/2 + 5, pocket_h/2 - 42, -1])
+            translate([pocket_w/2 - 43, pocket_h/2 - 42, -1])
                 linear_extrude(height=bottom + 2)
                     offset(r=5) offset(delta=-5)
                         square([38, 38]);

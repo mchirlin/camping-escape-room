@@ -10,58 +10,71 @@
 
 ### Step 0: The Beginning
 Kids receive:
-- **Explorer's Journal** — starts with a few pages:
-  - Page 1: Story intro about the lost treasure and the old explorer
-  - Page 2: *"To craft tools, you'll need a crafting table. Find 4 oak planks hidden near the campsite..."*
-  - Page 3: **Recipe: Crafting Table** (4 oak planks in 2x2)
+- **Explorer's Journal** — flavor/lore pages (Page 1 intro is included)
+- **Recipe Card: Crafting Table** (4 oak planks in 2x2) — handed out with the journal
 
 Hidden near the campsite (easy to find):
 - **4 Oak Plank blocks**
 - **3 Sticks** scattered around
 
-In the tent (visible but locked chest with "💥 TNT Required" sign):
-- **Treasure Chest** — chained shut, taunting them from the start
+> **Inventory:** 4 wood_plank, 3 stick
 
 ---
 
-### Step 1: Craft the Crafting Table
-Kids bring 4 oak planks to the game master.
+### Step 1: Craft the Crafting Table (Tutorial)
+Kids gather the 4 oak planks and bring them to the game master. This is the
+"key" to enter the tent.
+
+The game master lets them into the **Explorer Tent** and teaches them how the
+crafting table works — this first craft is the tutorial.
 
 **Recipe:** 4 Oak Planks (any 2x2 corner)
 
-Kids craft on the ESP32 table → success animation plays.
-
-**Unlocks:** The Explorer Tent — sign: *"🏕 Explorer Tent — Crafting Table Required"*
+Kids place the planks and trigger the craft → **fun teaching response**
+(rainbow LED sweep, cheerful sound, maybe a door pops open) so they learn the
+place-blocks + touch-to-craft mechanic in a low-stakes way.
 
 Inside the tent:
-- **The Crafting Table** (already there — ESP32 tech piece)
-- **Small Chest #1** — 4 Iron Ingots + 2 Sticks
-- **Under the Pillow** — 1 Redstone + 1 Coal
-- **Small Chest #2** — Journal Page: Compass Recipe
-- **Locked Treasure Chest** — chained, "💥 TNT Required" sign (the finale prize)
+- **The Crafting Table** (the ESP32 tech piece — where all crafting happens)
+- **Hollowed-out Book** — 4 Paper hidden inside + **Recipe Card: Compass**
+- **2 Sticks**
+- **4 Iron Ingots** — hidden in different spots around the tent (in a boot,
+  under the bedding, in a pack) so it's a mini-search, not one pile
+- **Under the Pillow** — 1 Redstone
+- **Recipe Card: Torch** (an old camp note — "light the dark with coal and a stick")
+- **Journal Page 2: "The Explorer Tent"**
+- **Locked Treasure Chest** — chained shut, the finale prize, sitting in the
+  tent where they can see it the whole game
+
+> **Inventory:** 5 stick, 4 paper, 4 iron_ingot, 1 redstone
 
 ---
 
 ### Step 2: Craft the Compass (→ door 2)
 **Recipe:** 4 Iron + 1 Redstone (cross pattern)
 
-Kids craft → receive **MCompass** (points north) + **Direction Card #1**
+Kids craft → receive **MCompass** (points north) + **Direction Card #1** +
+**Journal Page 3: "The Compass"** (handed out on successful craft)
 
 *"Walk 40 paces North to the Mossy Boulder, then 30 paces East to the Old Stump..."*
+
+> **Inventory:** 5 stick, 4 paper
 
 ---
 
 ### Step 3: Follow Compass Directions
 Direction cards lead them through 3-4 waypoints using cardinal directions.
+**Each waypoint holds at least one item** so kids know they've found the right
+spot — distribute the loot across the stops rather than one big end cache:
 
-Along the way: 2 extra Sticks
+- **3 Cobblestone blocks** — spread across the waypoints
+- **4 Sticks** — spread across the waypoints
+- **4 Paper** (the other half of the map's paper) — at the final waypoint
+- **Recipe Card: Cobblestone Pickaxe** — at the final waypoint
+- **Journal Page 4: "The Waypoint"** — at the final waypoint
+- **Direction Card #2:** *"The Old Mine is 50 paces South..."* — at the final waypoint
 
-Final waypoint chest:
-- **3 Cobblestone blocks**
-- **2 Sticks**
-- **2 String**
-- **Journal Page: Cobblestone Pickaxe Recipe**
-- **Direction Card #2:** *"The Old Mine is 50 paces South..."*
+> **Inventory:** 9 stick, 3 cobblestone, 8 paper
 
 ---
 
@@ -72,35 +85,45 @@ Kids craft → receive **Cobblestone Pickaxe**
 
 Follow directions to **"The Old Mine"** — sign: *"⛏ Cobblestone Pickaxe Required"*
 
+> **Inventory:** 7 stick, 8 paper
+
 ---
 
 ### Step 5: The Old Mine
 Inside:
-- **8 Paper**
-- **1 String** (now they have 3 total)
+- **1 String** (on a spider tucked in the tunnels)
 - **2 Copper Ingots**
-- **Journal Page: Map Recipe**
-- **Direction Card #3:** *"Return to camp. The map will guide you further..."*
+- **1 Coal** (mined from the walls)
+- **Recipe Card: Map**
+- **Journal Page 5: "The Old Mine"**
+
+> **Inventory:** 7 stick, 8 paper, 1 string, 2 copper_ingot, 1 coal
 
 ---
 
 ### Step 6: Craft the Map (no door — iPad activates)
 **Recipe:** 8 Paper + 1 Compass (center)
 
-Kids craft → **iPad fog-of-war map lights up!**
+Kids craft → **iPad fog-of-war map lights up!** + **Journal Page 6: "The Map Awakens"**
 
-**Admin trigger:** Reveal mine, villager, sand locations, and key POIs on the map.
+The map's locations (stream, cave, quarry, villager) are already visible as
+soon as it activates — no admin trigger needed here.
 
 *Note: The compass block is "consumed" into the map.*
 
+> **Inventory:** 7 stick, 1 string, 2 copper_ingot, 1 coal
+
 ---
 
-### Step 7: Trade with the Villager
-Map shows villager location. Villager says:
-- *"I'll trade my knowledge for something shiny from the quarry... but you'll need a strong pickaxe to get there."*
-- **Journal Page: Fishing Pole Recipe**
+### Step 7: The Stream
+Map shows the stream. On the bank, kids find an old **tacklebox**:
+- **1 String**
+- **Recipe Card: Fishing Pole**
+- **Journal Page 7: "The Stream"**
 
-Kids realize: *"We already have string from earlier!"*
+Kids realize: *"We've got the string from the mine and this one — enough for a rod!"*
+
+> **Inventory:** 7 stick, 2 string, 2 copper_ingot, 1 coal
 
 ---
 
@@ -109,12 +132,17 @@ Kids realize: *"We already have string from earlier!"*
 
 Kids craft → receive **Fishing Pole**
 
+> **Inventory:** 4 stick, 2 copper_ingot, 1 coal
+
 ---
 
 ### Step 9: Fish at the Stream
-Map shows stream. Kids fish out a waterproof container:
+Kids fish out a waterproof container:
 - **3 Diamonds**
-- **Journal Page: Diamond Pickaxe Recipe**
+- **Recipe Card: Diamond Pickaxe**
+- **Journal Page 8: "Diamonds!"**
+
+> **Inventory:** 4 stick, 2 copper_ingot, 1 coal, 3 diamond
 
 ---
 
@@ -123,6 +151,8 @@ Map shows stream. Kids fish out a waterproof container:
 
 Kids craft → receive **Diamond Pickaxe**
 
+> **Inventory:** 2 stick, 2 copper_ingot, 1 coal
+
 ---
 
 ### Step 11: The Ancient Quarry
@@ -130,18 +160,24 @@ Map shows location. Sign: *"⛏ Diamond Pickaxe Required"*
 
 Inside:
 - **1 Emerald**
-- **1 Amethyst Shard**
 - **2 Iron Ingots**
-- **Journal Page:** *"Return to the Villager with your treasure..."*
+- **Journal Page 9: "The Ancient Quarry"**
+- **Note:** *"Take the green jewel to the villager on the map..."*
+
+> **Inventory:** 2 stick, 2 copper_ingot, 1 coal, 1 emerald, 2 iron_ingot
 
 ---
 
-### Step 12: Trade with the Villager (Again)
-Trade Emerald → Villager gives:
-- **Journal Page: Torch Recipe + Iron Sword Recipe**
+### Step 12: Trade with the Villager
+Map shows villager location. Trade Emerald → Villager gives:
+- **1 Amethyst Shard** (a rare purple gem — the valuable half of the trade)
+- **Recipe Card: Iron Sword**
+- **Journal Page 10: "The Villager's Trade"**
 - *"Darkness guards something powerful... You'll need light and a blade."*
 
-Kids realize: *"We found coal under the pillow in Step 1!"*
+Kids realize: *"We've had the torch recipe since the tent, and iron from the quarry for a blade!"*
+
+> **Inventory:** 2 stick, 2 copper_ingot, 1 coal, 2 iron_ingot, 1 amethyst_shard
 
 ---
 
@@ -150,6 +186,8 @@ Kids realize: *"We found coal under the pillow in Step 1!"*
 
 Kids craft → receive **Torch**
 
+> **Inventory:** 1 stick, 2 copper_ingot, 2 iron_ingot, 1 amethyst_shard
+
 ---
 
 ### Step 14: Craft the Iron Sword (→ door 1)
@@ -157,15 +195,21 @@ Kids craft → receive **Torch**
 
 Kids craft → receive **Iron Sword**
 
+> **Inventory:** 2 copper_ingot, 1 amethyst_shard
+> *(0 sticks remaining — all 9 spent!)*
+
 ---
 
 ### Step 15: The Dark Cave
 Map shows cave. Sign: *"🔥 Torch Required"*
 
 Inside:
-- **Journal Page: Spyglass Recipe**
+- **Recipe Card: Spyglass**
+- **Journal Page 11: "The Dark Cave"**
 
-Kids realize: *"We have the copper and amethyst already!"*
+Kids realize: *"We have the copper from the mine and the amethyst from the villager!"*
+
+> **Inventory:** 2 copper_ingot, 1 amethyst_shard
 
 ---
 
@@ -174,12 +218,16 @@ Kids realize: *"We have the copper and amethyst already!"*
 
 Kids craft → receive **Spyglass**
 
+> **Inventory:** *(empty — every ingredient found so far has been used)*
+
 ---
 
 ### Step 17: Spot the Creeper
 Kids go to high ground, use Spyglass to spot the creeper.
 
 **Admin trigger:** Reveal creeper location on map.
+
+> **Inventory:** *(empty)*
 
 ---
 
@@ -188,11 +236,14 @@ Sign: *"⚔ Iron Sword Required"*
 
 Present sword → creeper defeated → drops:
 - **5 Gunpowder blocks** (inside creeper head)
-- **Journal Page: TNT Recipe**
+- **Recipe Card: TNT**
+- **Journal Page 12: "The Creeper Falls"**
 
 **Admin trigger:** Reveal gunpowder locations on map (the 5 blocks scattered around creeper area).
 
 Kids remember: *"We saw sand on the map at the stream!"*
+
+> **Inventory:** 5 gunpowder
 
 ---
 
@@ -203,12 +254,16 @@ Map shows the locations:
 
 Kids split up to collect!
 
+> **Inventory:** 5 gunpowder, 4 sand
+
 ---
 
 ### Step 20: Craft TNT (→ door 1)
 **Recipe:** 5 Gunpowder + 4 Sand (checkerboard pattern)
 
 Kids craft → receive **TNT** prop
+
+> **Inventory:** *(empty — every single item gathered has been used!)*
 
 ---
 
@@ -242,16 +297,16 @@ flowchart TD
     MINE --> MINE_LOOT[Find: 8 Paper, String, 2 Copper]:::item
     MINE_LOOT --> CRAFT_MAP{⚒️ CRAFT: Map — iPad activates!}:::craft
     CRAFT_MAP --> MAP_REVEALS[📍 Map reveals locations + sand]:::action
-    MAP_REVEALS --> VILLAGER1([🧑‍🌾 Villager]):::location
-    VILLAGER1 --> CRAFT_FISHING{⚒️ CRAFT: Fishing Pole}:::craft
-    CRAFT_FISHING --> STREAM([🎣 Stream — Fish!]):::location
-    STREAM --> STREAM_LOOT[Fish out: 3 Diamonds!]:::item
+    MAP_REVEALS --> STREAM([🎣 Stream — find Fishing Pole recipe]):::location
+    STREAM --> CRAFT_FISHING{⚒️ CRAFT: Fishing Pole}:::craft
+    CRAFT_FISHING --> FISH[Fish out: 3 Diamonds!]:::item
+    FISH --> STREAM_LOOT[Diamond Pickaxe recipe]:::item
     STREAM_LOOT --> CRAFT_DIAMOND_PICK{⚒️ CRAFT: Diamond Pickaxe}:::craft
     CRAFT_DIAMOND_PICK --> QUARRY([💎 Ancient Quarry]):::location
-    QUARRY --> QUARRY_LOOT[Find: Emerald, Amethyst, 2 Iron]:::item
-    QUARRY_LOOT --> VILLAGER2([🧑‍🌾 Villager Trade — Emerald]):::location
-    VILLAGER2 --> CRAFT_TORCH{⚒️ CRAFT: Torch}:::craft
-    VILLAGER2 --> CRAFT_SWORD{⚒️ CRAFT: Iron Sword}:::craft
+    QUARRY --> QUARRY_LOOT[Find: Emerald, 2 Iron]:::item
+    QUARRY_LOOT --> VILLAGER([🧑‍🌾 Villager Trade — Emerald for Amethyst + Sword recipe]):::location
+    VILLAGER --> CRAFT_SWORD{⚒️ CRAFT: Iron Sword}:::craft
+    MINE_LOOT --> CRAFT_TORCH{⚒️ CRAFT: Torch (recipe from tent, coal from mine)}:::craft
     CRAFT_TORCH --> CAVE([🔥 Dark Cave]):::location
     CAVE --> CRAFT_SPYGLASS{⚒️ CRAFT: Spyglass}:::craft
     CRAFT_SPYGLASS --> HILL([🔭 Spot Creeper]):::location
@@ -283,25 +338,25 @@ flowchart TD
 
 ---
 
-## Blocks Inventory (54 total)
+## Blocks Inventory (51 total)
 
 | Type | Qty | Where Found |
 |------|-----|-------------|
-| Stick | 11 | 3 start, 2 tent, 2 waypoints, 2 waypoint chest, 2 extra |
-| Paper | 8 | Old Mine |
-| Iron Ingot | 6 | 4 tent chest + 2 quarry |
+| Stick | 9 | 3 start, 2 tent, 4 across waypoints (all consumed, none spare) |
+| Paper | 8 | 4 tent (hollowed book) + 4 final waypoint |
+| Iron Ingot | 6 | 4 hidden in tent + 2 quarry |
 | Gunpowder | 5 | Creeper drop |
 | Wood Plank | 4 | Start area |
 | Sand | 4 | Stream shore |
 | Diamond | 3 | Stream fishing |
-| Cobblestone | 3 | Waypoint chest |
-| String | 3 | 2 waypoint chest + 1 mine |
+| Cobblestone | 3 | Spread across waypoints |
 | Copper Ingot | 2 | Old Mine |
+| String | 2 | 1 mine (spider) + 1 stream tacklebox |
 | Redstone | 1 | Tent pillow |
-| Coal | 1 | Tent pillow |
+| Coal | 1 | Old Mine |
 | Compass | 1 | Crafted (Step 2), consumed into Map (Step 6) |
 | Emerald | 1 | Ancient Quarry |
-| Amethyst Shard | 1 | Ancient Quarry |
+| Amethyst Shard | 1 | Villager trade (for emerald) |
 
 ---
 
@@ -309,10 +364,10 @@ flowchart TD
 
 | Item | Found | Needed For | Moment |
 |------|-------|------------|--------|
-| Coal | Tent pillow (Step 1) | Torch (Step 13) | "We found this earlier!" |
-| String | Waypoint chest (Step 3) | Fishing Pole (Step 8) | "We already have string!" |
+| Coal | Old Mine (Step 5) | Torch (Step 13) | "We mined this earlier!" |
+| String | Mine spider (Step 5) | Fishing Pole (Step 8) | "String from the mine!" |
 | Copper | Old Mine (Step 5) | Spyglass (Step 16) | "We can make it now!" |
-| Amethyst | Quarry (Step 11) | Spyglass (Step 16) | "We have both!" |
+| Amethyst | Villager trade (Step 12) | Spyglass (Step 16) | "We have both!" |
 | Sand | Map reveals (Step 6) | TNT (Step 20) | "The sand from the stream!" |
 
 ---
@@ -355,15 +410,43 @@ flowchart TD
 
 ## Explorer's Journal Pages
 
-| Page | Found Where | Contents |
-|------|-------------|----------|
-| 1-3 | Start (in journal) | Intro story, oak plank clue, Crafting Table recipe |
-| 4 | Tent chest | Compass recipe + navigation lore |
-| 5 | Waypoint chest | Cobblestone Pickaxe recipe + direction to mine |
-| 6 | Old Mine | Map recipe |
-| 7 | Villager (first visit) | Fishing Pole recipe |
-| 8 | Stream (fishing) | Diamond Pickaxe recipe |
-| 9 | Ancient Quarry | Hint to return to Villager |
-| 10 | Villager (trade) | Torch recipe + Iron Sword recipe |
-| 11 | Dark Cave | Spyglass recipe |
-| 12 | Creeper defeat | TNT recipe |
+The journal (12 pages) is pure flavor — no recipes or instructions. Each page
+is handed out as a reward at its beat: location pages are found on-site, craft
+pages are given by the game master when the craft succeeds (the door popping
+open is the cue). The journal fills up as kids progress.
+
+| Page | Title | Handed Out |
+|------|-------|-----------|
+| 1 | The Explorer's Journal | Start (already in journal) |
+| 2 | The Explorer Tent | Found in tent (Step 1) |
+| 3 | The Compass | On compass craft (Step 2) |
+| 4 | The Waypoint | Waypoint cache (Step 3) |
+| 5 | The Old Mine | Found in mine (Step 5) |
+| 6 | The Map Awakens | On map craft (Step 6) |
+| 7 | The Stream | Stream bank (Step 7) |
+| 8 | Diamonds! | Fished from stream (Step 9) |
+| 9 | The Ancient Quarry | Found in quarry (Step 11) |
+| 10 | The Villager's Trade | Villager trade (Step 12) |
+| 11 | The Dark Cave | Found in cave (Step 15) |
+| 12 | The Creeper Falls | Creeper defeat (Step 18) |
+
+## Recipe Cards
+
+Separate printed cards (Minecraft crafting-grid style), placed as follows:
+
+| Recipe Card | Found Where |
+|-------------|-------------|
+| Crafting Table | Start (with journal) |
+| Compass | Tent (hollowed book) |
+| Torch | Tent (old camp note) |
+| Cobblestone Pickaxe | Final waypoint |
+| Map | Old Mine |
+| Fishing Pole | Stream tacklebox |
+| Diamond Pickaxe | Stream (fished out with diamonds) |
+| Iron Sword | Villager trade (for emerald) |
+| Spyglass | Dark Cave |
+| TNT | Creeper drop |
+
+**Special card needed:** a **trade card** showing *1 Emerald → 1 Bag* (the
+villager's bag contains the amethyst + iron sword recipe card). Styled like a
+recipe card but representing the trade, not a crafting-grid recipe.

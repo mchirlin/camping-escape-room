@@ -1125,9 +1125,6 @@ async function main(): Promise<void> {
 
     for (const marker of markerStore.getAll()) {
       const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
-      const tileCol = Math.floor(worldPos.x / TILE_SCREEN_SIZE);
-      const tileRow = Math.floor(worldPos.y / TILE_SCREEN_SIZE);
-      if (!isAdminMode && !fogEngine.isRevealed(4, tileCol, tileRow)) continue;
 
       const mx = (worldPos.x - viewLeft) * scale;
       const my = (worldPos.y - viewTop) * scale;
@@ -1309,20 +1306,6 @@ async function main(): Promise<void> {
 
       for (const marker of markerStore.getAll()) {
         const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
-
-        // Check if this marker's map segment (quadrant) is discovered
-        const currentLevelConfig = MAP_LEVEL_CONFIG.find(c => c.display === currentDisplayLevel);
-        const quads = discoveredQuadrants.get(currentDisplayLevel);
-        if (quads && currentLevelConfig) {
-          const levelData = terrainData.zoomLevels.find((zl: any) => zl.level === currentLevelConfig.internal);
-          if (levelData) {
-            const quadWorldW = Math.round(levelData.cols * currentLevelConfig.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - currentLevelConfig.internal);
-            const quadWorldH = Math.round(levelData.rows * currentLevelConfig.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - currentLevelConfig.internal);
-            const qx = Math.floor(worldPos.x / quadWorldW);
-            const qy = Math.floor(worldPos.y / quadWorldH);
-            if (!quads.has(`${qx},${qy}`)) continue;
-          }
-        }
 
         const screenX = (worldPos.x - viewLeft) * scale;
         const screenY = (worldPos.y - viewTop) * scale;
