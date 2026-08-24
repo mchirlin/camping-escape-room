@@ -123,9 +123,8 @@ export class UIOverlayImpl implements UIOverlay {
     this.createActionButtonsRow();
     this.createMarkerVisibilityPanel();
 
-    // Bottom-right: center button, zoom controls
+    // Bottom-right: center button
     this.createCenterButton();
-    this.createZoomButtons();
 
     this.createToastContainer();
   }
@@ -467,30 +466,6 @@ export class UIOverlayImpl implements UIOverlay {
 
     this.bottomRightGroup!.appendChild(btn);
     this.centerBtn = btn;
-  }
-
-  private createZoomButtons(): void {
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('ui-zoom-controls');
-    wrapper.setAttribute('data-testid', 'zoom-controls');
-
-    const zoomIn = document.createElement('button');
-    zoomIn.classList.add('ui-btn', 'ui-zoom-in');
-    zoomIn.setAttribute('data-testid', 'zoom-in');
-    zoomIn.setAttribute('aria-label', 'Zoom in');
-    zoomIn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="white" shape-rendering="crispEdges"><rect x="7" y="3" width="4" height="12"/><rect x="3" y="7" width="12" height="4"/></svg>';
-    zoomIn.addEventListener('click', () => this.onZoomIn());
-
-    const zoomOut = document.createElement('button');
-    zoomOut.classList.add('ui-btn', 'ui-zoom-out');
-    zoomOut.setAttribute('data-testid', 'zoom-out');
-    zoomOut.setAttribute('aria-label', 'Zoom out');
-    zoomOut.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="white" shape-rendering="crispEdges"><rect x="3" y="7" width="12" height="4"/></svg>';
-    zoomOut.addEventListener('click', () => this.onZoomOut());
-
-    wrapper.appendChild(zoomIn);
-    wrapper.appendChild(zoomOut);
-    this.bottomRightGroup!.appendChild(wrapper);
   }
 
   private createGPSStatus(): void {

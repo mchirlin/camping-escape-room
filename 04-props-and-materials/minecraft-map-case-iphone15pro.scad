@@ -1,16 +1,14 @@
 // ============================================================
 // Minecraft Map iPhone 15 Pro Case — TPU
 // ============================================================
-// Outer shape: the Minecraft filled_map.png texture extruded.
-// Phone pocket: rotated to align with the map's tilt.
-//
-// TWEAK THIS: adjust phone_angle until the pocket fits nicely
-// inside the map shape without poking through any edges.
+// Outer shape: derived from Minecraft's map_background.png texture.
+// Rectangular map with pixelated ragged edges.
+// Phone sits straight (no rotation) inside the map border.
 // ============================================================
 
 // === TWEAK THESE ===
-phone_angle = 55;   // rotation of phone pocket (degrees, CW)
-pixel = 16;         // mm per texture pixel (controls overall size)
+border_h = 16;      // mm of map border on top and bottom
+border_w = 30;      // mm of map border on left and right — wider to look less rectangular
 // ===================
 
 // --- Phone dimensions (iPhone 15 Pro) ---
@@ -30,9 +28,15 @@ pocket_w = phone_w + clearance * 2;
 pocket_d = phone_d + clearance;
 corner_r = 8.0;
 
-// --- Map center in pixel coords ---
-map_cx = 8;
-map_cy = 7.5;
+// --- Map texture grid (stretched to rectangle) ---
+map_cols = 64;
+map_rows = 64;
+map_cx = map_cols / 2;
+map_cy = map_rows / 2;
+
+// Compute pixel scale per axis so border looks right around the phone
+pixel_x = (pocket_w + border_w * 2) / map_cols;
+pixel_y = (pocket_h + border_h * 2) / map_rows;
 
 // --- 2D rounded rectangle ---
 module rounded_rect_2d(w, h, r) {
@@ -40,26 +44,90 @@ module rounded_rect_2d(w, h, r) {
         square([w, h], center=true);
 }
 
-// --- Map shape from filled_map.png alpha channel ---
+// --- Map shape from map_background.png alpha channel ---
+// Each span is [row, start_col, end_col] representing a solid horizontal run.
 module map_shape_2d() {
-    pixels = [
-        [9,2],[10,2],
-        [8,3],[9,3],[10,3],[11,3],
-        [6,4],[7,4],[8,4],[9,4],[10,4],[11,4],[12,4],
-        [5,5],[6,5],[7,5],[8,5],[9,5],[10,5],[11,5],[12,5],[13,5],
-        [3,6],[4,6],[5,6],[6,6],[7,6],[8,6],[9,6],[10,6],[11,6],[12,6],[13,6],[14,6],
-        [2,7],[3,7],[4,7],[5,7],[6,7],[7,7],[8,7],[9,7],[10,7],[11,7],[12,7],[13,7],[14,7],[15,7],
-        [1,8],[2,8],[3,8],[4,8],[5,8],[6,8],[7,8],[8,8],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
-        [2,9],[3,9],[4,9],[5,9],[6,9],[7,9],[8,9],[9,9],[10,9],[11,9],[12,9],[13,9],
-        [3,10],[4,10],[5,10],[6,10],[7,10],[8,10],[9,10],[10,10],[11,10],[12,10],
-        [4,11],[5,11],[6,11],[7,11],[8,11],[9,11],[10,11],
-        [5,12],[6,12],[7,12],[8,12],[9,12],
-        [6,13],[7,13]
+    spans = [
+        // Row 0 (top edge — ragged)
+        [0,0,1],[0,17,19],[0,22,27],[0,29,32],[0,37,48],[0,61,63],
+        // Row 1
+        [1,0,10],[1,13,20],[1,22,33],[1,35,63],
+        // Rows 2–61 (solid body with edge nibbles)
+        [2,0,63],
+        [3,0,62],
+        [4,1,63],
+        [5,1,63],
+        [6,0,63],
+        [7,0,63],
+        [8,0,63],
+        [9,0,62],
+        [10,0,62],
+        [11,1,62],
+        [12,1,63],
+        [13,1,63],
+        [14,1,63],
+        [15,1,63],
+        [16,2,63],
+        [17,1,63],
+        [18,1,63],
+        [19,1,63],
+        [20,1,62],
+        [21,1,62],
+        [22,1,62],
+        [23,1,62],
+        [24,0,63],
+        [25,0,63],
+        [26,0,63],
+        [27,0,63],
+        [28,1,63],
+        [29,1,63],
+        [30,1,63],
+        [31,1,63],
+        [32,1,63],
+        [33,1,62],
+        [34,1,62],
+        [35,1,63],
+        [36,1,63],
+        [37,1,63],
+        [38,0,63],
+        [39,0,62],
+        [40,0,62],
+        [41,1,63],
+        [42,2,63],
+        [43,1,63],
+        [44,0,63],
+        [45,0,63],
+        [46,0,63],
+        [47,0,63],
+        [48,0,63],
+        [49,0,63],
+        [50,0,63],
+        [51,0,62],
+        [52,0,62],
+        [53,0,62],
+        [54,0,62],
+        [55,0,62],
+        [56,1,62],
+        [57,1,63],
+        [58,0,63],
+        [59,0,63],
+        [60,0,63],
+        [61,0,63],
+        // Row 62 (bottom edge — ragged)
+        [62,1,5],[62,9,18],[62,21,25],[62,28,63],
+        // Row 63 (bottom edge — ragged)
+        [63,11,16],[63,28,36],[63,38,40],[63,42,54],[63,59,61]
     ];
     
-    for (p = pixels) {
-        translate([(p[0] - map_cx) * pixel, -(p[1] - map_cy) * pixel])
-            square(pixel, center=true);
+    for (s = spans) {
+        row = s[0];
+        col_start = s[1];
+        col_end = s[2];
+        span_w = (col_end - col_start + 1) * pixel_x;
+        span_cx = ((col_start + col_end) / 2 - map_cx + 0.5) * pixel_x;
+        span_cy = -(row - map_cy + 0.5) * pixel_y;
+        translate([span_cx, span_cy])
+            square([span_w, pixel_y], center=true);
     }
 }
 
@@ -70,27 +138,48 @@ module case_body() {
         linear_extrude(height=case_d)
             map_shape_2d();
         
-        // Phone pocket — rotated to match map tilt
-        // Only goes up to the lip height (leaves material on front face)
-        translate([0, 0, bottom])
-            linear_extrude(height=pocket_d)
-                rotate([0, 0, -phone_angle])
-                    rounded_rect_2d(pocket_w, pocket_h, corner_r);
+        // Screen bezel parameters
+        screen_bezel_top = 18;     // hides status bar, Dynamic Island, time, wifi, battery
+        screen_bezel_bot = lip;    // standard lip at bottom
+        screen_bezel_side = lip;   // narrow side retention lip
         
-        // Screen opening (front face) — smaller than pocket, creates the retaining lip
-        translate([0, 0, bottom + pocket_d - 0.1])
+        // Phone pocket — centered, shifted up so visible screen appears centered
+        pocket_shift_y = (screen_bezel_top - lip) / 2;
+        translate([0, pocket_shift_y, bottom])
+            linear_extrude(height=pocket_d)
+                rounded_rect_2d(pocket_w, pocket_h, corner_r);
+        
+        // Screen opening (front face) — masks status bar at top only
+        screen_open_w = pocket_w - screen_bezel_side * 2;
+        screen_open_h = pocket_h - screen_bezel_top - screen_bezel_bot;
+        screen_offset_y = (screen_bezel_bot - screen_bezel_top) / 2;
+        
+        translate([0, pocket_shift_y + screen_offset_y, bottom + pocket_d - 0.1])
             linear_extrude(height=lip + 1)
-                rotate([0, 0, -phone_angle])
-                    rounded_rect_2d(pocket_w - lip*2, pocket_h - lip*2, corner_r - lip);
+                rounded_rect_2d(screen_open_w, screen_open_h, corner_r - lip);
         
         // Camera module cutout (back face, top-right of phone when face-down)
-        // iPhone 15 Pro: ~38x36mm rounded square, offset from top-right corner
-        // (camera is top-left on the phone's back, which mirrors to the right when face-down)
-        rotate([0, 0, -phone_angle])
-            translate([pocket_w/2 - 43, pocket_h/2 - 42, -1])
-                linear_extrude(height=bottom + 2)
-                    offset(r=5) offset(delta=-5)
-                        square([38, 38]);
+        // Sized to fit both iPhone 15 Pro (~38mm) and 16 Pro (~42mm)
+        translate([pocket_w/2 - 47, pocket_shift_y + pocket_h/2 - 46, -1])
+            linear_extrude(height=bottom + 2)
+                offset(r=5) offset(delta=-5)
+                    square([42, 42]);
+        
+        // --- Side button hollows ---
+        // Upper half of phone sides, half the case depth — generous clearance.
+        // Works for both 15 Pro and 16 Pro button layouts.
+        hollow_len = pocket_h * 0.55;
+        hollow_z0  = case_d / 4;
+        hollow_z1  = case_d / 2;
+        wall_cut   = bottom + 2;
+        
+        // Left side hollow (volume + action/camera control)
+        translate([-pocket_w/2 - 1, pocket_shift_y - 5, hollow_z0])
+            cube([wall_cut, hollow_len, hollow_z1]);
+        
+        // Right side hollow (power button)
+        translate([pocket_w/2 - (wall_cut - 1), pocket_shift_y - 5, hollow_z0])
+            cube([wall_cut, hollow_len, hollow_z1]);
     }
 }
 

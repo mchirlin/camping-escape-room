@@ -192,8 +192,8 @@ export class TileRenderer {
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
-    // 1. Black background
-    ctx.fillStyle = '#000000';
+    // 1. Parchment brown background (matches Minecraft map paper color)
+    ctx.fillStyle = '#c6a264';
     ctx.fillRect(0, 0, viewport.screenWidth, viewport.screenHeight);
 
     ctx.save();

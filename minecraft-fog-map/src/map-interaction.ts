@@ -21,18 +21,35 @@ const MIN_ZOOM = -3;
 const MAX_ZOOM = 6;
 
 /**
- * Pure function: clamp a viewport center to stay within world bounds.
+ * Pure function: clamp a viewport center so the visible screen area
+ * never extends past the world bounds.
  */
 export function clampViewportCenter(
   centerX: number,
   centerY: number,
   worldWidth: number,
-  worldHeight: number
+  worldHeight: number,
+  screenWidth = 0,
+  screenHeight = 0,
+  zoomLevel = 0
 ): { x: number; y: number } {
-  return {
-    x: Math.max(0, Math.min(centerX, worldWidth)),
-    y: Math.max(0, Math.min(centerY, worldHeight)),
-  };
+  const scale = Math.pow(2, zoomLevel);
+  const halfViewW = screenWidth / scale / 2;
+  const halfViewH = screenHeight / scale / 2;
+
+  // If the world is smaller than the viewport, center it
+  let x: number, y: number;
+  if (worldWidth <= halfViewW * 2) {
+    x = worldWidth / 2;
+  } else {
+    x = Math.max(halfViewW, Math.min(centerX, worldWidth - halfViewW));
+  }
+  if (worldHeight <= halfViewH * 2) {
+    y = worldHeight / 2;
+  } else {
+    y = Math.max(halfViewH, Math.min(centerY, worldHeight - halfViewH));
+  }
+  return { x, y };
 }
 
 const MOMENTUM_FRICTION = 0.92;
@@ -113,7 +130,8 @@ export class MapInteraction {
       this.config.level4GridSize,
       TILE_SCREEN_SIZE
     );
-    const clamped = clampViewportCenter(target.x, target.y, this.worldWidth, this.worldHeight);
+    const clamped = clampViewportCenter(target.x, target.y, this.worldWidth, this.worldHeight,
+      this.viewport.screenWidth, this.viewport.screenHeight, this.viewport.zoomLevel);
 
     if (!animate) {
       this.viewport.centerX = clamped.x;
@@ -146,7 +164,9 @@ export class MapInteraction {
   clampToBounds(): void {
     const clamped = clampViewportCenter(
       this.viewport.centerX, this.viewport.centerY,
-      this.worldWidth, this.worldHeight
+      this.worldWidth, this.worldHeight,
+      this.viewport.screenWidth, this.viewport.screenHeight,
+      this.viewport.zoomLevel
     );
     this.viewport.centerX = clamped.x;
     this.viewport.centerY = clamped.y;
@@ -223,6 +243,7 @@ export class MapInteraction {
         MIN_ZOOM,
         Math.min(MAX_ZOOM, this.pinchStartZoom + Math.log2(ratio))
       );
+      this.clampToBounds();
     }
   }
 
@@ -318,6 +339,7 @@ export class MapInteraction {
     }
 
     this.viewport.zoomLevel = newZoom;
+    this.clampToBounds();
   }
 
   // --- Momentum ---
