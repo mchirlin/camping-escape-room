@@ -122,24 +122,24 @@ export function showOnboarding(opts: OnboardingOptions): () => void {
     <div style="font-size:7px;color:#5a3d20;margin-bottom:6px;">HOW THE MAP WORKS</div>
     <div style="display:flex;flex-direction:column;gap:12px;background:#efe4c8;border:2px solid #5a3d20;border-radius:4px;padding:12px;margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:40px;text-align:center;font-size:20px;flex:none;">🚶</div>
-        <div style="font-size:8px;line-height:1.6;">The map uncovers as you walk. Explore to reveal the world!</div>
+        <div style="width:44px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;">🚶</div>
+        <div style="font-size:8px;line-height:1.6;">The map uncovers as you walk. Work together with your friends to reveal the whole map!</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        ${itemExampleHtml('diamond')}
+        <div style="width:44px;flex:none;display:flex;align-items:center;justify-content:center;">${itemExampleHtml('diamond')}</div>
         <div style="font-size:8px;line-height:1.6;">Collectible items look like this — a gray slot with the item inside.</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        ${locationExampleHtml('crafting')}
-        <div style="font-size:8px;line-height:1.6;">Locations look like this — a colored pin with a label.</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:40px;text-align:center;font-size:20px;flex:none;">👆</div>
+        <div style="width:44px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;">👆</div>
         <div style="font-size:8px;line-height:1.6;">Tap an item when you're close to collect it.</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:40px;text-align:center;font-size:20px;flex:none;">🤝</div>
-        <div style="font-size:8px;line-height:1.6;">Work together with your friends to uncover the whole map!</div>
+        <div style="width:44px;flex:none;display:flex;align-items:center;justify-content:center;">${locationExampleHtml('crafting')}</div>
+        <div style="font-size:8px;line-height:1.6;">Locations look like this — a colored pin with a label.</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:44px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;">🗺️</div>
+        <div style="font-size:8px;line-height:1.6;">Visit locations to move forward on your quest!</div>
       </div>
     </div>
 

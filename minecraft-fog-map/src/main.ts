@@ -780,12 +780,18 @@ async function main(): Promise<void> {
     uiOverlay.setGPSStatus('active');
     uiOverlay.setSimulationVisible(false);
 
+    let centeredOnFirstFix = false;
+
     gpsTracker.start(
       (pos) => {
         onPosition(pos);
         uiOverlay.setGPSStatus('active');
-        // Auto-follow only when orientation/heading mode is active
-        if (simHeading !== 0) {
+        // Always center on the player for the first GPS fix.
+        if (!centeredOnFirstFix) {
+          centeredOnFirstFix = true;
+          mapInteraction.centerOn(pos, true);
+        } else if (simHeading !== 0) {
+          // After that, auto-follow only in orientation/heading mode.
           mapInteraction.centerOn(pos, false);
         }
       },
