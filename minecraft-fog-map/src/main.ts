@@ -12,7 +12,7 @@ import { UIOverlayImpl } from './ui-overlay';
 import { createGPSTracker } from './gps-tracker';
 import { createSimulationMode, shouldActivateSimulation } from './simulation-mode';
 import { geoToWorld, worldToGeo } from './coords';
-import { MarkerStore, MARKER_TAGS, preloadMarkerImages, getMarkerImage, isLocationTag } from './markers';
+import { MarkerStore, MARKER_TAGS, preloadMarkerImages, getMarkerImage, isLocationTag, groupedMarkerTags } from './markers';
 import type { MarkerTag } from './markers';
 import { CraftingTableLink, collectNearestMarker } from './crafting-link';
 
@@ -971,29 +971,35 @@ async function main(): Promise<void> {
             sep.textContent = 'Add Item:';
             div.appendChild(sep);
 
-            // --- Item marker buttons ---
-            const grid = document.createElement('div');
-            grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+            // --- Marker buttons grouped into Locations / Items (alphabetical) ---
+            for (const group of groupedMarkerTags()) {
+              const heading = document.createElement('div');
+              heading.style.cssText = 'font-family:var(--mc-font);font-size:6px;color:#888;margin:4px 0 2px;';
+              heading.textContent = group.title;
+              div.appendChild(heading);
 
-            for (const t of MARKER_TAGS) {
-              const btn = document.createElement('button');
-              btn.textContent = t.label;
-              btn.style.cssText = `
-                font-family:var(--mc-font);font-size:7px;padding:4px 6px;cursor:pointer;
-                background:${t.color};color:#000;border:1px solid #333;
-              `;
-              btn.addEventListener('click', () => {
-                const { marker, incremented } = markerStore.add({ latitude: lat, longitude: lng }, t.tag);
-                if (incremented) {
-                  updateLeafletMarker(marker.id, t, marker.count);
-                } else {
-                  addLeafletMarker(marker.id, lat, lng, t);
-                }
-                leafletMap.closePopup();
-              });
-              grid.appendChild(btn);
+              const grid = document.createElement('div');
+              grid.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;';
+              for (const t of group.tags) {
+                const btn = document.createElement('button');
+                btn.textContent = t.label;
+                btn.style.cssText = `
+                  font-family:var(--mc-font);font-size:7px;padding:4px 6px;cursor:pointer;
+                  background:${t.color};color:#000;border:1px solid #333;
+                `;
+                btn.addEventListener('click', () => {
+                  const { marker, incremented } = markerStore.add({ latitude: lat, longitude: lng }, t.tag);
+                  if (incremented) {
+                    updateLeafletMarker(marker.id, t, marker.count);
+                  } else {
+                    addLeafletMarker(marker.id, lat, lng, t);
+                  }
+                  leafletMap.closePopup();
+                });
+                grid.appendChild(btn);
+              }
+              div.appendChild(grid);
             }
-            div.appendChild(grid);
 
             L.popup()
               .setLatLng(e.latlng)
@@ -1224,12 +1230,15 @@ async function main(): Promise<void> {
       display:flex;flex-direction:column;gap:6px;max-width:240px;
     `;
 
-    let html = '<div style="color:#aaa;margin-bottom:4px;">Add Item:</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:3px;">';
-    for (const t of MARKER_TAGS) {
-      html += `<button data-tag="${t.tag}" style="font-family:var(--mc-font);font-size:6px;padding:3px 5px;cursor:pointer;background:${t.color};color:#000;border:1px solid #333;border-radius:2px;">${t.label}</button>`;
+    let html = '';
+    for (const group of groupedMarkerTags()) {
+      html += `<div style="color:#888;font-size:6px;margin:2px 0;">${group.title}</div>`;
+      html += '<div style="display:flex;flex-wrap:wrap;gap:3px;">';
+      for (const t of group.tags) {
+        html += `<button data-tag="${t.tag}" style="font-family:var(--mc-font);font-size:6px;padding:3px 5px;cursor:pointer;background:${t.color};color:#000;border:1px solid #333;border-radius:2px;">${t.label}</button>`;
+      }
+      html += '</div>';
     }
-    html += '</div>';
     html += '<button data-action="close" style="font-family:var(--mc-font);font-size:6px;padding:3px 6px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;margin-top:4px;align-self:flex-end;">Cancel</button>';
     popup.innerHTML = html;
 

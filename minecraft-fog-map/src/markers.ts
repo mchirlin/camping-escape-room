@@ -88,6 +88,22 @@ export function isLocationTag(tag: MarkerTag): boolean {
   return MARKER_TAGS.find((t) => t.tag === tag)?.isLocation === true;
 }
 
+export type MarkerTagInfo = typeof MARKER_TAGS[number];
+
+/**
+ * Marker tags grouped for the Add menu: Locations first, then Items.
+ * Each group is sorted alphabetically by label.
+ */
+export function groupedMarkerTags(): { title: string; tags: MarkerTagInfo[] }[] {
+  const byLabel = (a: MarkerTagInfo, b: MarkerTagInfo) => a.label.localeCompare(b.label);
+  const locations = MARKER_TAGS.filter((t) => t.isLocation).slice().sort(byLabel);
+  const items = MARKER_TAGS.filter((t) => !t.isLocation).slice().sort(byLabel);
+  return [
+    { title: 'Locations', tags: locations },
+    { title: 'Items', tags: items },
+  ];
+}
+
 /** Preloaded marker textures: tag → HTMLImageElement */
 const markerImages: Map<MarkerTag, HTMLImageElement> = new Map();
 let imagesLoaded = false;
