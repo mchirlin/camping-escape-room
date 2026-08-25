@@ -172,10 +172,28 @@ export class MapInteraction {
     this.viewport.centerY = clamped.y;
   }
 
+  /**
+   * Minimum zoom level: low enough to fit the entire region on screen with a
+   * margin so you can see area beyond the region edges. Never above the fixed
+   * MIN_ZOOM floor.
+   */
+  private getMinZoom(): number {
+    const sw = this.viewport.screenWidth;
+    const sh = this.viewport.screenHeight;
+    if (sw <= 0 || sh <= 0 || this.worldWidth <= 0 || this.worldHeight <= 0) {
+      return MIN_ZOOM;
+    }
+    // 0.8 leaves ~20% margin so the region doesn't touch the screen edges
+    const fitScale = 0.8 * Math.min(sw / this.worldWidth, sh / this.worldHeight);
+    const fitZoom = Math.log2(fitScale);
+    // Allow zooming out to fit the region, but not past the hard floor
+    return Math.min(MIN_ZOOM, fitZoom);
+  }
+
   /** Set zoom level programmatically (continuous float) */
   setZoomLevel(level: number): void {
     this.stopAnimation();
-    this.viewport.zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
+    this.viewport.zoomLevel = Math.max(this.getMinZoom(), Math.min(MAX_ZOOM, level));
   }
 
   // Tap detection
@@ -240,7 +258,7 @@ export class MapInteraction {
       const ratio = dist / this.initialPinchDistance;
       // Continuous zoom: log2(ratio) gives smooth zoom delta
       this.viewport.zoomLevel = Math.max(
-        MIN_ZOOM,
+        this.getMinZoom(),
         Math.min(MAX_ZOOM, this.pinchStartZoom + Math.log2(ratio))
       );
       this.clampToBounds();
@@ -316,7 +334,7 @@ export class MapInteraction {
 
     const delta = e.deltaY > 0 ? -0.15 : 0.15;
     const oldZoom = this.viewport.zoomLevel;
-    const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, oldZoom + delta));
+    const newZoom = Math.max(this.getMinZoom(), Math.min(MAX_ZOOM, oldZoom + delta));
 
     // Zoom toward the mouse cursor position (like Google Maps)
     // Convert mouse screen position to world position at old zoom

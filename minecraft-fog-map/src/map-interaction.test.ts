@@ -139,8 +139,10 @@ describe('MapInteraction', () => {
       const mi = new MapInteraction(cfg);
       mi.clampToBounds();
       const vp = mi.getViewport();
-      expect(vp.centerX).toBe(8192);
-      expect(vp.centerY).toBe(0);
+      // Clamp keeps the visible screen edge inside world bounds.
+      // At zoom 2 (scale 4): halfViewW = 800/4/2 = 100, halfViewH = 600/4/2 = 75.
+      expect(vp.centerX).toBe(8192 - 100); // world width - half view width
+      expect(vp.centerY).toBe(75);          // half view height
     });
 
     it('does not change viewport already within bounds', () => {
@@ -183,9 +185,13 @@ describe('MapInteraction', () => {
       expect(interaction.getViewport().zoomLevel).toBe(4);
     });
 
-    it('clamps zoom level to MIN_ZOOM_LEVEL', () => {
+    it('clamps zoom level to a dynamic minimum that fits the region', () => {
+      // Min zoom is computed so the whole region fits on screen (with margin),
+      // and is never above the -3 floor. For this config it is below -3.
       interaction.setZoomLevel(-10);
-      expect(interaction.getViewport().zoomLevel).toBe(-3);
+      const z = interaction.getViewport().zoomLevel;
+      expect(z).toBeLessThanOrEqual(-3);
+      expect(z).toBeGreaterThan(-10);
     });
 
     it('clamps zoom level to MAX_ZOOM_LEVEL', () => {

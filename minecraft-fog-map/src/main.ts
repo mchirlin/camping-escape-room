@@ -620,27 +620,43 @@ async function main(): Promise<void> {
     discoveredQuadrants.set(cfg.display, new Set());
   }
 
-  // Position update handler shared by GPS and simulation
-  const onPosition = (pos: GeoPosition): void => {
-    fogEngine.reveal(pos, 15);
-    playerWorldPos = geoToWorld(pos, bbox, level4Grid, TILE_SCREEN_SIZE);
-    lastGeoPos = pos;
-
-    // Mark the player's current quadrant as discovered for each display level
+  // Mark the quadrant containing a given world position as discovered, for every display level.
+  const markQuadrantDiscovered = (worldX: number, worldY: number): void => {
     for (const cfg of MAP_LEVEL_CONFIG) {
       if (!discoveredQuadrants.has(cfg.display)) {
         discoveredQuadrants.set(cfg.display, new Set());
       }
       const levelData = terrainData.zoomLevels.find((zl) => zl.level === cfg.internal);
       if (levelData) {
-        // getQuadrantKey uses level-4 world coords, but quadrant size is based on
-        // the selected level's grid scaled to world space
         const quadWorldW = Math.round(levelData.cols * cfg.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - cfg.internal);
         const quadWorldH = Math.round(levelData.rows * cfg.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - cfg.internal);
-        const qx = Math.floor(playerWorldPos.x / quadWorldW);
-        const qy = Math.floor(playerWorldPos.y / quadWorldH);
+        const qx = Math.floor(worldX / quadWorldW);
+        const qy = Math.floor(worldY / quadWorldH);
         discoveredQuadrants.get(cfg.display)!.add(`${qx},${qy}`);
       }
+    }
+  };
+
+  const onPosition = (pos: GeoPosition): void => {
+    fogEngine.reveal(pos, 15);
+    playerWorldPos = geoToWorld(pos, bbox, level4Grid, TILE_SCREEN_SIZE);
+    lastGeoPos = pos;
+    markQuadrantDiscovered(playerWorldPos.x, playerWorldPos.y);
+  };
+
+  // When fog is revealed remotely (another player via Firebase), mark those
+  // quadrants as discovered so the shared fog actually renders on this device.
+  fogEngine.onRemoteReveal = (newLevel4Keys: string[]) => {
+    for (const key of newLevel4Keys) {
+      // key format: "z4:col:row"
+      const parts = key.split(':');
+      const col = parseInt(parts[1], 10);
+      const row = parseInt(parts[2], 10);
+      if (Number.isNaN(col) || Number.isNaN(row)) continue;
+      // Convert the level-4 tile to world coords (tile center)
+      const worldX = (col + 0.5) * TILE_SCREEN_SIZE;
+      const worldY = (row + 0.5) * TILE_SCREEN_SIZE;
+      markQuadrantDiscovered(worldX, worldY);
     }
   };
 
