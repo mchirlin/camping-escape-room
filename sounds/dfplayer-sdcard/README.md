@@ -14,7 +14,7 @@ SD Card Root/
     003.mp3                   — toast_in (touch start chime)
     004.mp3                   — levelup (victory variant)
     005.mp3                   — xp_pickup
-    006.mp3                   — explosion1
+    006.mp3                   — tnt_fuse + explosion (combined: hiss then bang)
     007.mp3                   — chest_open (legacy from mp3/ folder)
     008.mp3                   — note_pling
     009.mp3                   — levelup

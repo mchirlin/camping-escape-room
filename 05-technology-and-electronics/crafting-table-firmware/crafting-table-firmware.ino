@@ -26,13 +26,13 @@
 //
 // Recipes (storyline order):
 //   1. Compass (door 2): iron_ingot cross + redstone center
-//   2. Stone Pickaxe (door 0): cobblestone×3 top + stick×2 center column
+//   2. Stone Pickaxe (door 1): cobblestone×3 top + stick×2 center column
 //   3. Map (no door): paper×8 + compass center
-//   4. Fishing Rod (door 1): sticks diagonal + strings right column
+//   4. Fishing Rod (door 2): sticks diagonal + strings right column
 //   5. Diamond Pickaxe (door 0): diamond×3 top + stick×2 center column
-//   6. Torch (door 2): coal directly above stick, any of 6 grid positions
-//   7. Iron Sword (door 1): iron_ingot×2 + stick center column
-//   8. Spyglass (door 2): amethyst + copper×2 center column
+//   6. Torch (door 1): coal directly above stick, any of 6 grid positions
+//   7. Iron Sword (door 2): iron_ingot×2 + stick center column
+//   8. Spyglass (door 0): amethyst + copper×2 center column
 //   9. TNT (door 1): gunpowder/sand checkerboard
 //
 // Pin assignments:
@@ -82,6 +82,7 @@
 #include <DFRobotDFPlayerMini.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include <Preferences.h>
 
 // =============================================================================
 // Pin Definitions
@@ -232,11 +233,11 @@ const Recipe RECIPES[NUM_RECIPES] = {
     {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
     2, -1
   },
-  // Recipe 5: Stone Pickaxe → door 0 (Step 4 — "Cobblestone Pickaxe")
+  // Recipe 5: Stone Pickaxe → door 1 (Step 4 — "Cobblestone Pickaxe")
   {
     "Stone Pickaxe",
     {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
-    0, -1
+    1, -1
   },
   // Recipe 6: Map (no door — iPad activates) (Step 6)
   {
@@ -244,11 +245,11 @@ const Recipe RECIPES[NUM_RECIPES] = {
     {"paper", "paper", "paper", "paper", "compass", "paper", "paper", "paper", "paper"},
     255, -1
   },
-  // Recipe 7: Fishing Rod → door 1 (Step 8)
+  // Recipe 7: Fishing Rod → door 2 (Step 8)
   {
     "Fishing Rod",
     {"stick", "", "string", "", "stick", "string", "", "", "stick"},
-    1, -1
+    2, -1
   },
   // Recipe 8: Diamond Pickaxe → door 0 (Step 10)
   {
@@ -256,51 +257,51 @@ const Recipe RECIPES[NUM_RECIPES] = {
     {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
     0, -1
   },
-  // Recipe 9-14: Torch → door 2 (Step 13)
+  // Recipe 9-14: Torch → door 1 (Step 13)
   // Coal directly above a stick, valid in any of 6 grid positions
   // (3 columns × 2 vertical row-pairs). Orientation still matters —
   // coal must be on top, stick immediately below. All share craftGroup 1.
   {
     "Torch",  // left column, top pair: coal@6 / stick@3
     {"", "", "", "stick", "", "", "coal", "", ""},
-    2, 1
+    1, 1
   },
   {
     "Torch",  // left column, bottom pair: coal@3 / stick@0
     {"stick", "", "", "coal", "", "", "", "", ""},
-    2, 1
+    1, 1
   },
   {
     "Torch",  // center column, top pair: coal@7 / stick@4
     {"", "", "", "", "stick", "", "", "coal", ""},
-    2, 1
+    1, 1
   },
   {
     "Torch",  // center column, bottom pair: coal@4 / stick@1
     {"", "stick", "", "", "coal", "", "", "", ""},
-    2, 1
+    1, 1
   },
   {
     "Torch",  // right column, top pair: coal@8 / stick@5
     {"", "", "", "", "", "stick", "", "", "coal"},
-    2, 1
+    1, 1
   },
   {
     "Torch",  // right column, bottom pair: coal@5 / stick@2
     {"", "", "stick", "", "", "coal", "", "", ""},
-    2, 1
+    1, 1
   },
-  // Recipe 15: Iron Sword → door 1 (Step 14)
+  // Recipe 15: Iron Sword → door 2 (Step 14)
   {
     "Iron Sword",
     {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
-    1, -1
+    2, -1
   },
-  // Recipe 16: Spyglass → door 2 (Step 16)
+  // Recipe 16: Spyglass → door 0 (Step 16)
   {
     "Spyglass",
     {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
-    2, -1
+    0, -1
   },
   // Recipe 17: TNT → door 1 (Step 20)
   {
@@ -393,8 +394,12 @@ unsigned long touchStartMs = 0;    // When touch first detected (0 = not touchin
 bool craftTriggered = false;       // Prevents re-trigger while still holding
 bool wasTouched = false;           // Previous touch state for edge detection
 
-// Recipe state
-bool recipeCrafted[NUM_RECIPES];   // Once crafted, don't re-trigger
+// Recipe state — three states: LOCKED (can't craft yet), UNLOCKED (ready to craft), COMPLETED
+enum RecipeState : uint8_t { RECIPE_LOCKED = 0, RECIPE_UNLOCKED = 1, RECIPE_COMPLETED = 2 };
+RecipeState recipeState[NUM_RECIPES];   // Persisted to flash via Preferences
+
+// Preferences for persistent state (survives power cycle)
+Preferences prefs;
 
 // Jukebox state (Steve figurine cycles through music tracks)
 #define JUKEBOX_NUM_TRACKS 10
@@ -426,6 +431,45 @@ void logMsgf(const char* fmt, ...) {
   vsnprintf(buf, sizeof(buf), fmt, args);
   va_end(args);
   logMsg(String(buf));
+}
+
+// =============================================================================
+// Persistent Recipe State (NVS Flash)
+// =============================================================================
+void saveRecipeState() {
+  prefs.begin("craft", false);
+  for (int i = 0; i < NUM_RECIPES; i++) {
+    char key[8];
+    snprintf(key, sizeof(key), "r%d", i);
+    prefs.putUChar(key, (uint8_t)recipeState[i]);
+  }
+  prefs.end();
+}
+
+void loadRecipeState() {
+  prefs.begin("craft", true);  // read-only
+  for (int i = 0; i < NUM_RECIPES; i++) {
+    char key[8];
+    snprintf(key, sizeof(key), "r%d", i);
+    recipeState[i] = (RecipeState)prefs.getUChar(key, RECIPE_UNLOCKED);
+  }
+  prefs.end();
+}
+
+// Get the "unique recipe index" (skipping craftGroup duplicates) for status display
+int getUniqueRecipeIndex(int rawIndex) {
+  bool seenGroup[10];
+  memset(seenGroup, 0, sizeof(seenGroup));
+  int unique = 0;
+  for (int i = 0; i < NUM_RECIPES; i++) {
+    if (RECIPES[i].craftGroup >= 0) {
+      if (seenGroup[RECIPES[i].craftGroup]) continue;
+      seenGroup[RECIPES[i].craftGroup] = true;
+    }
+    if (i == rawIndex) return unique;
+    unique++;
+  }
+  return -1;
 }
 
 // =============================================================================
@@ -585,6 +629,125 @@ void flashRed() {
       } else {
         clearRing(ring);
       }
+    }
+  }
+  strip.show();
+}
+
+// =============================================================================
+// Animation: Victory Flash (gold_ingot scan — golden sparkle + sweep)
+// =============================================================================
+void victoryFlash() {
+  logMsg("[ANIM] Victory flash (gold_ingot)");
+  unsigned long startTime = millis();
+  while (millis() - startTime < 2500) {
+    // Alternating gold/white sparkle across all rings
+    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+      uint32_t c;
+      unsigned long t = millis() - startTime;
+      int phase = (i + (int)(t / 80)) % 6;
+      if (phase < 2) c = strip.Color(255, 215, 0);      // Gold
+      else if (phase < 3) c = strip.Color(255, 255, 200); // Bright gold-white
+      else if (phase < 4) c = strip.Color(200, 150, 0);  // Darker gold
+      else c = 0;
+      strip.setPixelColor(i, c);
+    }
+    strip.show();
+    delay(30);
+  }
+  // Restore slot ring colors
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    int8_t ring = SLOT_TO_RING[i];
+    if (ring >= 0) {
+      if (slotActive[i] && slotType[i].length() > 0) setRing(ring, getTypeColor(slotType[i]));
+      else if (slotActive[i]) setRing(ring, 0xFFFFFF);
+      else clearRing(ring);
+    }
+  }
+  strip.show();
+}
+
+// =============================================================================
+// Animation: TNT Fuse + Explosion (synced to combined fuse+explosion audio)
+// Phase 1 (0–2800ms): Fuse spark travels across rings with flickering red glow
+// Phase 2 (2800ms+): Bright white flash → expanding fireball → fade out
+// =============================================================================
+void explosionFlash() {
+  logMsg("[ANIM] TNT fuse + explosion");
+  unsigned long startTime = millis();
+
+  // === Phase 1: Fuse spark (0–2800ms) ===
+  // A bright white/yellow spark travels ring-to-ring while the rest pulses dim red
+  while (millis() - startTime < 2800) {
+    unsigned long t = millis() - startTime;
+    // Which ring the spark is currently on (0–8 over 2800ms)
+    uint8_t sparkRing = (t * NUM_SLOTS) / 2800;
+    if (sparkRing >= NUM_SLOTS) sparkRing = NUM_SLOTS - 1;
+
+    for (uint8_t ring = 0; ring < NUM_SLOTS; ring++) {
+      uint16_t offset = ring * LEDS_PER_RING;
+      if (ring == sparkRing) {
+        // Active spark ring — bright flickering white/yellow
+        for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
+          uint8_t flicker = random(180, 255);
+          strip.setPixelColor(offset + i, strip.Color(flicker, flicker / 2, 0));
+        }
+      } else if (ring < sparkRing) {
+        // Already-burned rings — dim smoldering orange/red
+        for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
+          uint8_t glow = random(5, 30);
+          strip.setPixelColor(offset + i, strip.Color(glow, glow / 4, 0));
+        }
+      } else {
+        // Not yet reached — pulsing dim red (anticipation)
+        uint8_t pulse = 10 + 10 * ((t / 100 + ring) % 3);
+        for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
+          strip.setPixelColor(offset + i, strip.Color(pulse, 0, 0));
+        }
+      }
+    }
+    strip.show();
+    delay(30);
+  }
+
+  // === Phase 2: Explosion (2800ms+) ===
+  // Bright white flash
+  for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+    strip.setPixelColor(i, strip.Color(255, 255, 255));
+  }
+  strip.show();
+  delay(100);
+
+  // Expanding fireball — reds, oranges, yellows
+  unsigned long explodeStart = millis();
+  while (millis() - explodeStart < 2000) {
+    unsigned long t = millis() - explodeStart;
+    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+      int phase = (i * 7 + (int)(t / 40)) % 12;
+      uint32_t c;
+      if (phase < 3) c = strip.Color(255, 0, 0);        // Red
+      else if (phase < 5) c = strip.Color(255, 100, 0);  // Orange
+      else if (phase < 7) c = strip.Color(255, 200, 0);  // Yellow-orange
+      else if (phase < 9) c = strip.Color(255, 255, 50); // Bright yellow
+      else c = strip.Color(200, 50, 0);                   // Deep orange
+      // Fade out over time
+      uint8_t fade = (t > 1500) ? map(t, 1500, 2000, 255, 0) : 255;
+      uint8_t r = ((c >> 16) & 0xFF) * fade / 255;
+      uint8_t g = ((c >> 8) & 0xFF) * fade / 255;
+      uint8_t b = (c & 0xFF) * fade / 255;
+      strip.setPixelColor(i, strip.Color(r, g, b));
+    }
+    strip.show();
+    delay(25);
+  }
+
+  // Restore slot ring colors
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    int8_t ring = SLOT_TO_RING[i];
+    if (ring >= 0) {
+      if (slotActive[i] && slotType[i].length() > 0) setRing(ring, getTypeColor(slotType[i]));
+      else if (slotActive[i]) setRing(ring, 0xFFFFFF);
+      else clearRing(ring);
     }
   }
   strip.show();
@@ -834,8 +997,8 @@ String readTypeFromTag() {
 // Returns recipe index (0-5) if grid matches a recipe, or -1 if no match.
 int checkRecipes() {
   for (int r = 0; r < NUM_RECIPES; r++) {
-    // Skip already-crafted recipes
-    if (recipeCrafted[r]) continue;
+    // Skip locked or already-completed recipes
+    if (recipeState[r] != RECIPE_UNLOCKED) continue;
 
     bool match = true;
     for (int i = 0; i < NUM_SLOTS; i++) {
@@ -866,15 +1029,16 @@ void executeCraft(int recipeIndex) {
   logMsgf("[CRAFT] === RECIPE MATCHED: %s (door %d) ===",
           RECIPES[recipeIndex].name, RECIPES[recipeIndex].doorIndex);
 
-  // Mark as crafted (and all recipes in the same craftGroup)
-  recipeCrafted[recipeIndex] = true;
+  // Mark as completed (and all recipes in the same craftGroup)
+  recipeState[recipeIndex] = RECIPE_COMPLETED;
   if (RECIPES[recipeIndex].craftGroup >= 0) {
     for (int i = 0; i < NUM_RECIPES; i++) {
       if (RECIPES[i].craftGroup == RECIPES[recipeIndex].craftGroup) {
-        recipeCrafted[i] = true;
+        recipeState[i] = RECIPE_COMPLETED;
       }
     }
   }
+  saveRecipeState();
 
   // Play success sound
   playCraftSound(recipeIndex);
@@ -931,10 +1095,11 @@ void servoSweepN(uint8_t n) {
 // =============================================================================
 void resetGame() {
   logMsg("[GAME] === RESET ===");
-  // Clear crafted flags
+  // Reset all recipe states to UNLOCKED
   for (int i = 0; i < NUM_RECIPES; i++) {
-    recipeCrafted[i] = false;
+    recipeState[i] = RECIPE_UNLOCKED;
   }
+  saveRecipeState();
   // Close all doors (return servos to rest)
   for (uint8_t i = 0; i < 3; i++) {
     servos[i]->attach(SERVO_PINS[i]);
@@ -944,7 +1109,7 @@ void resetGame() {
   for (uint8_t i = 0; i < 3; i++) {
     servos[i]->detach();
   }
-  logMsg("[GAME] All recipes cleared, doors closed");
+  logMsg("[GAME] All recipes unlocked, doors closed");
 }
 
 // =============================================================================
@@ -1237,7 +1402,12 @@ void handleStatus() {
       }
       if (!first) json += ",";
       first = false;
-      json += recipeCrafted[i] ? "true" : "false";
+      // Report state as string: "locked", "unlocked", "completed"
+      switch (recipeState[i]) {
+        case RECIPE_LOCKED:    json += "\"locked\""; break;
+        case RECIPE_UNLOCKED:  json += "\"unlocked\""; break;
+        case RECIPE_COMPLETED: json += "\"completed\""; break;
+      }
     }
   }
   json += "],\"dfplayer\":";
@@ -1363,6 +1533,70 @@ void handleReset() {
 }
 
 // =============================================================================
+// Recipe State Handler — lock/unlock/complete individual recipes
+// GET /recipestate?r=5&s=locked    (lock recipe index 5)
+// GET /recipestate?r=5&s=unlocked  (unlock recipe index 5)
+// GET /recipestate?r=5&s=completed (mark completed)
+// GET /recipestate?name=Compass&s=locked (by name, affects all variants)
+// =============================================================================
+void handleRecipeState() {
+  String state = server.arg("s");
+  RecipeState newState;
+  if (state == "locked") newState = RECIPE_LOCKED;
+  else if (state == "unlocked") newState = RECIPE_UNLOCKED;
+  else if (state == "completed") newState = RECIPE_COMPLETED;
+  else {
+    server.send(400, "application/json", "{\"error\":\"invalid state (locked/unlocked/completed)\"}");
+    return;
+  }
+
+  // Find recipe by index or name
+  String rArg = server.arg("r");
+  String nameArg = server.arg("name");
+  int count = 0;
+
+  if (rArg.length() > 0) {
+    int idx = rArg.toInt();
+    if (idx >= 0 && idx < NUM_RECIPES) {
+      recipeState[idx] = newState;
+      // Also apply to craftGroup siblings
+      if (RECIPES[idx].craftGroup >= 0) {
+        for (int i = 0; i < NUM_RECIPES; i++) {
+          if (RECIPES[i].craftGroup == RECIPES[idx].craftGroup) {
+            recipeState[i] = newState;
+            count++;
+          }
+        }
+      } else {
+        count = 1;
+      }
+    }
+  } else if (nameArg.length() > 0) {
+    for (int i = 0; i < NUM_RECIPES; i++) {
+      if (nameArg.equalsIgnoreCase(String(RECIPES[i].name))) {
+        recipeState[i] = newState;
+        count++;
+      }
+    }
+  } else {
+    server.send(400, "application/json", "{\"error\":\"provide r=INDEX or name=NAME\"}");
+    return;
+  }
+
+  saveRecipeState();
+  logMsgf("[ADMIN] Recipe state: %s -> %s (%d variants)",
+          nameArg.length() > 0 ? nameArg.c_str() : rArg.c_str(),
+          state.c_str(), count);
+
+  String json = "{\"success\":true,\"updated\":";
+  json += count;
+  json += ",\"state\":\"";
+  json += state;
+  json += "\"}";
+  server.send(200, "application/json", json);
+}
+
+// =============================================================================
 // Recipes Handler — returns all recipes as JSON
 // =============================================================================
 void handleRecipes() {
@@ -1461,6 +1695,7 @@ void setup() {
   server.on("/register", handleRegister);
   server.on("/reset", handleReset);
   server.on("/recipes", handleRecipes);
+  server.on("/recipestate", handleRecipeState);
   server.on("/volume", handleVolume);
   server.on("/motor", handleMotorPWM);
   server.begin();
@@ -1565,11 +1800,18 @@ void setup() {
   }
   logMsgf("[SERVO] 3 servos ready on GPIO %d, %d, %d", SERVO_PIN_0, SERVO_PIN_1, SERVO_PIN_2);
 
-  // --- Recipe state ---
-  for (int i = 0; i < NUM_RECIPES; i++) {
-    recipeCrafted[i] = false;
+  // --- Recipe state (load from flash) ---
+  loadRecipeState();
+  {
+    int completed = 0, locked = 0, unlocked = 0;
+    for (int i = 0; i < NUM_RECIPES; i++) {
+      if (recipeState[i] == RECIPE_COMPLETED) completed++;
+      else if (recipeState[i] == RECIPE_LOCKED) locked++;
+      else unlocked++;
+    }
+    logMsgf("[CRAFT] State loaded: %d completed, %d locked, %d unlocked",
+            completed, locked, unlocked);
   }
-  logMsg("[CRAFT] 6 recipes loaded, none crafted");
 
   // --- Touch baseline ---
   logMsgf("[TOUCH] Threshold=%d, hold %dms to craft", TOUCH_THRESHOLD, CRAFT_HOLD_MS);
@@ -1694,7 +1936,7 @@ void loop() {
         strip.show();
       }
 
-      if (slotType[i] != "steve") {
+      if (slotType[i] != "steve" && slotType[i] != "gold_ingot" && slotType[i] != "tnt") {
         playSound(i + 1);
       }
 
@@ -1710,6 +1952,28 @@ void loop() {
         }
         // Advance to next track for next placement
         jukeboxTrack = (jukeboxTrack % JUKEBOX_NUM_TRACKS) + 1;
+      }
+
+      // Gold ingot: victory celebration on any slot
+      if (slotType[i] == "gold_ingot") {
+        logMsg("[SCAN] Gold ingot — victory!");
+        if (dfPlayerReady) {
+          dfPlayer.disableLoop();
+          musicPlaying = false;
+          dfPlayer.playFolder(2, 4);  // Folder 02, track 004 = victory fanfare
+        }
+        victoryFlash();
+      }
+
+      // TNT: fuse hiss + explosion effect on any slot
+      if (slotType[i] == "tnt") {
+        logMsg("[SCAN] TNT — BOOM!");
+        if (dfPlayerReady) {
+          dfPlayer.disableLoop();
+          musicPlaying = false;
+          dfPlayer.playFolder(2, 6);  // Folder 02, track 006 = tnt_fuse + explosion (combined)
+        }
+        explosionFlash();  // Fuse spark animation (2.8s) + explosion flash, synced to audio
       }
 
       String uidDisp = uidToDisplayString(uid, uidLen);

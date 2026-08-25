@@ -343,6 +343,13 @@ async function main(): Promise<void> {
     initMarkerDb().then(() => {
       markerStore.startSync();
 
+      // Initialize shared fog sync via Firebase
+      import('./fog-sync').then(({ initFogSync }) => {
+        if (initFogSync()) {
+          fogEngine.loadFromFirebase();
+        }
+      });
+
       // Multiplayer: broadcast position and listen for other players (non-admin only)
       if (!isAdminMode) {
         import('./player-db').then(({ initPlayerDb, startBroadcasting, listenForPlayers, removePlayer }) => {

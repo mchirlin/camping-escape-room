@@ -7,6 +7,7 @@ import type { BoundingBox, FogState, GeoPosition, ZoomLevelData } from './types'
 import { ZOOM_LEVELS } from './types';
 import { geoToTile, tileToGeo } from './coords';
 import { calculateGridSize } from './terrain-utils';
+import { pushRevealedTiles, saveFogToFirebase, loadFogFromFirebase, subscribeFogUpdates, unsubscribeFogUpdates, isFogSyncActive } from './fog-sync';
 
 /** Configuration needed by the FogEngine to do coordinate conversions */
 export interface FogEngineConfig {
@@ -190,8 +191,12 @@ export class FogEngine {
     // Propagate to coarser levels (3 → 0)
     if (newlyRevealed.length > 0) {
       this.propagateToCoarserLevels(newlyRevealed);
-      // Auto-persist to localStorage after each reveal
+      // Persist to localStorage (local backup)
       this.persistToStorage();
+      // Push to Firebase for shared fog
+      if (isFogSyncActive() && this.config.regionId) {
+        pushRevealedTiles(this.config.regionId, newlyRevealed);
+      }
     }
 
     return newlyRevealed;
@@ -329,19 +334,79 @@ export class FogEngine {
     if (key) {
       try { localStorage.removeItem(key); } catch { /* ignore */ }
     }
+    // Clear Firebase fog state
+    if (isFogSyncActive() && this.config.regionId) {
+      saveFogToFirebase(this.config.regionId, []);
+    }
   }
 
   /** Reveal every tile at all zoom levels. */
   revealAll(): void {
     const { gridSizes } = this.config;
+    const newLevel4Keys: string[] = [];
     for (let level = 0; level <= 4; level++) {
       const grid = gridSizes[level];
       for (let row = 0; row < grid.rows; row++) {
         for (let col = 0; col < grid.cols; col++) {
-          this.revealedTiles.add(tileKey(level, col, row));
+          const key = tileKey(level, col, row);
+          this.revealedTiles.add(key);
+          if (level === 4) newLevel4Keys.push(key);
         }
       }
     }
     this.persistToStorage();
+    // Push full state to Firebase
+    if (isFogSyncActive() && this.config.regionId) {
+      saveFogToFirebase(this.config.regionId, newLevel4Keys);
+    }
+  }
+
+  /**
+   * Apply remotely-revealed tiles from Firebase.
+   * Merges incoming level-4 keys into local state without re-pushing to Firebase.
+   * Returns the count of newly added tiles.
+   */
+  applyRemoteTiles(level4Keys: string[]): number {
+    let added = 0;
+    const newKeys: string[] = [];
+
+    for (const key of level4Keys) {
+      if (!this.revealedTiles.has(key)) {
+        this.revealedTiles.add(key);
+        newKeys.push(key);
+        added++;
+      }
+    }
+
+    if (newKeys.length > 0) {
+      this.propagateToCoarserLevels(newKeys);
+      this.persistToStorage();
+    }
+
+    return added;
+  }
+
+  /**
+   * Load fog state from Firebase for the configured region.
+   * Merges with any existing local state. Also sets up real-time listener.
+   */
+  async loadFromFirebase(): Promise<void> {
+    if (!isFogSyncActive() || !this.config.regionId) return;
+
+    // Load initial state
+    const remoteTiles = await loadFogFromFirebase(this.config.regionId);
+    if (remoteTiles && remoteTiles.length > 0) {
+      this.applyRemoteTiles(remoteTiles);
+    }
+
+    // Subscribe to real-time updates from other players
+    subscribeFogUpdates(this.config.regionId, (tileKeys) => {
+      this.applyRemoteTiles(tileKeys);
+    });
+  }
+
+  /** Stop listening for remote fog updates. */
+  stopSync(): void {
+    unsubscribeFogUpdates();
   }
 }
