@@ -11,7 +11,7 @@ import { MapInteraction } from './map-interaction';
 import { UIOverlayImpl } from './ui-overlay';
 import { createGPSTracker } from './gps-tracker';
 import { createSimulationMode, shouldActivateSimulation } from './simulation-mode';
-import { geoToWorld, worldToGeo } from './coords';
+import { geoToWorld, worldToGeo, geoToTile } from './coords';
 import { MarkerStore, MARKER_TAGS, preloadMarkerImages, getMarkerImage, isLocationTag, groupedMarkerTags } from './markers';
 import type { MarkerTag } from './markers';
 import { CraftingTableLink, collectNearestMarker } from './crafting-link';
@@ -1150,11 +1150,12 @@ async function main(): Promise<void> {
   // Marker popup on the Minecraft canvas map
   let markerPopupEl: HTMLElement | null = null;
 
-  function showMarkerPopup(marker: { id: string; tag: string; count: number; hidden?: boolean }, screenX: number, screenY: number) {
+  function showMarkerPopup(marker: { id: string; tag: string; count: number; hidden?: boolean; revealOnFog?: boolean }, screenX: number, screenY: number) {
     hideMarkerPopup();
     const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
     const label = tagInfo?.label ?? marker.tag;
     const isHidden = !!marker.hidden;
+    const isFogGated = !!marker.revealOnFog;
     const isLocation = isLocationTag(marker.tag as MarkerTag);
 
     const popup = document.createElement('div');
@@ -1181,8 +1182,9 @@ async function main(): Promise<void> {
     }
     buttonsHtml += `<button data-action="close" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;">✕</button>`;
 
+    const statusText = isHidden ? ' 🙈 hidden' : (isFogGated ? ' 🌫️ reveal on uncover' : '');
     popup.innerHTML = `
-      <div>${label}${marker.count > 1 ? ' x' + marker.count : ''}${isHidden ? ' (hidden)' : ''}</div>
+      <div>${label}${marker.count > 1 ? ' x' + marker.count : ''}${statusText}</div>
       <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">
         ${buttonsHtml}
       </div>
@@ -1238,6 +1240,12 @@ async function main(): Promise<void> {
     }
   }
 
+  // Is a marker's tile uncovered in the fog? Used to gate reveal-on-fog markers.
+  function isMarkerFogRevealed(marker: { position: GeoPosition }): boolean {
+    const tile = geoToTile(marker.position, 4, bbox, level4Grid);
+    return fogEngine.isRevealed(4, tile.col, tile.row);
+  }
+
   // Detect clicks/taps on markers on the Minecraft canvas
   function handleMarkerClick(screenX: number, screenY: number) {
     const viewport = mapInteraction.getViewport();
@@ -1246,6 +1254,11 @@ async function main(): Promise<void> {
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
 
     for (const marker of markerStore.getAll()) {
+      // Don't allow interacting with reveal-on-fog markers still under fog (non-admin)
+      if (marker.revealOnFog && !isAdminMode && !isMarkerFogRevealed(marker)) {
+        continue;
+      }
+
       const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
 
       const mx = (worldPos.x - viewLeft) * scale;
@@ -1326,6 +1339,12 @@ async function main(): Promise<void> {
     `;
 
     let html = '';
+    // Reveal-on-fog toggle — when checked, placed markers only appear to players
+    // once they've uncovered that spot on the map.
+    html += `<label style="display:flex;align-items:center;gap:5px;font-size:6px;color:#ddd;margin-bottom:4px;cursor:pointer;">
+      <input type="checkbox" data-fog-toggle style="width:12px;height:12px;">
+      Only show when uncovered
+    </label>`;
     for (const group of groupedMarkerTags()) {
       html += `<div style="color:#888;font-size:6px;margin:2px 0;">${group.title}</div>`;
       html += '<div style="display:flex;flex-wrap:wrap;gap:3px;">';
@@ -1337,13 +1356,21 @@ async function main(): Promise<void> {
     html += '<button data-action="close" style="font-family:var(--mc-font);font-size:6px;padding:3px 6px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;margin-top:4px;align-self:flex-end;">Cancel</button>';
     popup.innerHTML = html;
 
+    const fogToggle = popup.querySelector('[data-fog-toggle]') as HTMLInputElement | null;
+
     // Wire tag buttons
     popup.querySelectorAll('[data-tag]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const tag = (btn as HTMLElement).getAttribute('data-tag') as MarkerTag;
-        const { marker, incremented } = markerStore.add(geo, tag, undefined, undefined, true);
+        const revealOnFog = !!fogToggle?.checked;
+        // reveal-on-fog markers use the fog gate for visibility, so they are NOT
+        // admin-hidden. Regular admin placements stay hidden until manually revealed.
+        const hidden = !revealOnFog;
+        const { marker, incremented } = markerStore.add(geo, tag, undefined, undefined, hidden, revealOnFog);
         if (!incremented) {
-          uiOverlay.showToast(`📌 Placed: ${MARKER_TAGS.find(t => t.tag === tag)?.label ?? tag} (hidden)`);
+          const label = MARKER_TAGS.find(t => t.tag === tag)?.label ?? tag;
+          const suffix = revealOnFog ? ' (reveal on uncover)' : ' (hidden)';
+          uiOverlay.showToast(`📌 Placed: ${label}${suffix}`);
         }
         popup.remove();
         updateMarkerPanel();
@@ -1454,6 +1481,12 @@ async function main(): Promise<void> {
       }
 
       for (const marker of markerStore.getAll()) {
+        // reveal-on-fog markers: hidden until their tile is uncovered.
+        // Admins always see them (dimmed) so they can manage placement.
+        if (marker.revealOnFog && !isAdminMode && !isMarkerFogRevealed(marker)) {
+          continue;
+        }
+
         const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
 
         const screenX = (worldPos.x - viewLeft) * scale;
@@ -1470,9 +1503,13 @@ async function main(): Promise<void> {
         const slotX = screenX - slotSize / 2;
         const slotY = screenY - slotSize / 2;
 
-        // Hidden markers in admin mode: draw semi-transparent
-        const isHidden = !!(marker.hidden && isAdminMode);
-        if (isHidden) ctx!.globalAlpha = 0.4;
+        // Admin-only dimming for markers players can't see yet:
+        //  - adminHidden: manually hidden (needs admin reveal)
+        //  - adminFogPending: reveal-on-fog, tile not uncovered yet
+        const adminHidden = !!(marker.hidden && isAdminMode);
+        const adminFogPending = !!(marker.revealOnFog && isAdminMode && !isMarkerFogRevealed(marker));
+        const isDimmed = adminHidden || adminFogPending;
+        if (isDimmed) ctx!.globalAlpha = 0.45;
 
         if (isLocation) {
           // --- Location marker: colored map-pin banner ---
@@ -1531,18 +1568,20 @@ async function main(): Promise<void> {
           ctx!.fillRect(screenX - iconSize / 2, screenY - iconSize / 2, iconSize, iconSize);
         }
 
-        // Hidden indicator: red "X" over the icon
-        if (isHidden) {
-          ctx!.globalAlpha = 0.8;
-          ctx!.strokeStyle = '#FF0000';
-          ctx!.lineWidth = 3;
-          ctx!.beginPath();
-          ctx!.moveTo(slotX + 4, slotY + 4);
-          ctx!.lineTo(slotX + slotSize - 4, slotY + slotSize - 4);
-          ctx!.moveTo(slotX + slotSize - 4, slotY + 4);
-          ctx!.lineTo(slotX + 4, slotY + slotSize - 4);
-          ctx!.stroke();
+        // Admin status badge (top-left corner) — no more red X.
+        //   🙈 = manually hidden, 🌫️ = reveal-on-fog (waiting to be uncovered)
+        if (isDimmed) {
           ctx!.globalAlpha = 1.0;
+          const badge = adminFogPending ? '🌫️' : '🙈';
+          ctx!.font = '13px sans-serif';
+          ctx!.textAlign = 'center';
+          ctx!.textBaseline = 'middle';
+          const bx = slotX + 2;
+          const by = slotY + 2;
+          // dark chip behind the emoji for contrast
+          ctx!.fillStyle = 'rgba(0,0,0,0.6)';
+          ctx!.fillRect(bx - 8, by - 8, 16, 16);
+          ctx!.fillText(badge, bx, by + 1);
         } else if (isAdminMode) {
           ctx!.globalAlpha = 1.0;
         }
@@ -1563,7 +1602,7 @@ async function main(): Promise<void> {
         // Location markers: draw the name label in Minecraft font to the right
         if (isLocation && tagInfo) {
           ctx!.save();
-          ctx!.globalAlpha = isHidden ? 0.5 : 1.0;
+          ctx!.globalAlpha = isDimmed ? 0.55 : 1.0;
           ctx!.font = '8px "Press Start 2P", monospace';
           ctx!.textBaseline = 'middle';
           ctx!.textAlign = 'left';

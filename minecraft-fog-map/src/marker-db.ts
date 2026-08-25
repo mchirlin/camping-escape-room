@@ -26,6 +26,7 @@ export interface DbMarker {
   uid?: string;
   collected: boolean;
   hidden: boolean;
+  revealOnFog?: boolean;
   createdAt: number;
 }
 

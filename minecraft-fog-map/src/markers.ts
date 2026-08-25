@@ -12,6 +12,11 @@ export interface MapMarker {
   label?: string;
   uid?: string;
   hidden?: boolean;
+  /**
+   * When true, players only see this marker once the fog over its tile has
+   * been uncovered. Lets admins pre-place items that appear as the map is explored.
+   */
+  revealOnFog?: boolean;
 }
 
 export type MarkerTag =
@@ -173,6 +178,7 @@ export class MarkerStore {
           label: m.label,
           uid: m.uid,
           hidden: m.hidden ?? false,
+          revealOnFog: m.revealOnFog ?? false,
         }));
       this.saveLocal();
       this.onChange?.(this.getAll());
@@ -258,7 +264,7 @@ export class MarkerStore {
     this.onChange?.(this.getAll());
   }
 
-  add(position: GeoPosition, tag: MarkerTag, label?: string, uid?: string, hidden = false): { marker: MapMarker; incremented: boolean } {
+  add(position: GeoPosition, tag: MarkerTag, label?: string, uid?: string, hidden = false, revealOnFog = false): { marker: MapMarker; incremented: boolean } {
     const nearby = this.markers.find((m) => {
       if (m.tag !== tag) return false;
       const dLat = Math.abs(m.position.latitude - position.latitude) * 111320;
@@ -282,6 +288,7 @@ export class MarkerStore {
       label,
       uid,
       hidden,
+      revealOnFog,
     };
     this.markers.push(marker);
     this.saveLocal();
@@ -289,6 +296,7 @@ export class MarkerStore {
       ...marker,
       collected: false,
       hidden,
+      revealOnFog,
       createdAt: Date.now(),
     });
     return { marker, incremented: false };

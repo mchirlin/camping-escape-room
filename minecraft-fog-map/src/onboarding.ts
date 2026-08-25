@@ -137,6 +137,10 @@ export function showOnboarding(opts: OnboardingOptions): () => void {
         <div style="width:40px;text-align:center;font-size:20px;flex:none;">👆</div>
         <div style="font-size:8px;line-height:1.6;">Tap an item when you're close to collect it.</div>
       </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;text-align:center;font-size:20px;flex:none;">🤝</div>
+        <div style="font-size:8px;line-height:1.6;">Work together with your friends to uncover the whole map!</div>
+      </div>
     </div>
 
     <button id="ob-start"
