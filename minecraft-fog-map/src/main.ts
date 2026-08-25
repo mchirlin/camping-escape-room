@@ -323,6 +323,14 @@ async function main(): Promise<void> {
     tileRenderer.setPlayerSkin(skinName);
   };
 
+  // Player name (shown under the local player's avatar; broadcast to others)
+  let playerName = (() => {
+    try { return localStorage.getItem('fogmap:playername') || ''; } catch { return ''; }
+  })();
+  uiOverlay.onNameChange = (name: string) => {
+    playerName = name;
+  };
+
   // Wire FogEngine storage warnings to toast notifications
   fogConfig.onStorageWarning = (msg: string) => uiOverlay.showToast(msg);
 
@@ -331,7 +339,7 @@ async function main(): Promise<void> {
   // Track current player geo position for crafting-link marker collection
   let lastGeoPos: GeoPosition | null = null;
   // Other players from Firebase (multiplayer)
-  let otherPlayers: Array<{ id: string; position: GeoPosition; avatar: string; updatedAt: number }> = [];
+  let otherPlayers: Array<{ id: string; position: GeoPosition; avatar: string; name: string; updatedAt: number }> = [];
 
   // Marker store for user-placed points of interest
   const isAdminMode = shouldActivateSimulation();
@@ -371,7 +379,10 @@ async function main(): Promise<void> {
           const getAvatar = () => {
             try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; }
           };
-          const stopBroadcast = startBroadcasting(playerId, () => lastGeoPos, getAvatar, 3000);
+          const getName = () => {
+            try { return localStorage.getItem('fogmap:playername') || ''; } catch { return ''; }
+          };
+          const stopBroadcast = startBroadcasting(playerId, () => lastGeoPos, getAvatar, 3000, getName);
 
           // Listen for other players
           listenForPlayers(playerId, (players) => {
@@ -1323,6 +1334,27 @@ async function main(): Promise<void> {
     mapInteraction.setScreenSize(r.width, r.height);
   });
 
+  // Draw a player name label in Minecraft font, centered at (cx, cy), with a
+  // dark rounded background so it reads over any terrain.
+  const drawNameLabel = (name: string, cx: number, cy: number): void => {
+    if (!ctx) return;
+    ctx.save();
+    ctx.font = '8px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const textW = ctx.measureText(name).width;
+    const padX = 4;
+    const boxW = textW + padX * 2;
+    const boxH = 14;
+    // Semi-transparent background (like Minecraft nameplates)
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(cx - boxW / 2, cy - boxH / 2, boxW, boxH);
+    // White text
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(name, cx, cy + 0.5);
+    ctx.restore();
+  };
+
   // 13. Hide loading, start render loop
   hideLoading();
 
@@ -1529,8 +1561,8 @@ async function main(): Promise<void> {
 
         const skinKey = `player_${op.avatar}`;
         const entry = atlasManifest.textures[skinKey] ?? atlasManifest.textures['player'];
+        const markerSize = 28;
         if (entry && atlasImage) {
-          const markerSize = 28;
           ctx!.save();
           ctx!.imageSmoothingEnabled = false;
           ctx!.translate(opScreenX, opScreenY);
@@ -1546,6 +1578,20 @@ async function main(): Promise<void> {
           ctx!.arc(opScreenX, opScreenY, 8, 0, Math.PI * 2);
           ctx!.fill();
         }
+
+        // Name label under the avatar (Minecraft font)
+        if (op.name) {
+          drawNameLabel(op.name, opScreenX, opScreenY + markerSize / 2 + 8);
+        }
+      }
+
+      // Local player's name under their own avatar.
+      // The avatar sits at the rotation pivot (its own screen position), which
+      // stays fixed under heading rotation, so no rotation math is needed here.
+      if (playerName && playerWorldPos) {
+        const meX = (playerWorldPos.x - vpLeft) * vpScale;
+        const meY = (playerWorldPos.y - vpTop) * vpScale;
+        drawNameLabel(playerName, meX, meY + 32 / 2 + 8);
       }
     }
     requestAnimationFrame(renderLoop);

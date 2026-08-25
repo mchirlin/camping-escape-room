@@ -20,6 +20,7 @@ export interface PlayerData {
   id: string;
   position: GeoPosition;
   avatar: string;
+  name: string;
   updatedAt: number;
 }
 
@@ -51,13 +52,15 @@ export function initPlayerDb(): boolean {
 export async function writePlayerPosition(
   playerId: string,
   position: GeoPosition,
-  avatar: string
+  avatar: string,
+  name = ''
 ): Promise<void> {
   if (!db) return;
   try {
     await setDoc(doc(db, COLLECTION_NAME, playerId), {
       position,
       avatar,
+      name,
       updatedAt: Date.now(),
     });
   } catch (err) {
@@ -104,6 +107,7 @@ export function listenForPlayers(
         id: docSnap.id,
         position: data.position,
         avatar: data.avatar || 'alex',
+        name: data.name || '',
         updatedAt: data.updatedAt || 0,
       });
     });
@@ -128,15 +132,16 @@ export function startBroadcasting(
   playerId: string,
   getPosition: () => GeoPosition | null,
   getAvatar: () => string,
-  intervalMs = 3000
+  intervalMs = 3000,
+  getName: () => string = () => ''
 ): () => void {
   // Write immediately
   const pos = getPosition();
-  if (pos) writePlayerPosition(playerId, pos, getAvatar());
+  if (pos) writePlayerPosition(playerId, pos, getAvatar(), getName());
 
   broadcastInterval = setInterval(() => {
     const p = getPosition();
-    if (p) writePlayerPosition(playerId, p, getAvatar());
+    if (p) writePlayerPosition(playerId, p, getAvatar(), getName());
   }, intervalMs);
 
   return () => {

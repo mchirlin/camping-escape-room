@@ -24,6 +24,7 @@ export interface UIOverlay {
   onResetFog: () => void;
   onHeadingChange: (degrees: number) => void;
   onAvatarChange: (skinName: string) => void;
+  onNameChange: (name: string) => void;
 }
 
 const GPS_STATUS_LABELS: Record<GPSStatus, string> = {
@@ -54,6 +55,7 @@ export class UIOverlayImpl implements UIOverlay {
   onRegionChange: (regionId: string) => void = () => {};
   onExitSimulation: () => void = () => {};
   onAvatarChange: (skinName: string) => void = () => {};
+  onNameChange: (name: string) => void = () => {};
   onRevealTag: (tag: string) => void = () => {};
   onHideTag: (tag: string) => void = () => {};
   onRevealAllMarkers: () => void = () => {};
@@ -286,6 +288,36 @@ export class UIOverlayImpl implements UIOverlay {
     });
     dropdown.addEventListener('click', (e) => e.stopPropagation());
 
+    // --- Name input (shown under the avatar while walking around) ---
+    const savedName = (() => {
+      try { return localStorage.getItem('fogmap:playername') || ''; } catch { return ''; }
+    })();
+
+    const nameLabel = document.createElement('div');
+    nameLabel.textContent = 'Your Name';
+    nameLabel.style.cssText = 'font-family:var(--mc-font);font-size:6px;color:#aaa;margin:6px 0 2px;grid-column:1 / -1;';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.maxLength = 16;
+    nameInput.placeholder = 'Enter name';
+    nameInput.value = savedName;
+    nameInput.setAttribute('aria-label', 'Your player name');
+    nameInput.style.cssText = `
+      grid-column:1 / -1;width:100%;box-sizing:border-box;
+      font-family:var(--mc-font);font-size:7px;padding:5px;
+      background:#1a1a1a;color:#fff;border:2px solid #555;border-radius:3px;
+    `;
+    nameInput.addEventListener('click', (e) => e.stopPropagation());
+    nameInput.addEventListener('input', () => {
+      const name = nameInput.value.trim();
+      try { localStorage.setItem('fogmap:playername', name); } catch { /* ignore */ }
+      this.onNameChange(name);
+    });
+
+    dropdown.appendChild(nameLabel);
+    dropdown.appendChild(nameInput);
+
     wrapper.appendChild(btn);
     wrapper.appendChild(dropdown);
     this.topRightGroup!.appendChild(wrapper);
@@ -297,6 +329,8 @@ export class UIOverlayImpl implements UIOverlay {
 
     // Fire initial avatar change so renderer uses saved skin
     setTimeout(() => this.onAvatarChange(saved), 0);
+    // Fire initial name so renderer/broadcast picks it up
+    setTimeout(() => this.onNameChange(savedName), 0);
   }
 
   /** Update avatar images from the atlas. Call after atlas is loaded. */
