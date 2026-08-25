@@ -360,7 +360,7 @@ async function main(): Promise<void> {
 
       // Multiplayer: broadcast position and listen for other players (non-admin only)
       if (!isAdminMode) {
-        import('./player-db').then(({ initPlayerDb, startBroadcasting, listenForPlayers, removePlayer }) => {
+        import('./player-db').then(({ initPlayerDb, startBroadcasting, listenForPlayers, removePlayer, hasOnboarded, markOnboarded }) => {
           if (!initPlayerDb()) return;
 
           // Persistent player ID per device
@@ -374,6 +374,37 @@ async function main(): Promise<void> {
           } catch {
             playerId = crypto.randomUUID();
           }
+
+          // Show onboarding on first visit (or after an admin reset).
+          // Firestore is the source of truth so admins can clear it for everyone.
+          hasOnboarded(playerId).then((onboarded) => {
+            if (onboarded) return;
+            import('./onboarding').then(({ showOnboarding }) => {
+              const curAvatar = (() => {
+                try { return localStorage.getItem('fogmap:avatar') || 'alex'; } catch { return 'alex'; }
+              })();
+              const curName = (() => {
+                try { return localStorage.getItem('fogmap:playername') || ''; } catch { return ''; }
+              })();
+              showOnboarding({
+                atlas: atlasImage,
+                manifest: atlasManifest.textures,
+                initialAvatar: curAvatar,
+                initialName: curName,
+                onComplete: (avatar, name) => {
+                  try {
+                    localStorage.setItem('fogmap:avatar', avatar);
+                    localStorage.setItem('fogmap:playername', name);
+                  } catch { /* ignore */ }
+                  tileRenderer.setPlayerSkin(avatar);
+                  uiOverlay.setAvatarSelection(avatar);
+                  uiOverlay.setNameValue(name);
+                  playerName = name;
+                  markOnboarded(playerId, avatar, name);
+                },
+              });
+            });
+          });
 
           // Start broadcasting position every 3 seconds
           const getAvatar = () => {
@@ -856,6 +887,16 @@ async function main(): Promise<void> {
       if (leafletMap) leafletMap.removeLayer(leafletMarkerLayers[id]);
       delete leafletMarkerLayers[id];
     }
+  };
+
+  // Admin: clear onboarding for all players so everyone sees the intro again
+  uiOverlay.onResetOnboarding = () => {
+    import('./player-db').then(({ initPlayerDb, resetAllOnboarding }) => {
+      initPlayerDb();
+      resetAllOnboarding().then((count) => {
+        uiOverlay.showToast(`📖 Intro reset for ${count} player${count === 1 ? '' : 's'}`);
+      });
+    });
   };
 
   // --- Admin: marker visibility triggers ---

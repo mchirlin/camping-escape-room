@@ -49,6 +49,7 @@ export class UIOverlayImpl implements UIOverlay {
   onZoomIn: () => void = () => {};
   onZoomOut: () => void = () => {};
   onResetFog: () => void = () => {};
+  onResetOnboarding: () => void = () => {};
   onRevealAll: () => void = () => {};
   onRemoveAllItems: () => void = () => {};
   onHeadingChange: (degrees: number) => void = () => {};
@@ -317,6 +318,7 @@ export class UIOverlayImpl implements UIOverlay {
 
     dropdown.appendChild(nameLabel);
     dropdown.appendChild(nameInput);
+    (this as any)._nameInput = nameInput;
 
     wrapper.appendChild(btn);
     wrapper.appendChild(dropdown);
@@ -376,6 +378,28 @@ export class UIOverlayImpl implements UIOverlay {
       btnImg.src = faceUrls[skin];
     }
     (this as any)._avatarSkin = skin;
+  }
+
+  /**
+   * Sync the avatar picker to an externally-chosen skin (e.g. from onboarding).
+   * Updates the button face and the dropdown selection highlight.
+   */
+  setAvatarSelection(skin: string): void {
+    const btnImg = (this as any)._avatarBtn as HTMLImageElement | undefined;
+    const dropdown = (this as any)._avatarDropdown as HTMLElement | undefined;
+    if (btnImg) this.updateAvatarImages(btnImg, dropdown!, skin);
+    if (dropdown) {
+      dropdown.querySelectorAll<HTMLElement>('.ui-avatar-option').forEach((el) => {
+        const img = el.querySelector('img[data-skin]') as HTMLImageElement | null;
+        el.style.borderColor = img?.dataset.skin === skin ? '#5b8731' : 'transparent';
+      });
+    }
+  }
+
+  /** Sync the name input to an externally-set name (e.g. from onboarding). */
+  setNameValue(name: string): void {
+    const input = (this as any)._nameInput as HTMLInputElement | undefined;
+    if (input) input.value = name;
   }
 
   private createCompass(): void {
@@ -633,6 +657,16 @@ export class UIOverlayImpl implements UIOverlay {
     });
     row.appendChild(removeBtn);
     this.removeAllItemsBtn = removeBtn;
+
+    const resetIntroBtn = document.createElement('button');
+    resetIntroBtn.classList.add('ui-btn', 'ui-action-btn');
+    resetIntroBtn.setAttribute('data-testid', 'reset-onboarding');
+    resetIntroBtn.setAttribute('aria-label', 'Reset intro for all players');
+    resetIntroBtn.textContent = '📖 Intro';
+    resetIntroBtn.addEventListener('click', () => {
+      if (confirm('Show the intro again for ALL players on their next load?')) this.onResetOnboarding();
+    });
+    row.appendChild(resetIntroBtn);
 
     this.bottomLeftGroup!.appendChild(row);
     this.actionRow = row;

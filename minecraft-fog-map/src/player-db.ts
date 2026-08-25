@@ -9,8 +9,11 @@ import {
   getFirestore,
   collection,
   doc,
+  getDoc,
+  getDocs,
   setDoc,
-  deleteDoc,
+  updateDoc,
+  deleteField,
   onSnapshot,
   type Unsubscribe,
 } from 'firebase/firestore';
@@ -57,26 +60,90 @@ export async function writePlayerPosition(
 ): Promise<void> {
   if (!db) return;
   try {
+    // merge:true so we don't clobber persistent fields like onboardedAt
     await setDoc(doc(db, COLLECTION_NAME, playerId), {
       position,
       avatar,
       name,
       updatedAt: Date.now(),
-    });
+    }, { merge: true });
   } catch (err) {
     console.warn('Failed to write player position', err);
   }
 }
 
 /**
- * Remove this player from the collection (on page unload).
+ * Mark this player offline on page unload.
+ * We keep the doc (so persistent state like onboardedAt survives) and just
+ * push updatedAt into the past so the staleness filter hides the avatar.
  */
 export async function removePlayer(playerId: string): Promise<void> {
   if (!db) return;
   try {
-    await deleteDoc(doc(db, COLLECTION_NAME, playerId));
+    await setDoc(doc(db, COLLECTION_NAME, playerId), {
+      updatedAt: 0,
+    }, { merge: true });
   } catch (err) {
-    console.warn('Failed to remove player', err);
+    console.warn('Failed to mark player offline', err);
+  }
+}
+
+/**
+ * Has this device's player already completed onboarding?
+ * Reads the persistent onboardedAt field from the player doc.
+ */
+export async function hasOnboarded(playerId: string): Promise<boolean> {
+  if (!db) return false;
+  try {
+    const snap = await getDoc(doc(db, COLLECTION_NAME, playerId));
+    return snap.exists() && typeof snap.data().onboardedAt === 'number';
+  } catch (err) {
+    console.warn('Failed to read onboarding status', err);
+    return false;
+  }
+}
+
+/**
+ * Record that this device's player finished onboarding.
+ * Also stores the chosen avatar/name so the doc has meaningful data
+ * before the first position broadcast.
+ */
+export async function markOnboarded(
+  playerId: string,
+  avatar: string,
+  name: string
+): Promise<void> {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, COLLECTION_NAME, playerId), {
+      avatar,
+      name,
+      onboardedAt: Date.now(),
+    }, { merge: true });
+  } catch (err) {
+    console.warn('Failed to mark onboarded', err);
+  }
+}
+
+/**
+ * Admin: clear the onboardedAt flag on every player doc so all devices
+ * re-onboard on their next load. Does not delete players.
+ */
+export async function resetAllOnboarding(): Promise<number> {
+  if (!db) return 0;
+  try {
+    const snap = await getDocs(collection(db, COLLECTION_NAME));
+    let count = 0;
+    const ops: Promise<void>[] = [];
+    snap.forEach((docSnap) => {
+      ops.push(updateDoc(docSnap.ref, { onboardedAt: deleteField() }));
+      count++;
+    });
+    await Promise.all(ops);
+    return count;
+  } catch (err) {
+    console.warn('Failed to reset onboarding', err);
+    return 0;
   }
 }
 
