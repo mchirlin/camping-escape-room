@@ -669,45 +669,53 @@ void victoryFlash() {
 
 // =============================================================================
 // Animation: TNT Fuse + Explosion (synced to combined fuse+explosion audio)
-// Phase 1 (0–2800ms): Fuse spark travels across rings with flickering red glow
+// Phase 1 (0–2800ms): Fuse burns through rings in order, yellow spark on active ring
 // Phase 2 (2800ms+): Bright white flash → expanding fireball → fade out
 // =============================================================================
 void explosionFlash() {
   logMsg("[ANIM] TNT fuse + explosion");
+
+  // Fuse burn order (ring indices)
+  const uint8_t fuseOrder[] = {8, 7, 6, 5, 0, 1, 2, 3, 4};
+  const uint8_t fuseSteps = 9;
+  const unsigned long fuseDuration = 2800;
+  const unsigned long stepTime = fuseDuration / fuseSteps;  // ~311ms per step
+
+  // === Phase 1: Start with all rings orange, ring 8 as bright fuse spark ===
+  for (uint8_t ring = 0; ring < NUM_SLOTS; ring++) {
+    uint16_t offset = ring * LEDS_PER_RING;
+    uint32_t color = (ring == 8) ? strip.Color(255, 34, 0) : strip.Color(255, 100, 0);
+    for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
+      strip.setPixelColor(offset + i, color);
+    }
+  }
+  strip.show();
+
+  // Burn through the fuse order
   unsigned long startTime = millis();
+  for (uint8_t step = 0; step < fuseSteps; step++) {
+    // Wait for this step's time slot
+    while (millis() - startTime < (step + 1) * stepTime) {
+      delay(10);
+    }
 
-  // === Phase 1: Fuse spark (0–2800ms) ===
-  // A bright white/yellow spark travels ring-to-ring while the rest pulses dim red
-  while (millis() - startTime < 2800) {
-    unsigned long t = millis() - startTime;
-    // Which ring the spark is currently on (0–8 over 2800ms)
-    uint8_t sparkRing = (t * NUM_SLOTS) / 2800;
-    if (sparkRing >= NUM_SLOTS) sparkRing = NUM_SLOTS - 1;
+    // Turn off the ring we just left (fuse burned away)
+    uint8_t burnedRing = fuseOrder[step];
+    uint16_t burnedOffset = burnedRing * LEDS_PER_RING;
+    for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
+      strip.setPixelColor(burnedOffset + i, 0);
+    }
 
-    for (uint8_t ring = 0; ring < NUM_SLOTS; ring++) {
-      uint16_t offset = ring * LEDS_PER_RING;
-      if (ring == sparkRing) {
-        // Active spark ring — bright flickering white/yellow
-        for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
-          uint8_t flicker = random(180, 255);
-          strip.setPixelColor(offset + i, strip.Color(flicker, flicker / 2, 0));
-        }
-      } else if (ring < sparkRing) {
-        // Already-burned rings — dim smoldering orange/red
-        for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
-          uint8_t glow = random(5, 30);
-          strip.setPixelColor(offset + i, strip.Color(glow, glow / 4, 0));
-        }
-      } else {
-        // Not yet reached — pulsing dim red (anticipation)
-        uint8_t pulse = 10 + 10 * ((t / 100 + ring) % 3);
-        for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
-          strip.setPixelColor(offset + i, strip.Color(pulse, 0, 0));
-        }
+    // Light the next ring as bright fuse spark (if there is one)
+    if (step + 1 < fuseSteps) {
+      uint8_t nextRing = fuseOrder[step + 1];
+      uint16_t nextOffset = nextRing * LEDS_PER_RING;
+      for (uint16_t i = 0; i < LEDS_PER_RING; i++) {
+        strip.setPixelColor(nextOffset + i, strip.Color(255, 34, 0));
       }
     }
+
     strip.show();
-    delay(30);
   }
 
   // === Phase 2: Explosion (2800ms+) ===

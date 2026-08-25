@@ -39,11 +39,17 @@ export type MarkerTag =
   | 'crafting'
   | 'mine'
   | 'tnt_chest'
-  | 'dig_site';
+  | 'dig_site'
+  | 'waypoint'
+  | 'villager'
+  | 'stream'
+  | 'quarry'
+  | 'cave'
+  | 'spyglass_hill';
 
 const BASE = import.meta.env.BASE_URL;
 
-export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; texture: string }[] = [
+export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; texture: string; isLocation?: boolean }[] = [
   // Blocks
   { tag: 'wood_plank',    label: 'Wood Plank',      color: '#8B6914', texture: `${BASE}markers/wood.png` },
   { tag: 'sand',          label: 'Sand',            color: '#E8D8A0', texture: `${BASE}markers/sand.png` },
@@ -63,13 +69,24 @@ export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; textur
   { tag: 'string',        label: 'String',          color: '#EEEEEE', texture: `${BASE}markers/string.png` },
   { tag: 'paper',         label: 'Paper',           color: '#F5F5DC', texture: `${BASE}markers/paper.png` },
   { tag: 'gunpowder',     label: 'Gunpowder',      color: '#444444', texture: `${BASE}markers/gunpowder.png` },
-  // Locations
-  { tag: 'creeper',       label: 'Creeper',         color: '#55AA33', texture: `${BASE}markers/creeper.png` },
-  { tag: 'crafting',      label: 'Crafting Table',  color: '#B5804A', texture: `${BASE}markers/crafting.png` },
-  { tag: 'mine',          label: 'Mine',            color: '#707070', texture: `${BASE}markers/mine.png` },
-  { tag: 'tnt_chest',     label: 'TNT Chest',       color: '#FF3333', texture: `${BASE}markers/tnt_chest.png` },
-  { tag: 'dig_site',      label: 'Dig Site',        color: '#AA5500', texture: `${BASE}markers/dig_site.png` },
+  // Locations (rendered with a distinct map-pin style)
+  { tag: 'crafting',      label: 'Crafting Table',  color: '#B5804A', texture: `${BASE}markers/crafting.png`,      isLocation: true },
+  { tag: 'waypoint',      label: 'Waypoint',        color: '#E02020', texture: `${BASE}markers/waypoint.png`,      isLocation: true },
+  { tag: 'mine',          label: 'Old Mine',        color: '#7A7A7A', texture: `${BASE}markers/mine.png`,          isLocation: true },
+  { tag: 'villager',      label: 'Villager',        color: '#17DD62', texture: `${BASE}markers/villager.png`,      isLocation: true },
+  { tag: 'stream',        label: 'Stream',          color: '#3A80D2', texture: `${BASE}markers/stream.png`,        isLocation: true },
+  { tag: 'quarry',        label: 'Ancient Quarry',  color: '#5CDBD5', texture: `${BASE}markers/quarry.png`,        isLocation: true },
+  { tag: 'cave',          label: 'Dark Cave',       color: '#FFAA00', texture: `${BASE}markers/cave.png`,          isLocation: true },
+  { tag: 'spyglass_hill', label: 'Spyglass Hill',   color: '#B08D57', texture: `${BASE}markers/spyglass_hill.png`, isLocation: true },
+  { tag: 'creeper',       label: 'Creeper',         color: '#55AA33', texture: `${BASE}markers/creeper.png`,       isLocation: true },
+  { tag: 'tnt_chest',     label: 'Treasure Chest',  color: '#FF3333', texture: `${BASE}markers/tnt_chest.png`,     isLocation: true },
+  { tag: 'dig_site',      label: 'Dig Site',        color: '#AA5500', texture: `${BASE}markers/dig_site.png`,      isLocation: true },
 ];
+
+/** True if the given tag is a location marker (vs an item marker). */
+export function isLocationTag(tag: MarkerTag): boolean {
+  return MARKER_TAGS.find((t) => t.tag === tag)?.isLocation === true;
+}
 
 /** Preloaded marker textures: tag → HTMLImageElement */
 const markerImages: Map<MarkerTag, HTMLImageElement> = new Map();

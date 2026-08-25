@@ -12,7 +12,7 @@ import { UIOverlayImpl } from './ui-overlay';
 import { createGPSTracker } from './gps-tracker';
 import { createSimulationMode, shouldActivateSimulation } from './simulation-mode';
 import { geoToWorld, worldToGeo } from './coords';
-import { MarkerStore, MARKER_TAGS, preloadMarkerImages, getMarkerImage } from './markers';
+import { MarkerStore, MARKER_TAGS, preloadMarkerImages, getMarkerImage, isLocationTag } from './markers';
 import type { MarkerTag } from './markers';
 import { CraftingTableLink, collectNearestMarker } from './crafting-link';
 
@@ -398,16 +398,30 @@ async function main(): Promise<void> {
   // Preload marker textures
   preloadMarkerImages();
 
-  function addLeafletMarker(id: string, lat: number, lng: number, tagInfo: { label: string; color: string; texture: string }, count = 1) {
+  function locationMarkerHtml(tagInfo: { color: string; texture: string }, badge: string): string {
+    // Larger colored frame with dark inner panel and a pin point below
+    return `<div style="position:relative;width:44px;height:53px;">` +
+      `<div style="position:relative;width:44px;height:44px;background:${tagInfo.color};border:3px solid #fff;box-sizing:border-box;display:flex;align-items:center;justify-content:center;">` +
+      `<div style="width:32px;height:32px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;"><img src="${tagInfo.texture}" style="width:28px;height:28px;object-fit:contain;image-rendering:pixelated;"></div>${badge}</div>` +
+      `<div style="position:absolute;left:50%;top:42px;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:10px solid ${tagInfo.color};"></div>` +
+      `</div>`;
+  }
+
+  function itemMarkerHtml(tagInfo: { texture: string }, badge: string): string {
+    return `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;display:flex;align-items:center;justify-content:center;"><img src="${tagInfo.texture}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">${badge}</div>`;
+  }
+
+  function addLeafletMarker(id: string, lat: number, lng: number, tagInfo: { label: string; color: string; texture: string; isLocation?: boolean }, count = 1) {
     const L = (window as any).L;
     if (!L || !leafletMap) return;
 
     const badge = count > 1 ? `<span style="position:absolute;bottom:-2px;right:-2px;background:#000;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;font-family:monospace;">${count}</span>` : '';
+    const loc = !!tagInfo.isLocation;
     const icon = L.divIcon({
       className: 'marker-icon-pixelated',
-      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;display:flex;align-items:center;justify-content:center;"><img src="${tagInfo.texture}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">${badge}</div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      html: loc ? locationMarkerHtml(tagInfo, badge) : itemMarkerHtml(tagInfo, badge),
+      iconSize: loc ? [44, 53] : [32, 32],
+      iconAnchor: loc ? [22, 53] : [16, 16],
     });
 
     const lm = L.marker([lat, lng], { icon, draggable: true }).addTo(leafletMap);
@@ -426,7 +440,7 @@ async function main(): Promise<void> {
     leafletMarkerLayers[id] = lm;
   }
 
-  function updateLeafletMarker(id: string, tagInfo: { label: string; color: string; texture: string }, count: number) {
+  function updateLeafletMarker(id: string, tagInfo: { label: string; color: string; texture: string; isLocation?: boolean }, count: number) {
     const L = (window as any).L;
     if (!L || !leafletMap) return;
 
@@ -434,11 +448,12 @@ async function main(): Promise<void> {
     if (!lm) return;
 
     const badge = count > 1 ? `<span style="position:absolute;bottom:-2px;right:-2px;background:#000;color:#fff;font-size:9px;font-weight:bold;padding:0 3px;border-radius:2px;font-family:monospace;">${count}</span>` : '';
+    const loc = !!tagInfo.isLocation;
     const icon = L.divIcon({
       className: 'marker-icon-pixelated',
-      html: `<div style="position:relative;width:32px;height:32px;background:#8b8b8b;border:2px solid;border-color:#555 #fff #fff #555;display:flex;align-items:center;justify-content:center;"><img src="${tagInfo.texture}" style="width:24px;height:24px;object-fit:contain;image-rendering:pixelated;">${badge}</div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16],
+      html: loc ? locationMarkerHtml(tagInfo, badge) : itemMarkerHtml(tagInfo, badge),
+      iconSize: loc ? [44, 53] : [32, 32],
+      iconAnchor: loc ? [22, 53] : [16, 16],
     });
     lm.setIcon(icon);
     lm.setPopupContent(`<b>${tagInfo.label} x${count}</b><br><button onclick="document.dispatchEvent(new CustomEvent('remove-marker',{detail:'${id}'}))">Remove</button>`);
@@ -1128,7 +1143,6 @@ async function main(): Promise<void> {
     const scale = Math.pow(2, viewport.zoomLevel);
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
-    const hitRadius = 16; // pixels
 
     for (const marker of markerStore.getAll()) {
       const worldPos = geoToWorld(marker.position, bbox, level4Grid, TILE_SCREEN_SIZE);
@@ -1137,6 +1151,9 @@ async function main(): Promise<void> {
       const my = (worldPos.y - viewTop) * scale;
       const dx = screenX - mx;
       const dy = screenY - my;
+
+      // Larger hit radius for location markers (they're bigger)
+      const hitRadius = isLocationTag(marker.tag) ? 24 : 16;
 
       if (Math.sqrt(dx * dx + dy * dy) < hitRadius) {
         showMarkerPopup(marker, screenX, screenY);
@@ -1320,8 +1337,11 @@ async function main(): Promise<void> {
         // Draw marker icon (texture or fallback color square)
         const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
         const markerImg = getMarkerImage(marker.tag);
-        const slotSize = 32;
-        const iconSize = 24;
+        const isLocation = isLocationTag(marker.tag);
+
+        // Location markers are larger and use a colored frame with a pin point.
+        const slotSize = isLocation ? 44 : 32;
+        const iconSize = isLocation ? 32 : 24;
         const slotX = screenX - slotSize / 2;
         const slotY = screenY - slotSize / 2;
 
@@ -1329,23 +1349,46 @@ async function main(): Promise<void> {
         const isHidden = !!(marker.hidden && isAdminMode);
         if (isHidden) ctx!.globalAlpha = 0.4;
 
-        // Draw inventory slot background
-        ctx!.fillStyle = '#8b8b8b';
-        ctx!.fillRect(slotX, slotY, slotSize, slotSize);
-        // Beveled border: dark top/left, light bottom/right
-        ctx!.strokeStyle = '#555555';
-        ctx!.lineWidth = 2;
-        ctx!.beginPath();
-        ctx!.moveTo(slotX, slotY + slotSize);
-        ctx!.lineTo(slotX, slotY);
-        ctx!.lineTo(slotX + slotSize, slotY);
-        ctx!.stroke();
-        ctx!.strokeStyle = '#ffffff';
-        ctx!.beginPath();
-        ctx!.moveTo(slotX + slotSize, slotY);
-        ctx!.lineTo(slotX + slotSize, slotY + slotSize);
-        ctx!.lineTo(slotX, slotY + slotSize);
-        ctx!.stroke();
+        if (isLocation) {
+          // --- Location marker: colored map-pin banner ---
+          const locColor = tagInfo?.color ?? '#FFAA00';
+          // Downward pin point below the frame
+          ctx!.fillStyle = locColor;
+          ctx!.beginPath();
+          ctx!.moveTo(screenX - 7, slotY + slotSize - 2);
+          ctx!.lineTo(screenX + 7, slotY + slotSize - 2);
+          ctx!.lineTo(screenX, slotY + slotSize + 9);
+          ctx!.closePath();
+          ctx!.fill();
+          // Colored rounded frame background
+          ctx!.fillStyle = locColor;
+          ctx!.fillRect(slotX, slotY, slotSize, slotSize);
+          // Dark inner panel so the icon reads clearly
+          ctx!.fillStyle = '#2a2a2a';
+          ctx!.fillRect(slotX + 4, slotY + 4, slotSize - 8, slotSize - 8);
+          // Bright outer border (thicker than item slots)
+          ctx!.strokeStyle = '#ffffff';
+          ctx!.lineWidth = 3;
+          ctx!.strokeRect(slotX + 1.5, slotY + 1.5, slotSize - 3, slotSize - 3);
+        } else {
+          // --- Item marker: gray inventory slot (unchanged) ---
+          ctx!.fillStyle = '#8b8b8b';
+          ctx!.fillRect(slotX, slotY, slotSize, slotSize);
+          // Beveled border: dark top/left, light bottom/right
+          ctx!.strokeStyle = '#555555';
+          ctx!.lineWidth = 2;
+          ctx!.beginPath();
+          ctx!.moveTo(slotX, slotY + slotSize);
+          ctx!.lineTo(slotX, slotY);
+          ctx!.lineTo(slotX + slotSize, slotY);
+          ctx!.stroke();
+          ctx!.strokeStyle = '#ffffff';
+          ctx!.beginPath();
+          ctx!.moveTo(slotX + slotSize, slotY);
+          ctx!.lineTo(slotX + slotSize, slotY + slotSize);
+          ctx!.lineTo(slotX, slotY + slotSize);
+          ctx!.stroke();
+        }
 
         // Draw icon centered, preserving aspect ratio (like object-fit:contain)
         ctx!.imageSmoothingEnabled = false;
