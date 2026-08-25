@@ -2,7 +2,7 @@
 // Map Markers — user-placed points of interest
 // ============================================================
 
-import type { GeoPosition } from './types';
+import type { GeoPosition, BoundingBox } from './types';
 
 export interface MapMarker {
   id: string;
@@ -17,6 +17,22 @@ export interface MapMarker {
    * been uncovered. Lets admins pre-place items that appear as the map is explored.
    */
   revealOnFog?: boolean;
+  /**
+   * The map region this marker belongs to. Markers are scoped to their region
+   * so a device viewing one region never shows markers placed for another.
+   * Legacy markers may be missing this — see MarkerStore.belongsToRegion.
+   */
+  regionId?: string;
+}
+
+/** True if a geographic position falls within a bounding box (inclusive). */
+function positionInBounds(pos: GeoPosition, b: BoundingBox): boolean {
+  return (
+    pos.latitude <= b.north &&
+    pos.latitude >= b.south &&
+    pos.longitude <= b.east &&
+    pos.longitude >= b.west
+  );
 }
 
 export type MarkerTag =
@@ -155,12 +171,36 @@ const STORAGE_KEY = 'fogmap:markers';
 export class MarkerStore {
   private markers: MapMarker[] = [];
   private isAdmin = false;
+  private regionId = '';
+  private regionBounds?: BoundingBox;
   /** Called whenever markers change (local or remote) */
   onChange: ((markers: MapMarker[]) => void) | null = null;
 
-  constructor(admin = false) {
+  constructor(admin = false, regionId = '', regionBounds?: BoundingBox) {
     this.isAdmin = admin;
+    this.regionId = regionId;
+    this.regionBounds = regionBounds;
     this.load();
+  }
+
+  /** localStorage key, scoped per region so the offline cache never mixes regions. */
+  private get storageKey(): string {
+    return this.regionId ? `${STORAGE_KEY}:${this.regionId}` : STORAGE_KEY;
+  }
+
+  /**
+   * True if a marker belongs to this store's region.
+   * - Markers stamped with a regionId must match this region exactly.
+   * - Legacy markers (no regionId) fall back to geographic containment in the
+   *   region's bounding box, so pre-existing data is scoped correctly without a
+   *   migration.
+   * - If no region is configured at all (e.g. unit tests), scoping is disabled.
+   */
+  private belongsToRegion(m: { regionId?: string; position: GeoPosition }): boolean {
+    if (!this.regionId && !this.regionBounds) return true;
+    if (m.regionId) return m.regionId === this.regionId;
+    if (this.regionBounds) return positionInBounds(m.position, this.regionBounds);
+    return true;
   }
 
   /** Start listening for remote changes via polling */
@@ -169,7 +209,7 @@ export class MarkerStore {
 
     dbPollMarkers((dbMarkers) => {
       this.markers = dbMarkers
-        .filter((m) => !m.collected)
+        .filter((m) => !m.collected && this.belongsToRegion(m))
         .map((m) => ({
           id: m.id,
           position: m.position,
@@ -179,6 +219,7 @@ export class MarkerStore {
           uid: m.uid,
           hidden: m.hidden ?? false,
           revealOnFog: m.revealOnFog ?? false,
+          regionId: m.regionId,
         }));
       this.saveLocal();
       this.onChange?.(this.getAll());
@@ -289,6 +330,7 @@ export class MarkerStore {
       uid,
       hidden,
       revealOnFog,
+      regionId: this.regionId || undefined,
     };
     this.markers.push(marker);
     this.saveLocal();
@@ -335,7 +377,7 @@ export class MarkerStore {
 
   private saveLocal(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.markers));
+      localStorage.setItem(this.storageKey, JSON.stringify(this.markers));
     } catch {
       // ignore
     }
@@ -343,7 +385,7 @@ export class MarkerStore {
 
   private load(): void {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(this.storageKey);
       if (raw) {
         this.markers = JSON.parse(raw);
         for (const m of this.markers) {

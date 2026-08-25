@@ -126,10 +126,10 @@ GNP  SND  GNP
 - Easy to re-stack for second run
 
 ### Treasure Chest
-- Locked/chained box inside the tent (visible from Step 1)
+- Locked box inside the tent (visible from Step 1)
 - "💥 TNT Required" sign
 - Kids craft TNT, bring it to the chest
-- Game master plays explosion sound, removes chain
+- Game master plays explosion sound, unlocks it
 - Inside: Ender Dragon Egg + candy/treats
 
 ### Recipe Scrolls (Journal Pages)

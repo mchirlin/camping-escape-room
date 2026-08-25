@@ -2,6 +2,11 @@
 
 Project: 2026-camping-minecraft
 Created: 2026-04-18
+Last updated: 2026-08-25
+
+> **Source of truth:** the authoritative game flow is
+> `../02-puzzle-design/flowchart.md`. If anything here disagrees with the
+> flowchart, the flowchart wins.
 
 ## Decisions
 
@@ -14,7 +19,7 @@ Created: 2026-04-18
 - Pre-loaded sounds:
   - **Creeper hiss** — play when kids approach the creeper
   - **Explosion** — play when they smash it
-  - **Victory/level-up fanfare** — play when they dig up the egg
+  - **Victory/level-up fanfare** — play when the TNT opens the treasure chest
   - **Crafting sound** — backup if table speaker fails
 - You control it from your phone — one tap per sound
 - App options: "Soundboard" or "Custom Soundboard" (both free)

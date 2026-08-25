@@ -2,6 +2,11 @@
 
 Project: 2026-camping-minecraft
 Created: 2026-04-18
+Last updated: 2026-08-25
+
+> **Source of truth:** the authoritative game flow (crafts, props, ingredients)
+> is `../02-puzzle-design/flowchart.md`. If anything here disagrees with the
+> flowchart, the flowchart wins.
 
 ## Decisions
 
@@ -39,12 +44,26 @@ Created: 2026-04-18
 - Wood construction
 - Splurge item — worth spending time and money on
 
-### Physical Items Given After Crafts
-1. Wooden Pickaxe — prop (3D printed or crafted from wood)
-2. Fishing Rod — real stick + string + magnet
-3. Gold Sword — foam (sourcing from friends, or Minecraft licensed foam sword from Amazon)
-4. Map — fog-of-war map app on iPad/phone (digital, no physical prop needed)
-5. Diamond Shovel — real kid-sized garden shovel, painted diamond blue/teal (already owned)
+### Physical Props Dispensed by Crafts
+
+The 10 crafts (see `flowchart.md`). Eight dispense a physical prop through one of
+the 3 crafting-table doors; the Crafting Table craft is the tutorial and the Map
+lights up the iPad, so neither needs a prop.
+
+1. Crafting Table — tutorial craft, no prop (unlocks the tent)
+2. Compass — MCompass (real working Minecraft compass, from Etsy)
+3. Cobblestone Pickaxe — prop (plywood/3D-printed cutout)
+4. Map — fog-of-war app on iPad/phone (digital, no physical prop)
+5. Fishing Pole — real stick + string + magnet
+6. Diamond Pickaxe — prop (plywood/3D-printed cutout)
+7. Torch — prop
+8. Iron Sword — foam sword
+9. Spyglass — prop (spyglass cutout / tube)
+10. TNT — prop (used to "open" the locked treasure chest)
+
+> Legacy note: earlier drafts listed a Wooden Pickaxe, Gold Sword, and Diamond
+> Shovel. Those are not in the current design — the pickaxes are
+> cobblestone/diamond, the blade is an iron sword, and there is no shovel.
 
 ### Creeper
 - 4 cardboard boxes stacked to adult height, painted creeper green
@@ -54,7 +73,7 @@ Created: 2026-04-18
 
 ### Ender Dragon Egg
 - 3D printed, painted — keepsake quality
-- Buried in waterproof container with candy
+- Placed inside the locked treasure chest with candy/treats (opened by the TNT craft)
 
 ### Other Props Already Owned
 - Chests

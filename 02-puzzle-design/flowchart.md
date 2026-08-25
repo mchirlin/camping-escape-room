@@ -43,7 +43,7 @@ Inside the tent:
 - **Under the Pillow** — 1 Redstone
 - **Recipe Card: Torch** (an old camp note — "light the dark with coal and a stick")
 - **Journal Page 2: "The Explorer Tent"**
-- **Locked Treasure Chest** — chained shut, the finale prize, sitting in the
+- **Locked Treasure Chest** — locked shut, the finale prize, sitting in the
   tent where they can see it the whole game
 
 > **Inventory:** 5 stick, 4 paper, 4 iron_ingot, 1 redstone
@@ -68,24 +68,28 @@ Direction cards lead them through 3-4 waypoints using cardinal directions.
 spot — distribute the loot across the stops rather than one big end cache:
 
 - **3 Cobblestone blocks** — spread across the waypoints
-- **4 Sticks** — spread across the waypoints
+- **3 Sticks** — spread across the waypoints
 - **4 Paper** (the other half of the map's paper) — at the final waypoint
 - **Recipe Card: Cobblestone Pickaxe** — at the final waypoint
 - **Journal Page 4: "The Waypoint"** — at the final waypoint
 - **Direction Card #2:** *"The Old Mine is 50 paces South..."* — at the final waypoint
 
-> **Inventory:** 9 stick, 3 cobblestone, 8 paper
+> **Inventory:** 8 stick, 3 cobblestone, 8 paper
 
 ---
 
-### Step 4: Craft the Cobblestone Pickaxe (→ door 0)
+### Step 4: Craft the Cobblestone Pickaxe (→ door 1)
 **Recipe:** 3 Cobblestone + 2 Sticks (top row + center column)
 
 Kids craft → receive **Cobblestone Pickaxe**
 
 Follow directions to **"The Old Mine"** — sign: *"⛏ Cobblestone Pickaxe Required"*
 
-> **Inventory:** 7 stick, 8 paper
+> **Note:** Kids may follow the compass directions (Step 3) *before* returning
+> to craft the pickaxe. If so, they'll gather the waypoint items first, then
+> come back to the crafting table. Either order works.
+
+> **Inventory:** 6 stick, 8 paper
 
 ---
 
@@ -94,10 +98,12 @@ Inside:
 - **1 String** (on a spider tucked in the tunnels)
 - **2 Copper Ingots**
 - **1 Coal** (mined from the walls)
-- **Recipe Card: Map**
 - **Journal Page 5: "The Old Mine"**
 
-> **Inventory:** 7 stick, 8 paper, 1 string, 2 copper_ingot, 1 coal
+**Door 1** (opened by crafting the pickaxe) contains:
+- **Recipe Card: Map**
+
+> **Inventory:** 6 stick, 8 paper, 1 string, 2 copper_ingot, 1 coal
 
 ---
 
@@ -111,13 +117,14 @@ soon as it activates — no admin trigger needed here.
 
 *Note: The compass block is "consumed" into the map.*
 
-> **Inventory:** 7 stick, 1 string, 2 copper_ingot, 1 coal
+> **Inventory:** 6 stick, 1 string, 2 copper_ingot, 1 coal
 
 ---
 
 ### Step 7: The Stream
 Map shows the stream. On the bank, kids find an old **tacklebox**:
 - **1 String**
+- **1 Stick**
 - **Recipe Card: Fishing Pole**
 - **Journal Page 7: "The Stream"**
 
@@ -127,7 +134,7 @@ Kids realize: *"We've got the string from the mine and this one — enough for a
 
 ---
 
-### Step 8: Craft the Fishing Pole (→ door 1)
+### Step 8: Craft the Fishing Pole (→ door 2)
 **Recipe:** 3 Sticks + 2 String (diagonal pattern)
 
 Kids craft → receive **Fishing Pole**
@@ -181,7 +188,7 @@ Kids realize: *"We've had the torch recipe since the tent, and iron from the qua
 
 ---
 
-### Step 13: Craft the Torch (→ door 2)
+### Step 13: Craft the Torch (→ door 1)
 **Recipe:** 1 Coal + 1 Stick (center column)
 
 Kids craft → receive **Torch**
@@ -190,7 +197,7 @@ Kids craft → receive **Torch**
 
 ---
 
-### Step 14: Craft the Iron Sword (→ door 1)
+### Step 14: Craft the Iron Sword (→ door 2)
 **Recipe:** 2 Iron Ingots + 1 Stick (center column)
 
 Kids craft → receive **Iron Sword**
@@ -213,7 +220,7 @@ Kids realize: *"We have the copper from the mine and the amethyst from the villa
 
 ---
 
-### Step 16: Craft the Spyglass (→ door 2)
+### Step 16: Craft the Spyglass (→ door 0)
 **Recipe:** 1 Amethyst Shard + 2 Copper Ingots (center column)
 
 Kids craft → receive **Spyglass**
@@ -268,7 +275,7 @@ Kids craft → receive **TNT** prop
 ---
 
 ### Step 21: Blow Open the Treasure!
-Kids bring TNT to the locked chest in the tent. Game master plays explosion sound, removes chain/lock.
+Kids bring TNT to the locked chest in the tent. Game master plays explosion sound, unlocks it.
 
 **Treasure:** Ender Dragon Egg + candy/treats for everyone!
 
@@ -306,7 +313,7 @@ flowchart TD
     QUARRY --> QUARRY_LOOT[Find: Emerald, 2 Iron]:::item
     QUARRY_LOOT --> VILLAGER([🧑‍🌾 Villager Trade — Emerald for Amethyst + Sword recipe]):::location
     VILLAGER --> CRAFT_SWORD{⚒️ CRAFT: Iron Sword}:::craft
-    MINE_LOOT --> CRAFT_TORCH{⚒️ CRAFT: Torch (recipe from tent, coal from mine)}:::craft
+    MINE_LOOT --> CRAFT_TORCH{⚒️ CRAFT: Torch}:::craft
     CRAFT_TORCH --> CAVE([🔥 Dark Cave]):::location
     CAVE --> CRAFT_SPYGLASS{⚒️ CRAFT: Spyglass}:::craft
     CRAFT_SPYGLASS --> HILL([🔭 Spot Creeper]):::location
@@ -327,13 +334,13 @@ flowchart TD
 |---|--------|-------------|------|
 | 1 | Crafting Table | 4 Oak Planks (2x2) | none |
 | 2 | Compass | 4 Iron + 1 Redstone | 2 |
-| 3 | Cobblestone Pickaxe | 3 Cobblestone + 2 Sticks | 0 |
+| 3 | Cobblestone Pickaxe | 3 Cobblestone + 2 Sticks | 1 |
 | 4 | Map | 8 Paper + 1 Compass | none (iPad) |
-| 5 | Fishing Pole | 3 Sticks + 2 String | 1 |
+| 5 | Fishing Pole | 3 Sticks + 2 String | 2 |
 | 6 | Diamond Pickaxe | 3 Diamonds + 2 Sticks | 0 |
-| 7 | Torch | 1 Coal + 1 Stick | 2 |
-| 8 | Iron Sword | 2 Iron + 1 Stick | 1 |
-| 9 | Spyglass | 1 Amethyst + 2 Copper | 2 |
+| 7 | Torch | 1 Coal + 1 Stick | 1 |
+| 8 | Iron Sword | 2 Iron + 1 Stick | 2 |
+| 9 | Spyglass | 1 Amethyst + 2 Copper | 0 |
 | 10 | TNT | 5 Gunpowder + 4 Sand | 1 |
 
 ---
@@ -342,7 +349,7 @@ flowchart TD
 
 | Type | Qty | Where Found |
 |------|-----|-------------|
-| Stick | 9 | 3 start, 2 tent, 4 across waypoints (all consumed, none spare) |
+| Stick | 9 | 3 start, 2 tent, 3 across waypoints, 1 stream tacklebox (all consumed, none spare) |
 | Paper | 8 | 4 tent (hollowed book) + 4 final waypoint |
 | Iron Ingot | 6 | 4 hidden in tent + 2 quarry |
 | Gunpowder | 5 | Creeper drop |
@@ -440,7 +447,7 @@ Separate printed cards (Minecraft crafting-grid style), placed as follows:
 | Compass | Tent (hollowed book) |
 | Torch | Tent (old camp note) |
 | Cobblestone Pickaxe | Final waypoint |
-| Map | Old Mine |
+| Map | Door 1 (pickaxe craft reward) |
 | Fishing Pole | Stream tacklebox |
 | Diamond Pickaxe | Stream (fished out with diamonds) |
 | Iron Sword | Villager trade (for emerald) |

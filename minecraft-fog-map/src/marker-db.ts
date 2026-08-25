@@ -27,6 +27,7 @@ export interface DbMarker {
   collected: boolean;
   hidden: boolean;
   revealOnFog?: boolean;
+  regionId?: string;
   createdAt: number;
 }
 
@@ -82,6 +83,8 @@ export async function dbPutMarker(marker: DbMarker): Promise<void> {
       uid: marker.uid || null,
       collected: marker.collected,
       hidden: marker.hidden ?? false,
+      revealOnFog: marker.revealOnFog ?? false,
+      regionId: marker.regionId || null,
       createdAt: marker.createdAt,
     });
   } catch (err) {
@@ -160,6 +163,8 @@ export function dbPollMarkers(
         uid: data.uid || undefined,
         collected: data.collected || false,
         hidden: data.hidden ?? false,
+        revealOnFog: data.revealOnFog ?? false,
+        regionId: data.regionId || undefined,
         createdAt: data.createdAt || 0,
       });
     });

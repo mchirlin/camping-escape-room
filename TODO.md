@@ -151,10 +151,9 @@
   - [x] Empty-grid detection (prevent re-triggering)
   - [x] Tag registration/writing mode
   - [ ] Dynamic recipe creation from web UI (define patterns via phone) [optional]
-- [ ] Write all block tags using registration program
+- [x] Write all block tags using registration program
   - [x] Stick × 11
   - [x] Iron Ingot × 6
-  - [ ] Iron Ingot × 1 (extra for iron pickaxe bonus recipe)
   - [x] Gold Ingot × 3
   - [x] Amethyst Shard × 1
   - [x] Diamond × 3
@@ -166,6 +165,7 @@
   - [x] Wood Plank × 4
   - [x] Sand × 4
   - [x] Cobblestone × 3
+  - [x] TNT x 1
   - [x] Paper × 8
   - [x] Tripwire Hook × 1
 - [x] Print and sticker new items:
@@ -261,7 +261,7 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 - [x] Marker hidden/reveal system (admin triggers visibility)
 - [x] Multiplayer avatar sync via Firebase
 - [x] NFC scan to place/collect markers
-- [ ] Place markers on real-world map for block hiding spots
+- [x] Place markers on real-world map for block hiding spots
 - [ ] Place markers for key locations (mine, quarry, cave, creeper, villager)
 - [ ] Test on iPad (Safari, performance)
 - [ ] Test GPS tracking at campsite
@@ -270,14 +270,14 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
   - [ ] Kill and reopen app — fog state persists from Firebase
   - [ ] Reset fog on admin — clears for all connected devices
   - [ ] Test with spotty connection — localStorage fallback works
-- [ ] Test map viewport clamping (can't scroll past map edge)
-- [ ] Test background color (uniform brown #d6be96, no black, no tiled border texture)
-- [ ] Test map case SCAD file:
-  - [ ] Print in TPU and verify phone fits (15 Pro and 16 Pro)
-  - [ ] Camera cutout aligns with correct side and clears both models
-  - [ ] Side button hollows don't obstruct volume/power/action buttons
-  - [ ] 3mm lip holds phone securely without obstructing screen
-  - [ ] Rectangular map shape with pixelated edges looks right
+- [x] Test map viewport clamping (can't scroll past map edge)
+- [x] Test background color (uniform brown #d6be96, no black, no tiled border texture)
+- [x] Test map case SCAD file:
+  - [x] Print in TPU and verify phone fits (15 Pro and 16 Pro)
+  - [x] Camera cutout aligns with correct side and clears both models
+  - [x] Side button hollows don't obstruct volume/power/action buttons
+  - [x] 3mm lip holds phone securely without obstructing screen
+  - [x] Rectangular map shape with pixelated edges looks right
 
 ## 📜 Recipe Cards
 
@@ -290,7 +290,7 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 - [x] **Fishing Rod** — attach string + magnet to a stick
 - [x] **Fishing target** — waterproof container with magnet/washer in stream (holds 3 diamonds + recipe page)
-- [ ] **Creeper** — stack 4 boxes, paint green, paint face on top box, pre-score tape
+- [x] **Creeper** — stack 4 boxes, paint green, paint face on top box, pre-score tape
 - [x] **Creeper loot** — 5 gunpowder blocks + TNT recipe page inside head box
 - [x] **Treasure chest** — locked/chained container in tent with "TNT Required" sign, holds dragon egg + candy
 - [x] **Explorer's Journal** — notebook with intro pages + slots for found pages

@@ -2,6 +2,11 @@
 
 Project: 2026-camping-minecraft
 Created: 2026-04-18
+Last updated: 2026-08-25
+
+> **Source of truth:** the authoritative game flow is
+> `../02-puzzle-design/flowchart.md`. If anything here disagrees with the
+> flowchart, the flowchart wins.
 
 ## Decisions
 
@@ -19,19 +24,18 @@ Created: 2026-04-18
 - Hide all blocks, walk the full route
 - Test fishing magnet in the actual stream
 - Verify creeper placement (stable but falls apart when hit)
-- Confirm dig site is diggable
+- Confirm the locked chest opens cleanly on cue
 
 ### Backup Plans (stay flexible)
 - RFID reader dies → game master manually confirms recipes (kids place blocks, you check visually, play sound from phone)
 - Blocks go missing → have a few spare blocks of each type
-- Stream too high → hide gold blocks near the stream bank instead of in the water
+- Stream too high → hide the diamonds near the stream bank instead of in the water
 - Creeper won't stay up → lean it against a tree
 - Weather → crafting table is in tent (covered), outdoor steps still work in light rain
 
 ## Pre-Trip Test Checklist
 - [ ] Every block tag reads correctly on every grid slot
-- [ ] All 5 main recipes recognized
-- [ ] Bonus recipes recognized
+- [ ] All 10 recipes recognized
 - [ ] Wrong recipes correctly rejected
 - [ ] Sound plays on success
 - [ ] Button works reliably

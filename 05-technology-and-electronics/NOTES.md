@@ -2,6 +2,10 @@
 
 Project: 2026-camping-minecraft
 Created: 2026-04-18
+Last updated: 2026-08-25
+
+> **Source of truth:** for game-flow details (recipes, crafts, props) see
+> `../02-puzzle-design/flowchart.md`. This file covers hardware only.
 
 ## Decisions
 

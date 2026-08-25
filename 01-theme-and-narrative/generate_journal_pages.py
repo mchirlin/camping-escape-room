@@ -328,6 +328,26 @@ PAGES = [
             "I am beginning to understand.",
         ],
     },
+    {
+        "num": 13,
+        "title": "The Treasure",
+        "lines": [
+            "",
+            "The chains broke. The lid",
+            "lifted free at last.",
+            "",
+            "Gold -- bright and heavy,",
+            "stacked in rows like the old",
+            "crafter left them yesterday.",
+            "",
+            "All of it real. All of it",
+            "waiting, all this time, for",
+            "hands clever enough to reach",
+            "it.",
+            "",
+            "Mine.",
+        ],
+    },
 ]
 
 

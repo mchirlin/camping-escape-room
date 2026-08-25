@@ -343,7 +343,7 @@ async function main(): Promise<void> {
 
   // Marker store for user-placed points of interest
   const isAdminMode = shouldActivateSimulation();
-  const markerStore = new MarkerStore(isAdminMode);
+  const markerStore = new MarkerStore(isAdminMode, terrainData.regionId, terrainData.boundingBox);
   const leafletMarkerLayers: Record<string, any> = {}; // id → Leaflet marker
 
   // Initialize Firebase sync (falls back to localStorage if not configured)
