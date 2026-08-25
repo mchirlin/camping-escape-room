@@ -39,7 +39,6 @@ export type MarkerTag =
   | 'crafting'
   | 'mine'
   | 'tnt_chest'
-  | 'dig_site'
   | 'waypoint'
   | 'villager'
   | 'stream'
@@ -79,8 +78,7 @@ export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; textur
   { tag: 'cave',          label: 'Dark Cave',       color: '#FFAA00', texture: `${BASE}markers/cave.png`,          isLocation: true },
   { tag: 'spyglass_hill', label: 'Spyglass Hill',   color: '#B08D57', texture: `${BASE}markers/spyglass_hill.png`, isLocation: true },
   { tag: 'creeper',       label: 'Creeper',         color: '#55AA33', texture: `${BASE}markers/creeper.png`,       isLocation: true },
-  { tag: 'tnt_chest',     label: 'Treasure Chest',  color: '#FF3333', texture: `${BASE}markers/tnt_chest.png`,     isLocation: true },
-  { tag: 'dig_site',      label: 'Dig Site',        color: '#AA5500', texture: `${BASE}markers/dig_site.png`,      isLocation: true },
+  { tag: 'tnt_chest',     label: 'Treasure Chest',  color: '#FAEE57', texture: `${BASE}markers/tnt_chest.png`,     isLocation: true },
 ];
 
 /** True if the given tag is a location marker (vs an item marker). */

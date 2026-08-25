@@ -425,9 +425,13 @@ async function main(): Promise<void> {
     });
 
     const lm = L.marker([lat, lng], { icon, draggable: true }).addTo(leafletMap);
+    // Locations can't be collected — only items get a Collect button
+    const collectBtn = tagInfo.isLocation
+      ? ''
+      : `<button onclick="document.dispatchEvent(new CustomEvent('collect-marker',{detail:'${id}'}))">✅ Collect</button> `;
     lm.bindPopup(
       `<b>${tagInfo.label}${count > 1 ? ' x' + count : ''}</b><br>` +
-      `<button onclick="document.dispatchEvent(new CustomEvent('collect-marker',{detail:'${id}'}))">✅ Collect</button> ` +
+      collectBtn +
       `<button onclick="document.dispatchEvent(new CustomEvent('remove-marker',{detail:'${id}'}))">🗑 Remove</button>`
     );
 
@@ -474,6 +478,11 @@ async function main(): Promise<void> {
     const id = e.detail;
     const marker = markerStore.getAll().find(m => m.id === id);
     const tagInfo = marker ? MARKER_TAGS.find(t => t.tag === marker.tag) : null;
+
+    // Locations are not collectible
+    if (marker && isLocationTag(marker.tag)) {
+      return;
+    }
 
     // Check proximity — need GPS position within 15m of marker
     getCurrentPosition().then((pos) => {
@@ -1078,6 +1087,7 @@ async function main(): Promise<void> {
     const tagInfo = MARKER_TAGS.find((t) => t.tag === marker.tag);
     const label = tagInfo?.label ?? marker.tag;
     const isHidden = !!marker.hidden;
+    const isLocation = isLocationTag(marker.tag as MarkerTag);
 
     const popup = document.createElement('div');
     popup.style.cssText = `
@@ -1093,7 +1103,14 @@ async function main(): Promise<void> {
     } else if (isAdminMode && !isHidden) {
       buttonsHtml += `<button data-action="hide" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#AA3333;color:#fff;border:1px solid #333;cursor:pointer;">🙈 Hide</button>`;
     }
-    buttonsHtml += `<button data-action="collect" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#55FF55;color:#000;border:1px solid #333;cursor:pointer;">✅ Collect</button>`;
+    // Locations can't be collected — only items
+    if (!isLocation) {
+      buttonsHtml += `<button data-action="collect" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#55FF55;color:#000;border:1px solid #333;cursor:pointer;">✅ Collect</button>`;
+    }
+    // Admins can delete any marker (the only way to remove a location)
+    if (isAdminMode) {
+      buttonsHtml += `<button data-action="delete" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#AA3333;color:#fff;border:1px solid #333;cursor:pointer;">🗑 Delete</button>`;
+    }
     buttonsHtml += `<button data-action="close" style="font-family:var(--mc-font);font-size:7px;padding:4px 8px;background:#555;color:#fff;border:1px solid #333;cursor:pointer;">✕</button>`;
 
     popup.innerHTML = `
@@ -1106,6 +1123,16 @@ async function main(): Promise<void> {
     popup.querySelector('[data-action="collect"]')?.addEventListener('click', () => {
       markerStore.collect(marker.id);
       hideMarkerPopup();
+    });
+    popup.querySelector('[data-action="delete"]')?.addEventListener('click', () => {
+      markerStore.remove(marker.id);
+      if (leafletMarkerLayers[marker.id] && leafletMap) {
+        leafletMap.removeLayer(leafletMarkerLayers[marker.id]);
+        delete leafletMarkerLayers[marker.id];
+      }
+      hideMarkerPopup();
+      updateMarkerPanel();
+      uiOverlay.showToast(`🗑 Deleted: ${label}`);
     });
     popup.querySelector('[data-action="close"]')?.addEventListener('click', () => {
       hideMarkerPopup();
@@ -1442,6 +1469,23 @@ async function main(): Promise<void> {
           const ty = screenY + slotSize / 2;
           ctx!.strokeText(text, tx, ty);
           ctx!.fillText(text, tx, ty);
+        }
+
+        // Location markers: draw the name label in Minecraft font to the right
+        if (isLocation && tagInfo) {
+          ctx!.save();
+          ctx!.globalAlpha = isHidden ? 0.5 : 1.0;
+          ctx!.font = '8px "Press Start 2P", monospace';
+          ctx!.textBaseline = 'middle';
+          ctx!.textAlign = 'left';
+          const labelX = slotX + slotSize + 4;
+          const labelY = screenY;
+          ctx!.lineWidth = 3;
+          ctx!.strokeStyle = '#000000';
+          ctx!.strokeText(tagInfo.label, labelX, labelY);
+          ctx!.fillStyle = '#ffffff';
+          ctx!.fillText(tagInfo.label, labelX, labelY);
+          ctx!.restore();
         }
       }
 
