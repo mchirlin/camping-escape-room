@@ -50,6 +50,7 @@ export type MarkerTag =
   | 'amethyst_shard'
   | 'emerald'
   | 'coal'
+  | 'dragon_egg'
   // Materials
   | 'stick'
   | 'string'
@@ -84,6 +85,7 @@ export const MARKER_TAGS: { tag: MarkerTag; label: string; color: string; textur
   { tag: 'amethyst_shard',label: 'Amethyst Shard',  color: '#9B59B6', texture: `${BASE}markers/amethyst_shard.png` },
   { tag: 'emerald',       label: 'Emerald',         color: '#17DD62', texture: `${BASE}markers/emerald.png` },
   { tag: 'coal',          label: 'Coal',            color: '#2A2A2A', texture: `${BASE}markers/coal.png` },
+  { tag: 'dragon_egg',    label: 'Dragon Egg',      color: '#9B30FF', texture: `${BASE}markers/dragon_egg.png` },
   // Materials
   { tag: 'stick',         label: 'Stick',           color: '#C4A24E', texture: `${BASE}markers/stick.png` },
   { tag: 'string',        label: 'String',          color: '#EEEEEE', texture: `${BASE}markers/string.png` },

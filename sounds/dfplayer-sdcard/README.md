@@ -1,6 +1,6 @@
 # DFPlayer SD Card — Folder-Based Sound Mapping
 
-Copy the `01/`, `02/`, and `03/` folders to the root of a FAT32-formatted micro SD card.
+Copy the `01/`, `02/`, `03/`, and `04/` folders to the root of a FAT32-formatted micro SD card.
 
 ## SD Card Structure
 
@@ -50,6 +50,10 @@ SD Card Root/
     008.mp3                   — dry_hands
     009.mp3                   — clark
     010.mp3                   — minecraft_calm
+  04/                         — Dragon egg songs (dragon_egg tag cycles these)
+    001.mp3                   — dragon egg song 1
+    002.mp3                   — dragon egg song 2
+    003.mp3                   — dragon egg song 3
 ```
 
 ## Firmware Usage
@@ -74,6 +78,11 @@ dfPlayer.playFolder(3, 1);   // sweden
 dfPlayer.playFolder(3, 2);   // wet_hands
 dfPlayer.playFolder(3, 4);   // haggstrom
 // etc.
+
+// Dragon egg songs (dragon_egg tag cycles 1 -> 2 -> 3 -> 1 on each placement)
+dfPlayer.playFolder(4, 1);   // dragon egg song 1
+dfPlayer.playFolder(4, 2);   // dragon egg song 2
+dfPlayer.playFolder(4, 3);   // dragon egg song 3
 ```
 
 ## Folder Layout Logic
@@ -81,10 +90,11 @@ dfPlayer.playFolder(3, 4);   // haggstrom
 - **Folder 01:** Block interaction sounds (played frequently, very short)
 - **Folder 02:** Game event sounds & ambient effects (short-medium)
 - **Folder 03:** Background music (long tracks, 1-5 minutes, looped)
+- **Folder 04:** Dragon egg songs (played one-shot; the `dragon_egg` tag cycles through the three tracks in order)
 
 ## Notes
 - SD card MUST be FAT32 formatted
-- Folder names must be exactly 2 digits: `01`, `02`, `03`
+- Folder names must be exactly 2 digits: `01`, `02`, `03`, `04`
 - File names must be exactly 3 digits: `001.mp3`, `002.mp3`, etc.
 - `dfPlayer.playFolder(folder, track)` is the most reliable playback method
 - All files encoded at 44.1kHz mono 128kbps for DFPlayer compatibility

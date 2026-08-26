@@ -72,6 +72,8 @@
 // SD Card Sound Layout:
 //   Folder 01: slot placement sounds (tracks 001-009)
 //   Folder 02: recipe sounds (tracks 001-006 = success per recipe, 010 = error)
+//   Folder 03: jukebox music tracks (001-010, Steve figurine cycles these)
+//   Folder 04: dragon egg songs (001-003, dragon_egg tag cycles these)
 //
 // =============================================================================
 
@@ -150,16 +152,16 @@ const char* BLOCK_TYPES[] = {
   "wood_plank", "sand", "stick", "iron_ingot", "string",
   "redstone", "diamond", "gold_ingot", "gunpowder", "coal",
   "copper_ingot", "amethyst_shard", "paper", "cobblestone", "tripwire_hook", "emerald",
-  "compass", "steve", "tnt"
+  "compass", "steve", "tnt", "dragon_egg"
 };
-#define NUM_BLOCK_TYPES 19
+#define NUM_BLOCK_TYPES 20
 
 // Abbreviated display names (for web grid)
 const char* BLOCK_ABBREV[] = {
   "wood", "sand", "stick", "iron", "str",
   "red", "dia", "gold", "gun", "coal",
   "cop", "ame", "paper", "cob", "trip", "emer",
-  "comp", "steve", "tnt"
+  "comp", "steve", "tnt", "egg"
 };
 
 // Colors for each block type (RGB) — average pixel color from texture
@@ -183,6 +185,7 @@ const uint32_t BLOCK_COLORS[] = {
   0xE02020,  // compass — deep red
   0x00AAFF,  // steve — bright blue (Steve's shirt)
   0xFF2200,  // tnt — red
+  0x9B30FF,  // dragon_egg — deep violet/purple
 };
 
 // =============================================================================
@@ -405,6 +408,11 @@ Preferences prefs;
 #define JUKEBOX_NUM_TRACKS 10
 uint8_t jukeboxTrack = 1;          // Current track (1-10, folder 03)
 String lastSteveUid = "";          // Prevent re-trigger while Steve stays on table
+
+// Dragon egg state (cycles through 3 songs on folder 04)
+#define DRAGON_EGG_NUM_TRACKS 3
+uint8_t dragonEggTrack = 1;        // Current track (1-3, folder 04)
+String lastDragonEggUid = "";      // Prevent re-trigger while egg stays on table
 
 // LED spin mode — disabled, using solid color
 // (spin code removed — too slow due to NFC scan cycle timing)
@@ -649,6 +657,41 @@ void victoryFlash() {
       if (phase < 2) c = strip.Color(255, 215, 0);      // Gold
       else if (phase < 3) c = strip.Color(255, 255, 200); // Bright gold-white
       else if (phase < 4) c = strip.Color(200, 150, 0);  // Darker gold
+      else c = 0;
+      strip.setPixelColor(i, c);
+    }
+    strip.show();
+    delay(30);
+  }
+  // Restore slot ring colors
+  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
+    int8_t ring = SLOT_TO_RING[i];
+    if (ring >= 0) {
+      if (slotActive[i] && slotType[i].length() > 0) setRing(ring, getTypeColor(slotType[i]));
+      else if (slotActive[i]) setRing(ring, 0xFFFFFF);
+      else clearRing(ring);
+    }
+  }
+  strip.show();
+}
+
+// =============================================================================
+// Animation: Dragon Egg Shimmer (dragon_egg scan — purple sparkle + sweep)
+// Mirrors victoryFlash() but in the amethyst/violet/magenta family so the
+// End-dragon egg reads as mysterious rather than golden.
+// =============================================================================
+void dragonEggFlash() {
+  logMsg("[ANIM] Dragon egg shimmer (dragon_egg)");
+  unsigned long startTime = millis();
+  while (millis() - startTime < 2500) {
+    // Alternating purple/magenta sparkle across all rings
+    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+      uint32_t c;
+      unsigned long t = millis() - startTime;
+      int phase = (i + (int)(t / 80)) % 6;
+      if (phase < 2) c = strip.Color(155, 48, 255);       // Deep violet
+      else if (phase < 3) c = strip.Color(220, 130, 255);  // Bright lavender
+      else if (phase < 4) c = strip.Color(90, 0, 160);     // Darker purple
       else c = 0;
       strip.setPixelColor(i, c);
     }
@@ -1238,7 +1281,7 @@ buildTracks();
 <div class="reg-box">
 <p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
 <p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
-<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tnt">tnt</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
+<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="dragon_egg">dragon_egg</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tnt">tnt</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
 <div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
 <div class="result" id="regres"></div>
 </div>
@@ -1944,7 +1987,8 @@ void loop() {
         strip.show();
       }
 
-      if (slotType[i] != "steve" && slotType[i] != "gold_ingot" && slotType[i] != "tnt") {
+      if (slotType[i] != "steve" && slotType[i] != "gold_ingot" &&
+          slotType[i] != "tnt" && slotType[i] != "dragon_egg") {
         playSound(i + 1);
       }
 
@@ -1984,6 +2028,20 @@ void loop() {
         explosionFlash();  // Fuse spark animation (2.8s) + explosion flash, synced to audio
       }
 
+      // Dragon egg: play one of three songs (cycles) + purple shimmer on any slot
+      if (slotType[i] == "dragon_egg" && slotUid[i] != lastDragonEggUid) {
+        lastDragonEggUid = slotUid[i];
+        logMsgf("[SCAN] Dragon egg — playing song %d/%d", dragonEggTrack, DRAGON_EGG_NUM_TRACKS);
+        if (dfPlayerReady) {
+          dfPlayer.disableLoop();
+          musicPlaying = false;
+          dfPlayer.playFolder(4, dragonEggTrack);  // Folder 04, tracks 001-003 = dragon songs
+        }
+        // Advance to next song for the next placement
+        dragonEggTrack = (dragonEggTrack % DRAGON_EGG_NUM_TRACKS) + 1;
+        dragonEggFlash();
+      }
+
       String uidDisp = uidToDisplayString(uid, uidLen);
       if (slotType[i].length() > 0) {
         logMsgf("[SLOT %d] Tag %s -> type: %s (ring %d)",
@@ -1997,6 +2055,10 @@ void loop() {
       // Clear Steve jukebox state if Steve was removed
       if (slotType[i] == "steve") {
         lastSteveUid = "";
+      }
+      // Clear dragon egg state if the egg was removed
+      if (slotType[i] == "dragon_egg") {
+        lastDragonEggUid = "";
       }
       slotActive[i] = false;
       slotUid[i] = "";
