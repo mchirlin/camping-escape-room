@@ -50,10 +50,10 @@ SD Card Root/
     008.mp3                   — dry_hands
     009.mp3                   — clark
     010.mp3                   — minecraft_calm
-  04/                         — Dragon egg songs (dragon_egg tag cycles these)
-    001.mp3                   — dragon egg song 1
-    002.mp3                   — dragon egg song 2
-    003.mp3                   — dragon egg song 3
+  04/                         — Celebration songs
+    001.mp3                   — gold victory song A (gold_ingot cycles 001/003)
+    002.mp3                   — dragon egg song (dragon_egg plays this)
+    003.mp3                   — gold victory song B (gold_ingot cycles 001/003)
 ```
 
 ## Firmware Usage
@@ -63,7 +63,7 @@ SD Card Root/
 dfPlayer.playFolder(1, 1);   // block_place click
 
 // Game events
-dfPlayer.playFolder(2, 1);   // craft success
+dfPlayer.playFolder(2, 4);   // craft success (victory fanfare)
 dfPlayer.playFolder(2, 2);   // craft fail
 dfPlayer.playFolder(2, 3);   // toast_in (touch hold start)
 dfPlayer.playFolder(2, 9);   // levelup
@@ -79,18 +79,18 @@ dfPlayer.playFolder(3, 2);   // wet_hands
 dfPlayer.playFolder(3, 4);   // haggstrom
 // etc.
 
-// Dragon egg songs (dragon_egg tag cycles 1 -> 2 -> 3 -> 1 on each placement)
-dfPlayer.playFolder(4, 1);   // dragon egg song 1
-dfPlayer.playFolder(4, 2);   // dragon egg song 2
-dfPlayer.playFolder(4, 3);   // dragon egg song 3
+// Celebration songs (folder 04)
+dfPlayer.playFolder(4, 1);   // gold victory song A  (gold_ingot cycles 1 <-> 3)
+dfPlayer.playFolder(4, 3);   // gold victory song B  (gold_ingot cycles 1 <-> 3)
+dfPlayer.playFolder(4, 2);   // dragon egg song      (dragon_egg, single track)
 ```
 
 ## Folder Layout Logic
 
 - **Folder 01:** Block interaction sounds (played frequently, very short)
 - **Folder 02:** Game event sounds & ambient effects (short-medium)
-- **Folder 03:** Background music (long tracks, 1-5 minutes, looped)
-- **Folder 04:** Dragon egg songs (played one-shot; the `dragon_egg` tag cycles through the three tracks in order)
+- **Folder 03:** Background music (long tracks, 1-5 minutes). Plays as a sequenced playlist: when one track ends the next starts, wrapping from 010 back to 001. After a stretch of silence the firmware resumes background music automatically.
+- **Folder 04:** Celebration songs (played one-shot). `gold_ingot` alternates between tracks 001 and 003 on each placement; `dragon_egg` always plays track 002.
 
 ## Notes
 - SD card MUST be FAT32 formatted

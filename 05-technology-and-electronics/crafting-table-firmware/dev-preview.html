@@ -96,7 +96,6 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 </div>
 <h2>Music</h2>
 <div class="btn-row"><input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span></div>
-<div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Play</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Stop</button></div>
 <div id="tracklist" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;"></div>
 <script>
 var trackNames=['Sweden','Wet Hands','Mice on Venus','Haggstrom','Living Mice','Subwoofer Lullaby','Danny','Dry Hands','Clark','Minecraft Calm'];
@@ -134,8 +133,8 @@ var MOCK = (function(){
   var RECIPES=[
     {index:0,name:'Crafting Table',door:255,pattern:['wood_plank','wood_plank',null,'wood_plank','wood_plank',null,null,null,null]},
     {index:4,name:'Compass',door:2,pattern:[null,'iron_ingot',null,'iron_ingot','redstone','iron_ingot',null,'iron_ingot',null]},
-    {index:5,name:'Stone Pickaxe',door:1,pattern:[null,'stick',null,null,'stick',null,'cobblestone','cobblestone','cobblestone']},
-    {index:6,name:'Map',door:255,pattern:['paper','paper','paper','paper','compass','paper','paper','paper','paper']},
+    {index:5,name:'Stone Pickaxe',door:0,pattern:[null,'stick',null,null,'stick',null,'cobblestone','cobblestone','cobblestone']},
+    {index:6,name:'Map',door:1,pattern:['paper','paper','paper','paper','compass','paper','paper','paper','paper']},
     {index:7,name:'Fishing Rod',door:2,pattern:['stick',null,'string',null,'stick','string',null,null,'stick']},
     {index:8,name:'Diamond Pickaxe',door:0,pattern:[null,'stick',null,null,'stick',null,'diamond','diamond','diamond']},
     {index:9,name:'Torch',door:1,pattern:[null,null,null,'stick',null,null,'coal',null,null]},

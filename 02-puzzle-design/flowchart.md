@@ -78,7 +78,7 @@ spot — distribute the loot across the stops rather than one big end cache:
 
 ---
 
-### Step 4: Craft the Cobblestone Pickaxe (→ door 1)
+### Step 4: Craft the Cobblestone Pickaxe (→ door 0)
 **Recipe:** 3 Cobblestone + 2 Sticks (top row + center column)
 
 Kids craft → receive **Cobblestone Pickaxe**
@@ -100,17 +100,18 @@ Inside:
 - **1 Coal** (mined from the walls)
 - **Journal Page 5: "The Old Mine"**
 
-**Door 1** (opened by crafting the pickaxe) contains:
-- **Recipe Card: Map**
+Crafting the pickaxe opens **Door 0** at the mine.
+
+The **Recipe Card: Map** is found in the mine (no longer behind a door).
 
 > **Inventory:** 6 stick, 8 paper, 1 string, 2 copper_ingot, 1 coal
 
 ---
 
-### Step 6: Craft the Map (no door — iPad activates)
+### Step 6: Craft the Map (→ door 1 + iPad activates)
 **Recipe:** 8 Paper + 1 Compass (center)
 
-Kids craft → **iPad fog-of-war map lights up!** + **Journal Page 6: "The Map Awakens"**
+Kids craft → **iPad fog-of-war map lights up!** + **Door 1 opens** + **Journal Page 6: "The Map Awakens"**
 
 The map's locations (stream, cave, quarry, villager) are already visible as
 soon as it activates — no admin trigger needed here.
@@ -301,7 +302,7 @@ flowchart TD
     WAYPOINTS --> WAYPOINT_LOOT[Find: 3 Cobblestone, Sticks, 2 String]:::item
     WAYPOINT_LOOT --> CRAFT_STONE_PICK{⚒️ CRAFT: Cobblestone Pickaxe}:::craft
     CRAFT_STONE_PICK --> MINE([⛏️ Old Mine]):::location
-    MINE --> MINE_LOOT[Find: 8 Paper, String, 2 Copper]:::item
+    MINE --> MINE_LOOT[Find: 8 Paper, String, 2 Copper, Map recipe]:::item
     MINE_LOOT --> CRAFT_MAP{⚒️ CRAFT: Map — iPad activates!}:::craft
     CRAFT_MAP --> MAP_REVEALS[📍 Map reveals locations + sand]:::action
     MAP_REVEALS --> STREAM([🎣 Stream — find Fishing Pole recipe]):::location
@@ -334,8 +335,8 @@ flowchart TD
 |---|--------|-------------|------|
 | 1 | Crafting Table | 4 Oak Planks (2x2) | none |
 | 2 | Compass | 4 Iron + 1 Redstone | 2 |
-| 3 | Cobblestone Pickaxe | 3 Cobblestone + 2 Sticks | 1 |
-| 4 | Map | 8 Paper + 1 Compass | none (iPad) |
+| 3 | Cobblestone Pickaxe | 3 Cobblestone + 2 Sticks | 0 |
+| 4 | Map | 8 Paper + 1 Compass | 1 (+ iPad) |
 | 5 | Fishing Pole | 3 Sticks + 2 String | 2 |
 | 6 | Diamond Pickaxe | 3 Diamonds + 2 Sticks | 0 |
 | 7 | Torch | 1 Coal + 1 Stick | 1 |
@@ -447,7 +448,7 @@ Separate printed cards (Minecraft crafting-grid style), placed as follows:
 | Compass | Tent (hollowed book) |
 | Torch | Tent (old camp note) |
 | Cobblestone Pickaxe | Final waypoint |
-| Map | Door 1 (pickaxe craft reward) |
+| Map | Old Mine (found openly, not behind a door) |
 | Fishing Pole | Stream tacklebox |
 | Diamond Pickaxe | Stream (fished out with diamonds) |
 | Iron Sword | Villager trade (for emerald) |

@@ -26,8 +26,8 @@
 //
 // Recipes (storyline order):
 //   1. Compass (door 2): iron_ingot cross + redstone center
-//   2. Stone Pickaxe (door 1): cobblestone×3 top + stick×2 center column
-//   3. Map (no door): paper×8 + compass center
+//   2. Stone Pickaxe (door 0): cobblestone×3 top + stick×2 center column
+//   3. Map (door 1): paper×8 + compass center
 //   4. Fishing Rod (door 2): sticks diagonal + strings right column
 //   5. Diamond Pickaxe (door 0): diamond×3 top + stick×2 center column
 //   6. Torch (door 1): coal directly above stick, any of 6 grid positions
@@ -74,9 +74,12 @@
 //
 // SD Card Sound Layout:
 //   Folder 01: slot placement sounds (tracks 001-009)
-//   Folder 02: recipe sounds (tracks 001-006 = success per recipe, 010 = error)
-//   Folder 03: jukebox music tracks (001-010, Steve figurine cycles these)
-//   Folder 04: dragon egg songs (001-003, dragon_egg tag cycles these)
+//   Folder 02: recipe sounds (004 = craft-success fanfare, 006 = TNT, 010 = error)
+//   Folder 03: background music (001-010). Plays in sequence — each track
+//              auto-advances to the next when it ends; wraps 010 -> 001.
+//              Steve figurine jumps to the next track; after ~15s of silence
+//              (MUSIC_IDLE_MS) background music resumes on its own.
+//   Folder 04: celebration songs — gold_ingot cycles 001/003, dragon_egg plays 002
 //
 // =============================================================================
 
@@ -239,17 +242,17 @@ const Recipe RECIPES[NUM_RECIPES] = {
     {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
     2, -1
   },
-  // Recipe 5: Stone Pickaxe → door 1 (Step 4 — "Cobblestone Pickaxe")
+  // Recipe 5: Stone Pickaxe → door 0 (Step 4 — "Cobblestone Pickaxe")
   {
     "Stone Pickaxe",
     {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
-    1, -1
+    0, -1
   },
-  // Recipe 6: Map (no door — iPad activates) (Step 6)
+  // Recipe 6: Map → door 1 (Step 6)
   {
     "Map",
     {"paper", "paper", "paper", "paper", "compass", "paper", "paper", "paper", "paper"},
-    255, -1
+    1, -1
   },
   // Recipe 7: Fishing Rod → door 2 (Step 8)
   {
@@ -414,10 +417,22 @@ Preferences prefs;
 uint8_t jukeboxTrack = 1;          // Current track (1-10, folder 03)
 String lastSteveUid = "";          // Prevent re-trigger while Steve stays on table
 
-// Dragon egg state (cycles through 3 songs on folder 04)
-#define DRAGON_EGG_NUM_TRACKS 3
-uint8_t dragonEggTrack = 1;        // Current track (1-3, folder 04)
+// Background music auto-advance + idle restart
+// - When a background track finishes, the next one in sequence starts.
+// - After MUSIC_IDLE_MS of silence (music stopped, nothing happening),
+//   background music restarts on its own.
+#define MUSIC_IDLE_MS   15000      // Idle time before background music resumes
+unsigned long lastActivityMs = 0;  // millis() of the last notable activity
+bool musicStoppedByUser = false;   // True after an explicit Stop (suppresses idle restart)
+
+// Dragon egg state (plays a single song on folder 04, track 002)
 String lastDragonEggUid = "";      // Prevent re-trigger while egg stays on table
+
+// Gold ingot state (cycles through folder 04 tracks 001 and 003)
+const uint8_t GOLD_TRACKS[] = {1, 3};   // Folder 04 tracks to cycle through
+#define GOLD_NUM_TRACKS 2
+uint8_t goldTrackIdx = 0;          // Index into GOLD_TRACKS
+String lastGoldUid = "";           // Prevent re-trigger while gold stays on table
 
 // LED spin mode — disabled, using solid color
 // (spin code removed — too slow due to NFC scan cycle timing)
@@ -832,9 +847,66 @@ void vibeBuzzError() {
 // =============================================================================
 // Sound
 // =============================================================================
+
+// Mark that something happened (resets the idle-restart timer). Also clears the
+// "stopped by user" flag so activity re-enables the idle auto-resume.
+void noteActivity() {
+  lastActivityMs = millis();
+  musicStoppedByUser = false;
+}
+
+// Start (or resume) background music on the current jukebox track, once (no
+// single-track loop — the main loop advances to the next track when it ends).
+void startBackgroundMusic() {
+  if (!dfPlayerReady) return;
+  dfPlayer.disableLoop();
+  dfPlayer.playFolder(3, jukeboxTrack);
+  musicPlaying = true;
+  musicStoppedByUser = false;
+  lastActivityMs = millis();
+  logMsgf("[SOUND] Background music playing — track %d/%d", jukeboxTrack, JUKEBOX_NUM_TRACKS);
+}
+
+// Advance to the next background track in sequence (wraps around) and play it.
+void advanceBackgroundMusic() {
+  jukeboxTrack = (jukeboxTrack % JUKEBOX_NUM_TRACKS) + 1;
+  startBackgroundMusic();
+}
+
+// Called every loop. Handles two things:
+//   1. Auto-advance: when a track finishes, play the next one. If background
+//      music was playing, advance the playlist. If an effect finished (music
+//      not playing), leave silence for the idle timer to handle.
+//   2. Idle restart: after MUSIC_IDLE_MS of silence (and not stopped by the
+//      user), resume background music on the current track.
+void serviceBackgroundMusic() {
+  if (!dfPlayerReady) return;
+
+  // Drain DFPlayer messages; act on track-finished events.
+  while (dfPlayer.available()) {
+    uint8_t type = dfPlayer.readType();
+    if (type == DFPlayerPlayFinished) {
+      if (musicPlaying) {
+        // A background track finished — roll to the next one in sequence.
+        advanceBackgroundMusic();
+      }
+      // If an effect finished (musicPlaying == false), do nothing here; the
+      // idle timer below will bring background music back after a quiet spell.
+    }
+  }
+
+  // Idle restart: quiet for long enough, and not deliberately stopped.
+  if (!musicPlaying && !musicStoppedByUser &&
+      (millis() - lastActivityMs >= MUSIC_IDLE_MS)) {
+    logMsg("[SOUND] Idle timeout — resuming background music");
+    startBackgroundMusic();
+  }
+}
+
 void playSound(uint8_t track) {
   if (dfPlayerReady) {
     dfPlayer.disableLoop();
+    musicPlaying = false;  // A one-shot effect is now playing (not background music)
     dfPlayer.playFolder(1, 1);  // Folder 01, track 001 = block_place
   }
 }
@@ -843,13 +915,14 @@ void playCraftSound(uint8_t recipeIndex) {
   if (dfPlayerReady) {
     dfPlayer.disableLoop();
     musicPlaying = false;
-    dfPlayer.playFolder(2, 1);  // Folder 02, track 001 = craft_success
+    dfPlayer.playFolder(2, 4);  // Folder 02, track 004 = victory fanfare (craft success)
   }
 }
 
 void playErrorSound() {
   if (dfPlayerReady) {
     dfPlayer.disableLoop();
+    musicPlaying = false;  // A one-shot effect is now playing (not background music)
     dfPlayer.playFolder(2, 2);  // Folder 02, track 002 = craft_fail
   }
 }
@@ -1082,6 +1155,7 @@ int checkRecipes() {
 // Craft Execution
 // =============================================================================
 void executeCraft(int recipeIndex) {
+  noteActivity();  // A craft happened — resets the idle-restart timer
   logMsgf("[CRAFT] === RECIPE MATCHED: %s (door %d) ===",
           RECIPES[recipeIndex].name, RECIPES[recipeIndex].doorIndex);
 
@@ -1293,7 +1367,6 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 </div>
 <h2>Music</h2>
 <div class="btn-row"><input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span></div>
-<div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Play</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Stop</button></div>
 <div id="tracklist" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;"></div>
 <script>
 var trackNames=['Sweden','Wet Hands','Mice on Venus','Haggstrom','Living Mice','Subwoofer Lullaby','Danny','Dry Hands','Clark','Minecraft Calm'];
@@ -1395,34 +1468,25 @@ void handleCmd() {
     logMsg("[WEB] Vibration motor OFF");
     server.send(200, "text/plain", "OK: Motor OFF");
   } else if (c == "mon") {
-    // Music on — play current jukebox track
-    if (dfPlayerReady) {
-      dfPlayer.enableLoop();
-      dfPlayer.playFolder(3, jukeboxTrack);
-      musicPlaying = true;
-      logMsgf("[SOUND] Music ON — track %d", jukeboxTrack);
-    }
+    // Music on — play current jukebox track (auto-advances when it ends)
+    startBackgroundMusic();
     server.send(200, "text/plain", "OK: Music ON");
   } else if (c == "moff") {
-    // Music off
+    // Music off — stays off (idle restart is suppressed until next activity)
     if (dfPlayerReady) {
       dfPlayer.disableLoop();
       dfPlayer.stop();
       musicPlaying = false;
-      logMsg("[SOUND] Music OFF");
+      musicStoppedByUser = true;
+      logMsg("[SOUND] Music OFF (by user)");
     }
     server.send(200, "text/plain", "OK: Music OFF");
   } else if (c.startsWith("trk")) {
-    // Play specific track: trk1, trk2, ..., trk10
+    // Play specific track: trk1, trk2, ..., trk10 (auto-advances afterward)
     int trackNum = c.substring(3).toInt();
     if (trackNum >= 1 && trackNum <= JUKEBOX_NUM_TRACKS) {
       jukeboxTrack = trackNum;
-      if (dfPlayerReady) {
-        dfPlayer.enableLoop();
-        dfPlayer.playFolder(3, trackNum);
-        musicPlaying = true;
-      }
-      logMsgf("[SOUND] Playing track %d", trackNum);
+      startBackgroundMusic();
       server.send(200, "text/plain", "OK: Track " + String(trackNum));
     } else {
       server.send(400, "text/plain", "Invalid track number");
@@ -1861,10 +1925,10 @@ void setup() {
     dfPlayer.volume(30);
     dfPlayerReady = true;
     logMsg("[SOUND] DFPlayer OK, volume 30/30");
-    // Start background music (sweden — folder 03, track 001, looping)
-    dfPlayer.enableLoop();
-    dfPlayer.playFolder(3, 1);
-    logMsg("[SOUND] Background music started (folder 03/001 — looping)");
+    // Start background music (folder 03, track 001). Plays once; the main loop
+    // auto-advances to the next track when each one finishes.
+    jukeboxTrack = 1;
+    startBackgroundMusic();
   } else {
     logMsg("[SOUND] DFPlayer NOT FOUND - sounds disabled");
   }
@@ -1937,6 +2001,9 @@ void loop() {
   // ----- WEB SERVER -----
   server.handleClient();
 
+  // ----- BACKGROUND MUSIC SERVICE (auto-advance + idle restart) -----
+  serviceBackgroundMusic();
+
   // ----- SERIAL COMMANDS -----
   if (Serial.available()) {
     char c = Serial.read();
@@ -1961,7 +2028,8 @@ void loop() {
       // Touch just started — play start sound
       touchStartMs = millis();
       craftTriggered = false;
-      if (dfPlayerReady) dfPlayer.playFolder(2, 3);  // Folder 02, track 003 = toast_in
+      noteActivity();
+      if (dfPlayerReady) { musicPlaying = false; dfPlayer.playFolder(2, 3); }  // Folder 02/003 = toast_in
       logMsgf("[TOUCH] Touched (val=%d) — hold 2s to craft", touchVal);
     }
 
@@ -2017,6 +2085,7 @@ void loop() {
 
     if (tagPresent && !slotActive[i]) {
       slotActive[i] = true;
+      noteActivity();  // A block was placed — resets the idle-restart timer
 
       // Store UID
       String uidHex = uidToHexString(uid, uidLen);
@@ -2048,28 +2117,26 @@ void loop() {
         playSound(i + 1);
       }
 
-      // Jukebox mode: Steve figurine cycles background music
+      // Jukebox mode: Steve figurine jumps background music to the next track
       if (slotType[i] == "steve" && slotUid[i] != lastSteveUid) {
         lastSteveUid = slotUid[i];
-        logMsgf("[JUKEBOX] Steve detected! Playing track %d/10", jukeboxTrack);
-        if (dfPlayerReady) {
-          dfPlayer.enableLoop();
-          delay(50);
-          dfPlayer.playFolder(3, jukeboxTrack);
-          musicPlaying = true;
-        }
-        // Advance to next track for next placement
-        jukeboxTrack = (jukeboxTrack % JUKEBOX_NUM_TRACKS) + 1;
+        noteActivity();
+        logMsg("[JUKEBOX] Steve detected — next track");
+        advanceBackgroundMusic();  // bump to next track and play it (auto-advances after)
       }
 
-      // Gold ingot: victory celebration on any slot
-      if (slotType[i] == "gold_ingot") {
-        logMsg("[SCAN] Gold ingot — victory!");
+      // Gold ingot: victory celebration on any slot — cycles folder 04 tracks {1, 3}
+      if (slotType[i] == "gold_ingot" && slotUid[i] != lastGoldUid) {
+        lastGoldUid = slotUid[i];
+        uint8_t goldTrack = GOLD_TRACKS[goldTrackIdx];
+        logMsgf("[SCAN] Gold ingot — victory! Playing folder 04 track %d", goldTrack);
         if (dfPlayerReady) {
           dfPlayer.disableLoop();
           musicPlaying = false;
-          dfPlayer.playFolder(2, 4);  // Folder 02, track 004 = victory fanfare
+          dfPlayer.playFolder(4, goldTrack);  // Folder 04, tracks 001/003 (cycled)
         }
+        // Advance to next track for the next placement
+        goldTrackIdx = (goldTrackIdx + 1) % GOLD_NUM_TRACKS;
         victoryFlash();
       }
 
@@ -2084,17 +2151,15 @@ void loop() {
         explosionFlash();  // Fuse spark animation (2.8s) + explosion flash, synced to audio
       }
 
-      // Dragon egg: play one of three songs (cycles) + purple shimmer on any slot
+      // Dragon egg: play its song (folder 04, track 002) + purple shimmer on any slot
       if (slotType[i] == "dragon_egg" && slotUid[i] != lastDragonEggUid) {
         lastDragonEggUid = slotUid[i];
-        logMsgf("[SCAN] Dragon egg — playing song %d/%d", dragonEggTrack, DRAGON_EGG_NUM_TRACKS);
+        logMsg("[SCAN] Dragon egg — playing folder 04 track 2");
         if (dfPlayerReady) {
           dfPlayer.disableLoop();
           musicPlaying = false;
-          dfPlayer.playFolder(4, dragonEggTrack);  // Folder 04, tracks 001-003 = dragon songs
+          dfPlayer.playFolder(4, 2);  // Folder 04, track 002 = dragon egg song
         }
-        // Advance to next song for the next placement
-        dragonEggTrack = (dragonEggTrack % DRAGON_EGG_NUM_TRACKS) + 1;
         dragonEggFlash();
       }
 
@@ -2115,6 +2180,10 @@ void loop() {
       // Clear dragon egg state if the egg was removed
       if (slotType[i] == "dragon_egg") {
         lastDragonEggUid = "";
+      }
+      // Clear gold state if the gold ingot was removed
+      if (slotType[i] == "gold_ingot") {
+        lastGoldUid = "";
       }
       slotActive[i] = false;
       slotUid[i] = "";
