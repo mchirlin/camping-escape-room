@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="3in" height="3in" viewBox="0 0 76.2 76.2">
+  <!-- Speaker Hole Pattern - 1.5" diameter (38.1mm) -->
+  <!-- Print at 100% scale, drill the small circles -->
+  
+  <!-- Center point of the design -->
+  <!-- Outer guide circle (1.5" = 38.1mm diameter) -->
+  <circle cx="38.1" cy="38.1" r="19.05" fill="none" stroke="#999" stroke-width="0.3" stroke-dasharray="2,1"/>
+  
+  <!-- Drill holes pattern - 3mm holes in hexagonal pattern -->
+  <!-- Hole radius: 1.5mm (3mm drill bit) -->
+  
+  <!-- Center hole -->
+  <circle cx="38.1" cy="38.1" r="1.5" fill="black"/>
+  
+  <!-- Ring 1 - 6 holes at 8mm radius -->
+  <circle cx="46.1" cy="38.1" r="1.5" fill="black"/>
+  <circle cx="42.1" cy="45.04" r="1.5" fill="black"/>
+  <circle cx="34.1" cy="45.04" r="1.5" fill="black"/>
+  <circle cx="30.1" cy="38.1" r="1.5" fill="black"/>
+  <circle cx="34.1" cy="31.16" r="1.5" fill="black"/>
+  <circle cx="42.1" cy="31.16" r="1.5" fill="black"/>
+  
+  <!-- Ring 2 - 12 holes at 16mm radius -->
+  <circle cx="54.1" cy="38.1" r="1.5" fill="black"/>
+  <circle cx="52.05" cy="46.1" r="1.5" fill="black"/>
+  <circle cx="46.1" cy="51.95" r="1.5" fill="black"/>
+  <circle cx="38.1" cy="54.1" r="1.5" fill="black"/>
+  <circle cx="30.1" cy="51.95" r="1.5" fill="black"/>
+  <circle cx="24.15" cy="46.1" r="1.5" fill="black"/>
+  <circle cx="22.1" cy="38.1" r="1.5" fill="black"/>
+  <circle cx="24.15" cy="30.1" r="1.5" fill="black"/>
+  <circle cx="30.1" cy="24.25" r="1.5" fill="black"/>
+  <circle cx="38.1" cy="22.1" r="1.5" fill="black"/>
+  <circle cx="46.1" cy="24.25" r="1.5" fill="black"/>
+  <circle cx="52.05" cy="30.1" r="1.5" fill="black"/>
+  
+  <!-- Crosshairs for alignment -->
+  <line x1="38.1" y1="15" x2="38.1" y2="18" stroke="#666" stroke-width="0.2"/>
+  <line x1="38.1" y1="58.2" x2="38.1" y2="61.2" stroke="#666" stroke-width="0.2"/>
+  <line x1="15" y1="38.1" x2="18" y2="38.1" stroke="#666" stroke-width="0.2"/>
+  <line x1="58.2" y1="38.1" x2="61.2" y2="38.1" stroke="#666" stroke-width="0.2"/>
+  
+  <!-- Label -->
+  <text x="38.1" y="70" font-family="Arial" font-size="3" text-anchor="middle" fill="#333">1.5" speaker - 3mm holes</text>
+</svg>

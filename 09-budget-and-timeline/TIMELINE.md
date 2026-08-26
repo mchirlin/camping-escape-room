@@ -14,8 +14,8 @@ Do this NOW so shipping doesn't block you later.
 - [x] JST-XH connectors (4-pin headers x9, 3-pin headers x4)
 - [x] Screw terminals (2-pin 5.08mm x3)
 - [x] Pin sockets (1x15 x2, 1x12 x4, 1x8 x2)
-- [ ] Barrel jack (PJ-002A, 5.5x2.1mm horizontal THT)
-- [ ] 1000µF 10V electrolytic cap (Rubycon 10ZLH1000MEFC10X12.5)
+- [x] Barrel jack (PJ-002A, 5.5x2.1mm horizontal THT)
+- [x] 1000µF 10V electrolytic cap (Rubycon 10ZLH1000MEFC10X12.5)
 - [x] Resistor kit (10kΩ, 4.7kΩ x2, 300Ω, 1kΩ — axial through-hole)
 - [x] 1N5819 Schottky diode DO-41
 - [x] Pin header 1x9
@@ -46,13 +46,13 @@ Do this NOW so shipping doesn't block you later.
 **Crafting Table Finishing:**
 - [x] 2.5' square of camel pleather
 - [x] 3" strips of dark brown pleather
-- [ ] 1'×1' frosted acrylic
-- [ ] Danish oil (for wood planks — natural finish)
-- [ ] Watered-down acrylic paints (for pixel color variation on planks)
-- [ ] Wood stain — dark (espresso) for plywood backing panels
+- [x] 1'×1' frosted acrylic
+- [x] Danish oil (for wood planks — natural finish)
+- [x] Watered-down acrylic paints (for pixel color variation on planks)
+- [x] Wood stain — dark (espresso) for plywood backing panels
 
 **3D Printing Supplies:**
-- [ ] Black PLA filament (1-2 spools)
+- [x] Black PLA filament (1-2 spools)
 - [x] Matte clear coat spray
 
 **Paint & Paper:**
@@ -64,14 +64,14 @@ Do this NOW so shipping doesn't block you later.
 - [ ] 1/4" plywood sheet (for wooden prop cutouts)
 - [ ] Cardboard boxes for creeper (free — grocery store)
 - [ ] Waterproof container for buried treasure
-- [ ] Waterproof container for TNT chest
-- [ ] Chain or tape for TNT chest lock
+- [x] Waterproof container for TNT chest
+- [x] Chain or tape for TNT chest lock
 - [ ] Candy/treats for finale
 - [ ] Foam board for signs
 
 **Other:**
 - [x] Get a working ESP32 dev board
-- [ ] Get a map device (iPad mini 4+ or use phones)
+- [x] Get a map device (iPad mini 4+ or use phones)
 - [x] Source foam gold sword (ask friends, Amazon backup)
 
 ## Phase 2: PCB Design + 3D Print Test (Weeks 2-3 — May 5-16)

@@ -42,23 +42,6 @@ const MAP_COLORS: Record<TerrainType, string> = {
 export const TILE_SCREEN_SIZE = 32;
 
 /**
- * Compute the quadrant key ("qx,qy") for a world position given a map level and size fraction.
- * Returns null if the position is outside the grid.
- */
-export function getQuadrantKey(
-  worldPos: WorldPosition,
-  fullGridCols: number,
-  fullGridRows: number,
-  mapSizeFraction: number
-): string {
-  const quadWorldW = Math.round(fullGridCols * mapSizeFraction) * TILE_SCREEN_SIZE;
-  const quadWorldH = Math.round(fullGridRows * mapSizeFraction) * TILE_SCREEN_SIZE;
-  const qx = Math.floor(worldPos.x / quadWorldW);
-  const qy = Math.floor(worldPos.y / quadWorldH);
-  return `${qx},${qy}`;
-}
-
-/**
  * Visible tile range returned by viewport culling.
  * All values are inclusive grid indices clamped to [0, gridSize-1].
  */
@@ -159,9 +142,7 @@ export class TileRenderer {
     mapLevel: number,
     isLevel4Revealed: (col: number, row: number) => boolean,
     playerPos: WorldPosition | null,
-    playerHeading = 0,
-    mapSizeFraction = 1.0,
-    discoveredQuadrants: Set<string> | null = null
+    playerHeading = 0
   ): void {
     if (!this.terrainData || !this.atlas) return;
 
@@ -175,19 +156,11 @@ export class TileRenderer {
     const fullGridCols = zoomData.cols;
     const fullGridRows = zoomData.rows;
 
-    // Quadrant size in grid tiles at this map level
-    const quadCols = Math.round(fullGridCols * mapSizeFraction);
-    const quadRows = Math.round(fullGridRows * mapSizeFraction);
-
     const tileWorldSize = TILE_SCREEN_SIZE * Math.pow(2, 4 - mapLevel);
     const scale = Math.pow(2, viewport.zoomLevel);
     const tileScreenPx = tileWorldSize * scale;
     const subTilesPerAxis = Math.round(Math.pow(2, 4 - mapLevel));
     const subTileScreenPx = TILE_SCREEN_SIZE * scale;
-
-    // Quadrant dimensions in world pixels
-    const quadWorldW = quadCols * tileWorldSize;
-    const quadWorldH = quadRows * tileWorldSize;
 
     const viewLeft = viewport.centerX - (viewport.screenWidth / scale) / 2;
     const viewTop = viewport.centerY - (viewport.screenHeight / scale) / 2;
@@ -212,25 +185,6 @@ export class TileRenderer {
       ctx.translate(-pivotX, -pivotY);
     }
 
-    // Determine which quadrants are visible (quadrant grid covers the full terrain)
-    // Quadrant (qx, qy) covers grid cols [qx*quadCols .. (qx+1)*quadCols-1]
-    const numQuadX = Math.ceil(fullGridCols / quadCols);
-    const numQuadY = Math.ceil(fullGridRows / quadRows);
-
-    // Viewport bounds in world pixels (with extra margin for rotation)
-    const extraWorld = playerHeading !== 0
-      ? Math.max(viewport.screenWidth, viewport.screenHeight) / scale / 2
-      : 0;
-    const visLeft = viewLeft - extraWorld;
-    const visTop = viewTop - extraWorld;
-    const visRight = viewLeft + viewport.screenWidth / scale + extraWorld;
-    const visBottom = viewTop + viewport.screenHeight / scale + extraWorld;
-
-    const minQX = Math.max(0, Math.floor(visLeft / quadWorldW));
-    const maxQX = Math.min(numQuadX - 1, Math.floor(visRight / quadWorldW));
-    const minQY = Math.max(0, Math.floor(visTop / quadWorldH));
-    const maxQY = Math.min(numQuadY - 1, Math.floor(visBottom / quadWorldH));
-
     // 2. (Map background texture removed — uniform brown parchment is the background now)
 
     // Expand tile range to cover rotated view (render extra tiles around edges)
@@ -243,13 +197,6 @@ export class TileRenderer {
 
     for (let row = range.minRow; row <= range.maxRow; row++) {
       for (let col = range.minCol; col <= range.maxCol; col++) {
-        // Skip tiles in undiscovered quadrants
-        if (discoveredQuadrants) {
-          const qx = Math.floor(col / quadCols);
-          const qy = Math.floor(row / quadRows);
-          if (!discoveredQuadrants.has(`${qx},${qy}`)) continue;
-        }
-
         const screenX = (col * tileWorldSize - viewLeft) * scale;
         const screenY = (row * tileWorldSize - viewTop) * scale;
 

@@ -389,7 +389,9 @@ WebServer server(80);
 bool readerOk[NUM_SLOTS];
 bool slotActive[NUM_SLOTS];        // Tag currently present on slot
 bool dfPlayerReady = false;
-bool musicPlaying = true;           // Background music state
+bool musicPlaying = true;           // Background music is the current audio
+bool celebrationPlaying = false;    // A long one-shot song (gold/dragon) is playing;
+                                    // suppresses idle restart until it finishes
 bool currentTouchState = false;    // Exposed for web status
 int currentTouchVal1 = 0;          // Raw touch value pad 1
 int currentTouchVal2 = 0;          // Raw touch value pad 2
@@ -862,6 +864,7 @@ void startBackgroundMusic() {
   dfPlayer.disableLoop();
   dfPlayer.playFolder(3, jukeboxTrack);
   musicPlaying = true;
+  celebrationPlaying = false;
   musicStoppedByUser = false;
   lastActivityMs = millis();
   logMsgf("[SOUND] Background music playing — track %d/%d", jukeboxTrack, JUKEBOX_NUM_TRACKS);
@@ -871,6 +874,18 @@ void startBackgroundMusic() {
 void advanceBackgroundMusic() {
   jukeboxTrack = (jukeboxTrack % JUKEBOX_NUM_TRACKS) + 1;
   startBackgroundMusic();
+}
+
+// Play a long one-shot celebration song (gold ingot / dragon egg) from the
+// given folder/track. Unlike a short effect, the idle timer will NOT interrupt
+// this — it's allowed to play to completion, after which background music
+// resumes on the normal idle timer.
+void playCelebrationSong(uint8_t folder, uint8_t track) {
+  if (!dfPlayerReady) return;
+  dfPlayer.disableLoop();
+  musicPlaying = false;
+  celebrationPlaying = true;
+  dfPlayer.playFolder(folder, track);
 }
 
 // Called every loop. Handles two things:
@@ -886,17 +901,23 @@ void serviceBackgroundMusic() {
   while (dfPlayer.available()) {
     uint8_t type = dfPlayer.readType();
     if (type == DFPlayerPlayFinished) {
-      if (musicPlaying) {
+      if (celebrationPlaying) {
+        // A long celebration song (gold/dragon) finished — let the idle timer
+        // bring background music back after a quiet spell.
+        celebrationPlaying = false;
+        lastActivityMs = millis();
+      } else if (musicPlaying) {
         // A background track finished — roll to the next one in sequence.
         advanceBackgroundMusic();
       }
-      // If an effect finished (musicPlaying == false), do nothing here; the
-      // idle timer below will bring background music back after a quiet spell.
+      // If a short effect finished (musicPlaying == false), do nothing here;
+      // the idle timer below brings background music back after a quiet spell.
     }
   }
 
-  // Idle restart: quiet for long enough, and not deliberately stopped.
-  if (!musicPlaying && !musicStoppedByUser &&
+  // Idle restart: quiet long enough, not deliberately stopped, and no long
+  // celebration song currently playing (those must finish uninterrupted).
+  if (!musicPlaying && !celebrationPlaying && !musicStoppedByUser &&
       (millis() - lastActivityMs >= MUSIC_IDLE_MS)) {
     logMsg("[SOUND] Idle timeout — resuming background music");
     startBackgroundMusic();
@@ -906,7 +927,8 @@ void serviceBackgroundMusic() {
 void playSound(uint8_t track) {
   if (dfPlayerReady) {
     dfPlayer.disableLoop();
-    musicPlaying = false;  // A one-shot effect is now playing (not background music)
+    musicPlaying = false;       // A one-shot effect is now playing (not background music)
+    celebrationPlaying = false; // ...and it's short, so the idle timer governs resume
     dfPlayer.playFolder(1, 1);  // Folder 01, track 001 = block_place
   }
 }
@@ -915,6 +937,7 @@ void playCraftSound(uint8_t recipeIndex) {
   if (dfPlayerReady) {
     dfPlayer.disableLoop();
     musicPlaying = false;
+    celebrationPlaying = false;
     dfPlayer.playFolder(2, 4);  // Folder 02, track 004 = victory fanfare (craft success)
   }
 }
@@ -922,7 +945,8 @@ void playCraftSound(uint8_t recipeIndex) {
 void playErrorSound() {
   if (dfPlayerReady) {
     dfPlayer.disableLoop();
-    musicPlaying = false;  // A one-shot effect is now playing (not background music)
+    musicPlaying = false;       // A one-shot effect is now playing (not background music)
+    celebrationPlaying = false;
     dfPlayer.playFolder(2, 2);  // Folder 02, track 002 = craft_fail
   }
 }
@@ -1477,6 +1501,7 @@ void handleCmd() {
       dfPlayer.disableLoop();
       dfPlayer.stop();
       musicPlaying = false;
+      celebrationPlaying = false;
       musicStoppedByUser = true;
       logMsg("[SOUND] Music OFF (by user)");
     }
@@ -2029,7 +2054,7 @@ void loop() {
       touchStartMs = millis();
       craftTriggered = false;
       noteActivity();
-      if (dfPlayerReady) { musicPlaying = false; dfPlayer.playFolder(2, 3); }  // Folder 02/003 = toast_in
+      if (dfPlayerReady) { musicPlaying = false; celebrationPlaying = false; dfPlayer.playFolder(2, 3); }  // Folder 02/003 = toast_in
       logMsgf("[TOUCH] Touched (val=%d) — hold 2s to craft", touchVal);
     }
 
@@ -2130,11 +2155,7 @@ void loop() {
         lastGoldUid = slotUid[i];
         uint8_t goldTrack = GOLD_TRACKS[goldTrackIdx];
         logMsgf("[SCAN] Gold ingot — victory! Playing folder 04 track %d", goldTrack);
-        if (dfPlayerReady) {
-          dfPlayer.disableLoop();
-          musicPlaying = false;
-          dfPlayer.playFolder(4, goldTrack);  // Folder 04, tracks 001/003 (cycled)
-        }
+        playCelebrationSong(4, goldTrack);  // Folder 04, tracks 001/003 (cycled) — plays to completion
         // Advance to next track for the next placement
         goldTrackIdx = (goldTrackIdx + 1) % GOLD_NUM_TRACKS;
         victoryFlash();
@@ -2146,6 +2167,7 @@ void loop() {
         if (dfPlayerReady) {
           dfPlayer.disableLoop();
           musicPlaying = false;
+          celebrationPlaying = false;
           dfPlayer.playFolder(2, 6);  // Folder 02, track 006 = tnt_fuse + explosion (combined)
         }
         explosionFlash();  // Fuse spark animation (2.8s) + explosion flash, synced to audio
@@ -2155,11 +2177,7 @@ void loop() {
       if (slotType[i] == "dragon_egg" && slotUid[i] != lastDragonEggUid) {
         lastDragonEggUid = slotUid[i];
         logMsg("[SCAN] Dragon egg — playing folder 04 track 2");
-        if (dfPlayerReady) {
-          dfPlayer.disableLoop();
-          musicPlaying = false;
-          dfPlayer.playFolder(4, 2);  // Folder 04, track 002 = dragon egg song
-        }
+        playCelebrationSong(4, 2);  // Folder 04, track 002 = dragon egg song — plays to completion
         dragonEggFlash();
       }
 

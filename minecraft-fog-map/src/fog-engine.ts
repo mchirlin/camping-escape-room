@@ -381,18 +381,10 @@ export class FogEngine {
     if (newKeys.length > 0) {
       this.propagateToCoarserLevels(newKeys);
       this.persistToStorage();
-      // Notify listener so the UI can mark these tiles' quadrants as discovered
-      this.onRemoteReveal?.(newKeys);
     }
 
     return added;
   }
-
-  /**
-   * Called when tiles are revealed remotely (from another player via Firebase).
-   * Receives the list of newly-revealed level-4 tile keys.
-   */
-  onRemoteReveal: ((newLevel4Keys: string[]) => void) | null = null;
 
   /**
    * Load fog state from Firebase for the configured region.

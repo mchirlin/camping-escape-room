@@ -51,9 +51,7 @@
   - [x] Matte clear coat spray
 - [ ] **Props & materials**
   - [x] Neodymium disc magnets (for fishing rod)
-  - [ ] Parchment paper (recipe scrolls)
-  - [ ] Spray paint — diamond blue/teal (shovel)
-  - [ ] Green wrapping paper (creeper)
+  - [x] Green wrapping paper (creeper)
   - [x] Cardboard boxes for creeper
   - [x] Waterproof container for buried treasure
   - [x] Chain or tape for TNT chest lock
@@ -84,7 +82,7 @@
 - [x] Design block model with NTAG215 cavity (pause-at-layer method)
 - [x] Design item model (half-height) with NTAG215 cavity
 - [x] Test print one block + one item with embedded NFC tag — verify read range
-- [ ] **Ender Dragon Egg** — print and paint (keepsake quality)
+- [x] **Ender Dragon Egg** — print and paint (keepsake quality)
 
 ## 🎨 Block Finishing
 
@@ -92,7 +90,7 @@
 - [x] Print textures on vinyl sticker paper
 - [x] Cut to 3" squares (6 faces per block, 5 visible)
 - [x] Apply stickers to all printed blocks
-- [ ] Acrylic over all stickers
+- [x] Acrylic over all stickers
 
 ## 🔌 Crafting Table — PCB
 
@@ -262,13 +260,13 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 - [x] Multiplayer avatar sync via Firebase
 - [x] NFC scan to place/collect markers
 - [x] Place markers on real-world map for block hiding spots
-- [ ] Place markers for key locations (mine, quarry, cave, creeper, villager)
-- [ ] Test on iPad (Safari, performance)
+- [x] Place markers for key locations (mine, quarry, cave, creeper, villager)
+- [x] Test on iPad (Safari, performance)
 - [ ] Test GPS tracking at campsite
-- [ ] Test shared fog of war (Firebase sync):
-  - [ ] Two devices reveal simultaneously — both see each other's fog cleared in real-time
-  - [ ] Kill and reopen app — fog state persists from Firebase
-  - [ ] Reset fog on admin — clears for all connected devices
+- [x] Test shared fog of war (Firebase sync):
+  - [x] Two devices reveal simultaneously — both see each other's fog cleared in real-time
+  - [x] Kill and reopen app — fog state persists from Firebase
+  - [x] Reset fog on admin — clears for all connected devices
   - [ ] Test with spotty connection — localStorage fallback works
 - [x] Test map viewport clamping (can't scroll past map edge)
 - [x] Test background color (uniform brown #d6be96, no black, no tiled border texture)
@@ -311,26 +309,26 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
 
 - [ ] Wife playtest — full walkthrough at home
 - [ ] Pack checklist:
-  - [ ] Crafting table + DeWalt battery + buck converter
-  - [ ] All 54 blocks/items (in labeled bags by step)
+  - [x] Crafting table + DeWalt battery + buck converter
+  - [ ] All 51 blocks/items (in labeled bags by step)
     - [ ] 4 Wood Plank (start area)
-    - [ ] 11 Stick (scattered)
+    - [ ] 9 Stick (3 start area + 2 tent + 3 across waypoints + 1 stream tacklebox)
+    - [ ] 8 Paper (4 tent hollowed book + 4 final waypoint)
     - [ ] 6 Iron Ingot (4 tent + 2 quarry)
-    - [ ] 1 Redstone (tent pillow)
-    - [ ] 1 Coal (tent pillow)
-    - [ ] 3 Cobblestone (waypoint chest)
-    - [ ] 3 String (2 waypoint + 1 mine)
-    - [ ] 8 Paper (mine)
-    - [ ] 2 Copper Ingot (mine)
-    - [ ] 1 Compass block (crafted, then used in Map recipe)
-    - [ ] 3 Diamond (stream fishing)
-    - [ ] 1 Emerald (quarry)
-    - [ ] 1 Amethyst Shard (quarry)
+    - [ ] 5 Gunpowder (creeper drop)
     - [ ] 4 Sand (stream shore)
-    - [ ] 5 Gunpowder (creeper)
+    - [ ] 3 Diamond (stream fishing)
+    - [ ] 3 Cobblestone (spread across waypoints)
+    - [ ] 2 Copper Ingot (Old Mine)
+    - [ ] 2 String (1 mine spider + 1 stream tacklebox)
+    - [ ] 1 Redstone (tent pillow)
+    - [ ] 1 Coal (Old Mine)
+    - [ ] 1 Emerald (Ancient Quarry)
+    - [ ] 1 Amethyst Shard (villager trade, for emerald)
+    - [ ] 1 Compass block (crafted Step 2, consumed into Map recipe Step 6)
   - [ ] 10 recipe cards (Selphy prints)
   - [ ] Explorer's Journal (notebook with starter pages)
-  - [ ] 13 journal pages (to find throughout adventure)
+  - [ ] 12 journal pages (to find throughout adventure)
   - [ ] Direction cards for compass navigation (3-4 cards)
   - [ ] Physical props:
     - [ ] Cobblestone Pickaxe
@@ -344,20 +342,18 @@ Each door is a 2"×5"×9" block hinged at the bottom with a piano hinge, held cl
   - [ ] Wrapped Creeper boxes
   - [ ] Dragon egg + candy
   - [ ] Treasure chest + lock
-  - [ ] 6 lock-out signs (tent, mine, quarry, cave, creeper)
+  - [ ] 5 lock-out signs (tent, mine, quarry, cave, creeper)
   - [ ] Gold fishing target (waterproof container + magnet/washer)
   - [ ] iphone map holder
   - [ ] Phone with admin fog map app
   - [ ] Phone charger / power bank
-  - [ ] Spare blocks + tape + zip ties (field repairs)
-- [ ] Prep two treasure chests (for running twice)
+  - [ ] Screwdriver
 
 ## 🎮 Game Day Setup
 
-- [ ] Walk route — check for hazards, poison ivy
-- [ ] Check stream level
+- [ ] Walk route
 - [ ] Set up crafting table in tent + power on
-- [ ] Place treasure chest in tent (chained, "TNT Required" sign)
+- [ ] Place treasure chest in tent (locked)
 - [ ] Test all readers one more time
 - [ ] Hide blocks by step:
   - [ ] Start area: 4 wood planks + 3 sticks (easy to find)

@@ -655,51 +655,10 @@ async function main(): Promise<void> {
     { display: 2, internal: 2, sizeFraction: 1.0 },   // 512m = full map
   ];
 
-  // Track which map quadrants the player has stepped into (per display level)
-  const discoveredQuadrants = new Map<number, Set<string>>();
-  // Initialize empty sets so quadrants are hidden until discovered (null = show all)
-  for (const cfg of MAP_LEVEL_CONFIG) {
-    discoveredQuadrants.set(cfg.display, new Set());
-  }
-
-  // Mark the quadrant containing a given world position as discovered, for every display level.
-  const markQuadrantDiscovered = (worldX: number, worldY: number): void => {
-    for (const cfg of MAP_LEVEL_CONFIG) {
-      if (!discoveredQuadrants.has(cfg.display)) {
-        discoveredQuadrants.set(cfg.display, new Set());
-      }
-      const levelData = terrainData.zoomLevels.find((zl) => zl.level === cfg.internal);
-      if (levelData) {
-        const quadWorldW = Math.round(levelData.cols * cfg.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - cfg.internal);
-        const quadWorldH = Math.round(levelData.rows * cfg.sizeFraction) * TILE_SCREEN_SIZE * Math.pow(2, 4 - cfg.internal);
-        const qx = Math.floor(worldX / quadWorldW);
-        const qy = Math.floor(worldY / quadWorldH);
-        discoveredQuadrants.get(cfg.display)!.add(`${qx},${qy}`);
-      }
-    }
-  };
-
   const onPosition = (pos: GeoPosition): void => {
     fogEngine.reveal(pos, 15);
     playerWorldPos = geoToWorld(pos, bbox, level4Grid, TILE_SCREEN_SIZE);
     lastGeoPos = pos;
-    markQuadrantDiscovered(playerWorldPos.x, playerWorldPos.y);
-  };
-
-  // When fog is revealed remotely (another player via Firebase), mark those
-  // quadrants as discovered so the shared fog actually renders on this device.
-  fogEngine.onRemoteReveal = (newLevel4Keys: string[]) => {
-    for (const key of newLevel4Keys) {
-      // key format: "z4:col:row"
-      const parts = key.split(':');
-      const col = parseInt(parts[1], 10);
-      const row = parseInt(parts[2], 10);
-      if (Number.isNaN(col) || Number.isNaN(row)) continue;
-      // Convert the level-4 tile to world coords (tile center)
-      const worldX = (col + 0.5) * TILE_SCREEN_SIZE;
-      const worldY = (row + 0.5) * TILE_SCREEN_SIZE;
-      markQuadrantDiscovered(worldX, worldY);
-    }
   };
 
   // 10. Detect simulation mode and set up position source
@@ -830,7 +789,6 @@ async function main(): Promise<void> {
 
   let currentDisplayLevel = 0;
   let currentMapLevel = 4; // internal terrain grid level
-  let mapSizeFraction = 0.25; // fraction of the full map to show
   uiOverlay.setMapLevel(currentDisplayLevel);
 
   uiOverlay.onMapLevelChange = (displayLevel: number) => {
@@ -838,7 +796,6 @@ async function main(): Promise<void> {
     if (!config) return;
     currentDisplayLevel = displayLevel;
     currentMapLevel = config.internal;
-    mapSizeFraction = config.sizeFraction;
   };
 
   uiOverlay.onZoomIn = () => {
@@ -853,33 +810,10 @@ async function main(): Promise<void> {
 
   uiOverlay.onResetFog = () => {
     fogEngine.reset();
-    // Reset discovered quadrants to empty sets (not null — null means show all)
-    for (const cfg of MAP_LEVEL_CONFIG) {
-      discoveredQuadrants.set(cfg.display, new Set());
-    }
   };
 
   uiOverlay.onRevealAll = () => {
     fogEngine.revealAll();
-    // Discover all quadrants for every display level
-    for (const cfg of MAP_LEVEL_CONFIG) {
-      if (!discoveredQuadrants.has(cfg.display)) {
-        discoveredQuadrants.set(cfg.display, new Set());
-      }
-      const levelData = terrainData.zoomLevels.find((zl) => zl.level === cfg.internal);
-      if (levelData) {
-        const quadCols = Math.round(levelData.cols * cfg.sizeFraction);
-        const quadRows = Math.round(levelData.rows * cfg.sizeFraction);
-        const numQX = Math.ceil(levelData.cols / quadCols);
-        const numQY = Math.ceil(levelData.rows / quadRows);
-        const set = discoveredQuadrants.get(cfg.display)!;
-        for (let qy = 0; qy < numQY; qy++) {
-          for (let qx = 0; qx < numQX; qx++) {
-            set.add(`${qx},${qy}`);
-          }
-        }
-      }
-    }
   };
 
   uiOverlay.onHeadingChange = (degrees: number) => {
@@ -1464,7 +1398,7 @@ async function main(): Promise<void> {
 
     // When performance is degraded, skip player marker rendering
     const effectivePlayerPos = skipNonEssential ? null : playerWorldPos;
-    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading, mapSizeFraction, discoveredQuadrants.get(currentDisplayLevel) ?? null);
+    tileRenderer.render(ctx!, viewport, effectiveLevel, (c, r) => fogEngine.isRevealed(4, c, r), effectivePlayerPos, simHeading);
 
     // Render user-placed markers on revealed tiles
     if (!skipNonEssential) {

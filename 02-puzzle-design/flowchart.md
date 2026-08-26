@@ -398,7 +398,6 @@ flowchart TD
 - "⛏ Diamond Pickaxe Required" — Ancient Quarry
 - "🔥 Torch Required" — Dark Cave
 - "⚔ Iron Sword Required" — Creeper location
-- "💥 TNT Required" — Treasure chest (in tent, visible from Step 1)
 
 ---
 
