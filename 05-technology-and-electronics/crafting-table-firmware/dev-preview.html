@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<!--
+  Crafting Table — DEV PREVIEW
+  =============================================================================
+  Standalone demo of the crafting table control panel with an in-browser mock
+  backend. Open this file directly in a browser (no ESP32, no WiFi needed) to
+  click through the UI: lock/unlock recipes, force-craft, register (fake) tags,
+  toggle simulated slots, music, etc.
+
+  This mirrors HTML_PAGE in crafting-table-firmware.ino. The markup, CSS, and
+  UI script are kept in sync with the firmware; only the network layer differs:
+  window.fetch is replaced by a mock that answers the same endpoints from
+  in-memory state. If you change the firmware UI, mirror the change here.
+  =============================================================================
+-->
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crafting Table (Dev Preview)</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',monospace;background:#1a1a1a;color:#a0a0a0;padding:12px;max-width:480px;margin:0 auto}
+h1{color:#5b8731;font-size:1.4em;text-align:center;margin-bottom:8px;text-shadow:2px 2px #000;letter-spacing:2px}
+.subtitle{text-align:center;color:#6b5b3a;font-size:0.8em;margin-bottom:16px}
+.devbar{background:#3a2a00;border:1px solid #8b6914;color:#e0b040;font-size:0.7em;text-align:center;padding:5px;margin-bottom:12px;letter-spacing:1px}
+.tabs{display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #333}
+.tab{flex:1;padding:10px 4px;text-align:center;cursor:pointer;color:#666;font-size:0.85em;font-weight:bold;border-bottom:2px solid transparent;margin-bottom:-2px}
+.tab.active{color:#5b8731;border-bottom-color:#5b8731}
+.panel{display:none}
+.panel.active{display:block}
+.btn-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+button{flex:1;min-width:100px;min-height:52px;border:3px solid #3d3d3d;background:#2d2d2d;color:#c8c8c8;font-family:'Courier New',monospace;font-size:1em;font-weight:bold;cursor:pointer;border-radius:0}
+button:active{background:#5b8731;color:#fff;border-color:#7ec842}
+.btn-light{border-color:#5b8731}
+.btn-crawl{border-color:#6b5b3a}
+.btn-off{border-color:#8b2020}
+.btn-motor{border-color:#8b6914}
+.btn-motor.vibe{border-color:#6b4fa5}
+.btn-refresh{border-color:#4a6fa5;min-width:60px;flex:0}
+.btn-reg{border-color:#4a9fa5}
+.btn-reset{border-color:#cc4400;background:#3a1a00;color:#ff8844}
+h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;padding-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:12px}
+.slot{background:#2a2a2a;border:2px solid #333;padding:8px;text-align:center;font-size:0.8em;min-height:50px;cursor:pointer}
+.slot.active{border-color:#5b8731;background:#2d3d20;color:#7ec842}
+.slot.no-reader{border-color:#4a1a1a;color:#666}
+.slot .stype{font-size:0.7em;color:#8b8;margin-top:2px}
+.slot .stype.unreg{color:#b86}
+.info{font-size:0.75em;color:#666;margin-bottom:8px}
+.info span{margin-right:12px}
+.info .on{color:#5b8731}
+.info .off{color:#8b2020}
+.reg-box{background:#222;border:1px solid #4a9fa5;padding:10px;margin-bottom:12px}
+.reg-box select{background:#1a1a1a;color:#c8c8c8;border:1px solid #555;padding:4px;font-family:monospace;width:100%;margin:6px 0}
+.reg-box .result{font-size:0.75em;margin-top:6px;min-height:1.2em;color:#8b8}
+.reg-box .result.err{color:#b44}
+.rcard{background:#222;border:1px solid #444;padding:6px}
+.rcard.locked{border-color:#8b2020}
+.rcard.unlocked{border-color:#5b8731}
+.rcard .rhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rcard .rname{font-size:0.75em;color:#5b8731;font-weight:bold}
+.rcard .rbadge{font-size:0.6em;padding:1px 5px;border:1px solid;border-radius:2px;text-transform:uppercase;letter-spacing:1px}
+.rcard .rbadge.locked{color:#e08080;border-color:#8b2020;background:#2a1414}
+.rcard .rbadge.unlocked{color:#7ec842;border-color:#5b8731;background:#1d2913}
+.rcard .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:5px}
+.rcard .rcell{padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa}
+.rcard .ract{display:flex;gap:3px}
+.rcard .ract button{flex:1;min-width:0;min-height:28px;font-size:0.6em;padding:2px;border-width:2px}
+.rcard .b-lock{border-color:#8b2020}
+.rcard .b-unlock{border-color:#5b8731}
+.rcard .b-craft{border-color:#4a9fa5;color:#7ecfd6}
+#log{background:#111;border:1px solid #333;padding:8px;height:180px;overflow-y:auto;font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
+</style></head><body>
+<h1>&#x2B1C; Crafting Table</h1>
+<p class="subtitle">Escape Room Control Panel</p>
+<div class="devbar">DEV PREVIEW — mock backend, no hardware connected</div>
+<div class="tabs">
+<div class="tab active" onclick="showTab(0)">Game</div>
+<div class="tab" onclick="showTab(1)">Admin</div>
+<div class="tab" onclick="showTab(2)">Test</div>
+</div>
+<div class="panel active" id="tab0">
+<h2>Slot Status</h2>
+<div class="grid" id="grid"></div>
+<div class="info"><span>Touch1: <span id="tv1" class="off">-</span></span><span>Touch2: <span id="tv2" class="off">-</span></span></div>
+<h2>Recipes</h2>
+<p style="font-size:0.7em;color:#666;margin-bottom:8px">Each recipe shows its state. Lock/Unlock to control whether the table will craft it; Craft force-fires it (door + sound + lights) if a piece is lost.</p>
+<div id="recipes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:12px"></div>
+<div class="btn-row"><button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game (unlock all)</button></div>
+</div>
+<div class="panel" id="tab1">
+<h2>Register Tags</h2>
+<div class="reg-box">
+<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
+<p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
+<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="dragon_egg">dragon_egg</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tnt">tnt</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
+<div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
+<div class="result" id="regres"></div>
+</div>
+<h2>Music</h2>
+<div class="btn-row"><input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span></div>
+<div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Play</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Stop</button></div>
+<div id="tracklist" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;"></div>
+<script>
+var trackNames=['Sweden','Wet Hands','Mice on Venus','Haggstrom','Living Mice','Subwoofer Lullaby','Danny','Dry Hands','Clark','Minecraft Calm'];
+var currentTrackNum=0;
+function buildTracks(){var h='';for(var i=0;i<trackNames.length;i++){var n=i+1;var cls=n===currentTrackNum?'background:#5b8731;color:#fff;border-color:#5b8731':'background:#333;color:#aaa;border-color:#555';h+='<button style="font-family:var(--mc-font,monospace);font-size:7px;padding:4px 6px;cursor:pointer;border:1px solid;border-radius:2px;'+cls+'" onclick="playTrack('+n+')">'+n+'. '+trackNames[i]+'</button>';}document.getElementById('tracklist').innerHTML=h;}
+function playTrack(n){fetch('/cmd?c=trk'+n).then(function(){currentTrackNum=n;buildTracks();});}
+buildTracks();
+</script>
+<h2>Status</h2>
+<div class="info"><span>DFPlayer: <span id="dfp" class="off">-</span></span></div>
+<h2>Log</h2>
+<div id="log">Connecting...</div>
+</div>
+<div class="panel" id="tab2">
+<h2>LED Tests</h2>
+<div class="btn-row"><button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button><button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button><button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button></div>
+<h2>Motors</h2>
+<div class="btn-row"><button class="btn-motor" onclick="cmd('sv0')">Servo 0</button><button class="btn-motor" onclick="cmd('sv1')">Servo 1</button><button class="btn-motor" onclick="cmd('sv2')">Servo 2</button></div>
+<div class="btn-row"><button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button><button class="btn-off" onclick="cmd('voff')">Vibe OFF</button></div>
+<div class="btn-row"><input type="range" id="mtr" min="0" max="255" value="0" style="flex:1;accent-color:#6b4fa5" oninput="setMtr(this.value)"><span id="mtrval" style="min-width:30px;text-align:center;color:#c8c8c8">0</span></div>
+<h2>Simulate Slots</h2>
+<p style="font-size:0.75em;color:#666;margin-bottom:8px">Tap to toggle LEDs:</p>
+<div class="grid" id="grid2"></div>
+</div>
+
+<!-- =========================================================================
+     MOCK BACKEND — replaces window.fetch. Answers the same endpoints the
+     firmware serves, from in-memory state. Keep endpoint shapes in sync with
+     the firmware handlers (handleStatus, handleRecipes, handleRecipeState,
+     handleCraft, handleCmd, handleReset, handleRegister, handleLog).
+     ========================================================================= -->
+<script>
+var MOCK = (function(){
+  // Recipes mirror RECIPES[] in the firmware (unique recipes, with raw index).
+  var RECIPES=[
+    {index:0,name:'Crafting Table',door:255,pattern:['wood_plank','wood_plank',null,'wood_plank','wood_plank',null,null,null,null]},
+    {index:4,name:'Compass',door:2,pattern:[null,'iron_ingot',null,'iron_ingot','redstone','iron_ingot',null,'iron_ingot',null]},
+    {index:5,name:'Stone Pickaxe',door:1,pattern:[null,'stick',null,null,'stick',null,'cobblestone','cobblestone','cobblestone']},
+    {index:6,name:'Map',door:255,pattern:['paper','paper','paper','paper','compass','paper','paper','paper','paper']},
+    {index:7,name:'Fishing Rod',door:2,pattern:['stick',null,'string',null,'stick','string',null,null,'stick']},
+    {index:8,name:'Diamond Pickaxe',door:0,pattern:[null,'stick',null,null,'stick',null,'diamond','diamond','diamond']},
+    {index:9,name:'Torch',door:1,pattern:[null,null,null,'stick',null,null,'coal',null,null]},
+    {index:15,name:'Iron Sword',door:2,pattern:[null,'stick',null,null,'iron_ingot',null,null,'iron_ingot',null]},
+    {index:16,name:'Spyglass',door:0,pattern:[null,'copper_ingot',null,null,'copper_ingot',null,null,'amethyst_shard',null]},
+    {index:17,name:'TNT',door:1,pattern:['gunpowder','sand','gunpowder','sand','gunpowder','sand','gunpowder','sand','gunpowder']},
+    {index:18,name:'Bow',door:255,pattern:[null,'stick','string','stick',null,'string',null,'stick','string']},
+    {index:19,name:'Crossbow',door:255,pattern:[null,'stick',null,'string','tripwire_hook','string','stick','iron_ingot','stick']}
+  ];
+  // state keyed by raw recipe index: 'locked' | 'unlocked'
+  var state={}; RECIPES.forEach(function(r){state[r.index]='unlocked';});
+  var slots=[false,false,false,false,false,false,false,false,false];
+  var types=[null,null,null,null,null,null,null,null,null];
+  var readers=[true,true,true,true,true,true,true,true,true];
+  var regSlotType=null;
+  var musicTrack=1, musicPlaying=true, volume=30, motorPwm=0;
+  var log=['[DEV] Mock backend ready — no hardware connected','[WIFI] AP CraftingTable (simulated)','[CRAFT] State loaded: 0 locked, 12 unlocked'];
+  var ABBR={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp','emerald':'emer','dragon_egg':'egg'};
+  function push(m){log.push(m);if(log.length>20)log.shift();}
+  function param(qs,k){var m=qs.match(new RegExp('[?&]'+k+'=([^&]*)'));return m?decodeURIComponent(m[1]):'';}
+  function statesArray(){return RECIPES.map(function(r){return state[r.index];});}
+  function findByIndex(i){for(var j=0;j<RECIPES.length;j++){if(RECIPES[j].index===i)return RECIPES[j];}return null;}
+  return {
+    handle:function(url){
+      var path=url.split('?')[0], qs=url.indexOf('?')>=0?url.slice(url.indexOf('?')):'';
+      if(path==='/status'){
+        return {json:{touch:false,touchVal1:900,touchVal2:900,
+          slots:slots,readers:readers,
+          types:slots.map(function(a,i){return a?(types[i]?ABBR[types[i]]||types[i]:null):null;}),
+          recipeStates:statesArray(),dfplayer:true,
+          regSlotType:(slots[4]?(types[4]||'unregistered'):null),
+          musicTrack:musicPlaying?musicTrack:0}};
+      }
+      if(path==='/recipes'){return {json:RECIPES};}
+      if(path==='/log'){return {json:log.slice()};}
+      if(path==='/recipestate'){
+        var r=parseInt(param(qs,'r'),10),s=param(qs,'s');
+        if((s==='locked'||s==='unlocked')&&findByIndex(r)){state[r]=s;push('[ADMIN] Recipe '+findByIndex(r).name+' -> '+s);return {json:{success:true,state:s}};}
+        return {json:{error:'invalid'}};
+      }
+      if(path==='/craft'){
+        var ci=parseInt(param(qs,'r'),10),rc=findByIndex(ci);
+        if(rc){state[ci]='locked';push('[ADMIN] Manual craft trigger: '+rc.name);push('[CRAFT] === RECIPE MATCHED: '+rc.name+' (door '+rc.door+') ===');return {json:{success:true,name:rc.name}};}
+        return {json:{error:'recipe not found'}};
+      }
+      if(path==='/reset'){RECIPES.forEach(function(r){state[r.index]='unlocked';});push('[GAME] === RESET === all recipes unlocked, doors closed');return {json:{success:true,message:'Game reset'}};}
+      if(path==='/register'){
+        var t=param(qs,'type');
+        if(slots[4]){types[4]=t;regSlotType=t;push('[REG] SUCCESS: written as '+t+' (simulated)');return {json:{success:true,type:t}};}
+        push('[REG] No tag detected on slot 4');return {json:{success:false,error:'no tag on slot 4'}};
+      }
+      if(path==='/volume'){volume=parseInt(param(qs,'v'),10)||0;push('[SOUND] Volume set to '+volume+'/30');return {text:'OK'};}
+      if(path==='/motor'){motorPwm=parseInt(param(qs,'pwm'),10)||0;push('[MOTOR] PWM set to '+motorPwm+'/255');return {text:'OK'};}
+      if(path==='/cmd'){
+        var c=param(qs,'c');
+        if(c.indexOf('s')===0&&c.length>1&&!isNaN(parseInt(c.slice(1),10))&&c.indexOf('sv')!==0){
+          var sl=parseInt(c.slice(1),10);
+          if(sl>=0&&sl<9){slots[sl]=!slots[sl];if(!slots[sl])types[sl]=null;push('[WEB] Slot '+sl+' '+(slots[sl]?'ON':'OFF'));}
+          return {text:'OK'};
+        }
+        if(c.indexOf('sv')===0){push('[SERVO] Sweeping servo '+c.slice(2));return {text:'OK: Servo sweep'};}
+        if(c==='mon'){musicPlaying=true;push('[SOUND] Music ON — track '+musicTrack);return {text:'OK'};}
+        if(c==='moff'){musicPlaying=false;push('[SOUND] Music OFF');return {text:'OK'};}
+        if(c.indexOf('trk')===0){musicTrack=parseInt(c.slice(3),10)||1;musicPlaying=true;push('[SOUND] Playing track '+musicTrack);return {text:'OK'};}
+        if(c==='von'){push('[WEB] Vibration motor ON');return {text:'OK'};}
+        if(c==='voff'){push('[WEB] Vibration motor OFF');return {text:'OK'};}
+        if(c==='L'){push('[LED TEST] Cycling all rings...');return {text:'OK'};}
+        if(c==='P'){push('[LED CRAWL] one pixel at a time...');return {text:'OK'};}
+        if(c==='off'){for(var i=0;i<9;i++){slots[i]=false;types[i]=null;}push('[WEB] All LEDs off');return {text:'OK'};}
+        return {text:'OK'};
+      }
+      return {status:404,text:'not found'};
+    }
+  };
+})();
+// Override fetch so the exact same UI script talks to the mock.
+window.fetch=function(url){
+  var res=MOCK.handle(url);
+  return Promise.resolve({
+    ok:(res.status||200)<400,
+    status:res.status||200,
+    json:function(){return Promise.resolve(res.json!==undefined?res.json:{});},
+    text:function(){return Promise.resolve(res.text!==undefined?res.text:JSON.stringify(res.json||''));}
+  });
+};
+</script>
+
+<!-- =========================================================================
+     UI SCRIPT — identical to the firmware's HTML_PAGE script.
+     ========================================================================= -->
+<script>
+function showTab(n){document.querySelectorAll('.tab').forEach((t,i)=>{t.className='tab'+(i===n?' active':'')});document.querySelectorAll('.panel').forEach((p,i)=>{p.className='panel'+(i===n?' active':'')});}
+function cmd(c){fetch('/cmd?c='+c).then(r=>r.text()).then(t=>{refresh()})}
+function setVol(v){document.getElementById('volval').textContent=v;fetch('/volume?v='+v);}
+function setMtr(v){document.getElementById('mtrval').textContent=v;fetch('/motor?pwm='+v);}
+function regTag(){let t=document.getElementById('btype').value;let el=document.getElementById('regres');el.textContent='Programming...';el.className='result';fetch('/register?type='+t).then(r=>r.json()).then(d=>{if(d.success){el.textContent='Written: '+d.type;el.className='result';}else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}refresh();}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});}
+function resetGame(){if(confirm('Unlock all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
+var recipeIndexOrder=[];
+function setState(idx,s){fetch('/recipestate?r='+idx+'&s='+s).then(r=>r.json()).then(function(){refresh();});}
+function forceCraft(idx,name){if(confirm('Force craft "'+name+'"? This opens the door and plays the sound/lights.')){fetch('/craft?r='+idx).then(r=>r.json()).then(function(){refresh();});}}
+var ABBR={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp','emerald':'emer','dragon_egg':'egg'};
+function buildRecipes(recipes){recipeIndexOrder=[];var h='';var order=[6,7,8,3,4,5,0,1,2];recipes.forEach(function(r){recipeIndexOrder.push(r.index);var door=(r.door<3)?('D'+r.door):'—';h+='<div class="rcard locked" id="rc'+r.index+'"><div class="rhead"><span class="rname">'+r.name+' ('+door+')</span><span class="rbadge locked" id="rb'+r.index+'">locked</span></div><div class="rgrid">';for(var k=0;k<9;k++){var i=order[k];var p=r.pattern[i];var bg=p?'#3a3a2a':'#1a1a1a';var txt=p?(ABBR[p]||p.slice(0,4)):'';h+='<div class="rcell" style="background:'+bg+'">'+txt+'</div>';}h+='</div><div class="ract"><button class="b-lock" onclick="setState('+r.index+',\'locked\')">Lock</button><button class="b-unlock" onclick="setState('+r.index+',\'unlocked\')">Unlock</button><button class="b-craft" onclick="forceCraft('+r.index+',\''+r.name.replace(/'/g,"")+'\')">Craft</button></div></div>';});document.getElementById('recipes').innerHTML=h;}
+function applyRecipeStates(states){if(!states)return;for(var i=0;i<recipeIndexOrder.length&&i<states.length;i++){var idx=recipeIndexOrder[i];var s=states[i];var card=document.getElementById('rc'+idx);var badge=document.getElementById('rb'+idx);if(card){card.className='rcard '+s;}if(badge){badge.className='rbadge '+s;badge.textContent=s;}}}
+function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}applyRecipeStates(d.recipeStates);if(typeof d.musicTrack!=='undefined'){currentTrackNum=d.musicTrack;buildTracks();}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
+fetch('/recipes').then(r=>r.json()).then(function(recipes){buildRecipes(recipes);setInterval(refresh,2000);refresh();});
+</script></body></html>

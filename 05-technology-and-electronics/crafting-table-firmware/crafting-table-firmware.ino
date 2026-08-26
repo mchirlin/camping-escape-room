@@ -67,7 +67,10 @@
 //     GET /status     — JSON status of slots, readers, touch, dfplayer, types
 //     GET /log        — JSON array of recent log messages
 //     GET /register?type=wood_plank — Read tag from slot 4, write type to tag
-//     GET /reset      — Reset game (clear crafted flags, close doors)
+//     GET /reset      — Reset game (all recipes unlocked, close doors)
+//     GET /recipes    — JSON array of recipes (index, name, door, pattern)
+//     GET /recipestate?r=N&s=locked|unlocked — Lock/unlock a recipe
+//     GET /craft?r=N  — Force-fire a recipe (door + sound + lights), ignores grid
 //
 // SD Card Sound Layout:
 //   Folder 01: slot placement sounds (tracks 001-009)
@@ -397,8 +400,10 @@ unsigned long touchStartMs = 0;    // When touch first detected (0 = not touchin
 bool craftTriggered = false;       // Prevents re-trigger while still holding
 bool wasTouched = false;           // Previous touch state for edge detection
 
-// Recipe state — three states: LOCKED (can't craft yet), UNLOCKED (ready to craft), COMPLETED
-enum RecipeState : uint8_t { RECIPE_LOCKED = 0, RECIPE_UNLOCKED = 1, RECIPE_COMPLETED = 2 };
+// Recipe state — two states: LOCKED (not craftable) and UNLOCKED (ready to craft).
+// A successful (or manually triggered) craft returns the recipe to LOCKED, which
+// both prevents an immediate re-fire and reads as "done" in the UI.
+enum RecipeState : uint8_t { RECIPE_LOCKED = 0, RECIPE_UNLOCKED = 1 };
 RecipeState recipeState[NUM_RECIPES];   // Persisted to flash via Preferences
 
 // Preferences for persistent state (survives power cycle)
@@ -1048,7 +1053,7 @@ String readTypeFromTag() {
 // Returns recipe index (0-5) if grid matches a recipe, or -1 if no match.
 int checkRecipes() {
   for (int r = 0; r < NUM_RECIPES; r++) {
-    // Skip locked or already-completed recipes
+    // Only unlocked recipes are craftable
     if (recipeState[r] != RECIPE_UNLOCKED) continue;
 
     bool match = true;
@@ -1080,12 +1085,13 @@ void executeCraft(int recipeIndex) {
   logMsgf("[CRAFT] === RECIPE MATCHED: %s (door %d) ===",
           RECIPES[recipeIndex].name, RECIPES[recipeIndex].doorIndex);
 
-  // Mark as completed (and all recipes in the same craftGroup)
-  recipeState[recipeIndex] = RECIPE_COMPLETED;
+  // Return to LOCKED (and all recipes in the same craftGroup). Locked means
+  // "not craftable right now" — prevents immediate re-fire and reads as done.
+  recipeState[recipeIndex] = RECIPE_LOCKED;
   if (RECIPES[recipeIndex].craftGroup >= 0) {
     for (int i = 0; i < NUM_RECIPES; i++) {
       if (RECIPES[i].craftGroup == RECIPES[recipeIndex].craftGroup) {
-        recipeState[i] = RECIPE_COMPLETED;
+        recipeState[i] = RECIPE_LOCKED;
       }
     }
   }
@@ -1243,9 +1249,21 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 .reg-box select{background:#1a1a1a;color:#c8c8c8;border:1px solid #555;padding:4px;font-family:monospace;width:100%;margin:6px 0}
 .reg-box .result{font-size:0.75em;margin-top:6px;min-height:1.2em;color:#8b8}
 .reg-box .result.err{color:#b44}
-.crafted{font-size:0.75em;color:#5b8731;margin-bottom:8px}
-.crafted span{display:inline-block;margin:2px 6px 2px 0;padding:2px 6px;background:#2d3d20;border:1px solid #5b8731}
-.crafted span.no{background:#2a2a2a;border-color:#333;color:#666}
+.rcard{background:#222;border:1px solid #444;padding:6px}
+.rcard.locked{border-color:#8b2020}
+.rcard.unlocked{border-color:#5b8731}
+.rcard .rhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rcard .rname{font-size:0.75em;color:#5b8731;font-weight:bold}
+.rcard .rbadge{font-size:0.6em;padding:1px 5px;border:1px solid;border-radius:2px;text-transform:uppercase;letter-spacing:1px}
+.rcard .rbadge.locked{color:#e08080;border-color:#8b2020;background:#2a1414}
+.rcard .rbadge.unlocked{color:#7ec842;border-color:#5b8731;background:#1d2913}
+.rcard .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-bottom:5px}
+.rcard .rcell{padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa}
+.rcard .ract{display:flex;gap:3px}
+.rcard .ract button{flex:1;min-width:0;min-height:28px;font-size:0.6em;padding:2px;border-width:2px}
+.rcard .b-lock{border-color:#8b2020}
+.rcard .b-unlock{border-color:#5b8731}
+.rcard .b-craft{border-color:#4a9fa5;color:#7ecfd6}
 #log{background:#111;border:1px solid #333;padding:8px;height:180px;overflow-y:auto;font-size:0.7em;line-height:1.4;white-space:pre-wrap;word-break:break-all}
 </style></head><body>
 <h1>&#x2B1C; Crafting Table</h1>
@@ -1260,10 +1278,19 @@ h2{color:#6b5b3a;font-size:1em;margin:12px 0 6px;border-bottom:1px solid #333;pa
 <div class="grid" id="grid"></div>
 <div class="info"><span>Touch1: <span id="tv1" class="off">-</span></span><span>Touch2: <span id="tv2" class="off">-</span></span></div>
 <h2>Recipes</h2>
-<div id="recipes" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px"></div>
-<h2>Game State</h2>
-<div class="crafted" id="crafted"></div>
-<div class="btn-row"><button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game</button></div>
+<p style="font-size:0.7em;color:#666;margin-bottom:8px">Each recipe shows its state. Lock/Unlock to control whether the table will craft it; Craft force-fires it (door + sound + lights) if a piece is lost.</p>
+<div id="recipes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:12px"></div>
+<div class="btn-row"><button class="btn-reset" onclick="resetGame()">&#x1F504; Reset Game (unlock all)</button></div>
+</div>
+<div class="panel" id="tab1">
+<h2>Register Tags</h2>
+<div class="reg-box">
+<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
+<p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
+<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="dragon_egg">dragon_egg</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tnt">tnt</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
+<div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
+<div class="result" id="regres"></div>
+</div>
 <h2>Music</h2>
 <div class="btn-row"><input type="range" id="vol" min="0" max="30" value="30" style="flex:1;accent-color:#5b8731" oninput="setVol(this.value)"><span id="volval" style="min-width:30px;text-align:center;color:#c8c8c8">30</span></div>
 <div class="btn-row"><button class="btn-light" onclick="cmd('mon')">&#x1F3B5; Play</button><button class="btn-off" onclick="cmd('moff')">&#x1F507; Stop</button></div>
@@ -1275,20 +1302,6 @@ function buildTracks(){var h='';for(var i=0;i<trackNames.length;i++){var n=i+1;v
 function playTrack(n){fetch('/cmd?c=trk'+n).then(function(){currentTrackNum=n;buildTracks();});}
 buildTracks();
 </script>
-</div>
-<div class="panel" id="tab1">
-<h2>Register Tags</h2>
-<div class="reg-box">
-<p style="font-size:0.8em;color:#888">Place tag on <b>slot 4</b> (center), select type, tap Program.</p>
-<p style="font-size:0.85em;margin:6px 0;color:#7ec842" id="regcurrent">Current: —</p>
-<select id="btype"><option value="amethyst_shard">amethyst_shard</option><option value="coal">coal</option><option value="cobblestone">cobblestone</option><option value="compass">compass</option><option value="copper_ingot">copper_ingot</option><option value="diamond">diamond</option><option value="dragon_egg">dragon_egg</option><option value="emerald">emerald</option><option value="gold_ingot">gold_ingot</option><option value="gunpowder">gunpowder</option><option value="iron_ingot">iron_ingot</option><option value="paper">paper</option><option value="redstone">redstone</option><option value="sand">sand</option><option value="steve">steve</option><option value="stick">stick</option><option value="string">string</option><option value="tnt">tnt</option><option value="tripwire_hook">tripwire_hook</option><option value="wood_plank">wood_plank</option></select>
-<div class="btn-row"><button class="btn-reg" onclick="regTag()">&#x1F4BE; Program</button></div>
-<div class="result" id="regres"></div>
-</div>
-<h2>Motors</h2>
-<div class="btn-row"><button class="btn-motor" onclick="cmd('sv0')">Servo 0</button><button class="btn-motor" onclick="cmd('sv1')">Servo 1</button><button class="btn-motor" onclick="cmd('sv2')">Servo 2</button></div>
-<div class="btn-row"><button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button><button class="btn-off" onclick="cmd('voff')">Vibe OFF</button></div>
-<div class="btn-row"><input type="range" id="mtr" min="0" max="255" value="0" style="flex:1;accent-color:#6b4fa5" oninput="setMtr(this.value)"><span id="mtrval" style="min-width:30px;text-align:center;color:#c8c8c8">0</span></div>
 <h2>Status</h2>
 <div class="info"><span>DFPlayer: <span id="dfp" class="off">-</span></span></div>
 <h2>Log</h2>
@@ -1297,6 +1310,10 @@ buildTracks();
 <div class="panel" id="tab2">
 <h2>LED Tests</h2>
 <div class="btn-row"><button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button><button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button><button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button></div>
+<h2>Motors</h2>
+<div class="btn-row"><button class="btn-motor" onclick="cmd('sv0')">Servo 0</button><button class="btn-motor" onclick="cmd('sv1')">Servo 1</button><button class="btn-motor" onclick="cmd('sv2')">Servo 2</button></div>
+<div class="btn-row"><button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button><button class="btn-off" onclick="cmd('voff')">Vibe OFF</button></div>
+<div class="btn-row"><input type="range" id="mtr" min="0" max="255" value="0" style="flex:1;accent-color:#6b4fa5" oninput="setMtr(this.value)"><span id="mtrval" style="min-width:30px;text-align:center;color:#c8c8c8">0</span></div>
 <h2>Simulate Slots</h2>
 <p style="font-size:0.75em;color:#666;margin-bottom:8px">Tap to toggle LEDs:</p>
 <div class="grid" id="grid2"></div>
@@ -1307,10 +1324,15 @@ function cmd(c){fetch('/cmd?c='+c).then(r=>r.text()).then(t=>{refresh()})}
 function setVol(v){document.getElementById('volval').textContent=v;fetch('/volume?v='+v);}
 function setMtr(v){document.getElementById('mtrval').textContent=v;fetch('/motor?pwm='+v);}
 function regTag(){let t=document.getElementById('btype').value;let el=document.getElementById('regres');el.textContent='Programming...';el.className='result';fetch('/register?type='+t).then(r=>r.json()).then(d=>{if(d.success){el.textContent='Written: '+d.type;el.className='result';}else{el.textContent='FAIL: '+(d.error||'no tag');el.className='result err';}refresh();}).catch(e=>{el.textContent='Error: '+e;el.className='result err';});}
-function resetGame(){if(confirm('Reset all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
-function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}if(d.crafted){let names=['Craft Table','Compass','Stone Pick','Map','Fish Rod','Dia Pick','Torch','Iron Sword','Spyglass','TNT','Bow','Crossbow'];let h='';for(let i=0;i<d.crafted.length;i++){h+='<span class="'+(d.crafted[i]?'':'no')+'">'+names[i]+'</span>';}document.getElementById('crafted').innerHTML=h;}if(typeof d.musicTrack!=='undefined'){currentTrackNum=d.musicTrack;buildTracks();}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
-setInterval(refresh,2000);refresh();
-fetch('/recipes').then(r=>r.json()).then(recipes=>{let h='';let abbr={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp','emerald':'emer'};recipes.forEach(r=>{h+='<div style="background:#222;border:1px solid #444;padding:6px;width:140px"><div style="font-size:0.75em;color:#5b8731;margin-bottom:4px;font-weight:bold">'+r.name+' (D'+r.door+')</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px">';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let i=order[k];let p=r.pattern[i];let bg=p?'#3a3a2a':'#1a1a1a';let txt=p?(abbr[p]||p.slice(0,4)):'';h+='<div style="background:'+bg+';padding:2px;text-align:center;font-size:0.55em;min-height:18px;color:#aaa">'+txt+'</div>';}h+='</div></div>';});document.getElementById('recipes').innerHTML=h;});
+function resetGame(){if(confirm('Unlock all recipes and close doors?')){fetch('/reset').then(r=>r.json()).then(d=>{refresh();});}}
+var recipeIndexOrder=[];
+function setState(idx,s){fetch('/recipestate?r='+idx+'&s='+s).then(r=>r.json()).then(function(){refresh();});}
+function forceCraft(idx,name){if(confirm('Force craft "'+name+'"? This opens the door and plays the sound/lights.')){fetch('/craft?r='+idx).then(r=>r.json()).then(function(){refresh();});}}
+var ABBR={'wood_plank':'wood','sand':'sand','stick':'stick','iron_ingot':'iron','string':'str','redstone':'red','diamond':'dia','gold_ingot':'gold','gunpowder':'gun','coal':'coal','copper_ingot':'cop','amethyst_shard':'ame','paper':'paper','cobblestone':'cob','tripwire_hook':'trip','compass':'comp','emerald':'emer','dragon_egg':'egg'};
+function buildRecipes(recipes){recipeIndexOrder=[];var h='';var order=[6,7,8,3,4,5,0,1,2];recipes.forEach(function(r){recipeIndexOrder.push(r.index);var door=(r.door<3)?('D'+r.door):'—';h+='<div class="rcard locked" id="rc'+r.index+'"><div class="rhead"><span class="rname">'+r.name+' ('+door+')</span><span class="rbadge locked" id="rb'+r.index+'">locked</span></div><div class="rgrid">';for(var k=0;k<9;k++){var i=order[k];var p=r.pattern[i];var bg=p?'#3a3a2a':'#1a1a1a';var txt=p?(ABBR[p]||p.slice(0,4)):'';h+='<div class="rcell" style="background:'+bg+'">'+txt+'</div>';}h+='</div><div class="ract"><button class="b-lock" onclick="setState('+r.index+',\'locked\')">Lock</button><button class="b-unlock" onclick="setState('+r.index+',\'unlocked\')">Unlock</button><button class="b-craft" onclick="forceCraft('+r.index+',\''+r.name.replace(/'/g,"")+'\')">Craft</button></div></div>';});document.getElementById('recipes').innerHTML=h;}
+function applyRecipeStates(states){if(!states)return;for(var i=0;i<recipeIndexOrder.length&&i<states.length;i++){var idx=recipeIndexOrder[i];var s=states[i];var card=document.getElementById('rc'+idx);var badge=document.getElementById('rb'+idx);if(card){card.className='rcard '+s;}if(badge){badge.className='rbadge '+s;badge.textContent=s;}}}
+function refresh(){fetch('/status').then(r=>r.json()).then(d=>{let g='',g2='';let order=[6,7,8,3,4,5,0,1,2];for(let k=0;k<9;k++){let j=order[k];let cls='slot';if(!d.readers[j])cls+=' no-reader';else if(d.slots[j])cls+=' active';let label=j+(d.slots[j]?' &#x2705;':d.readers[j]?' .':' &#x274C;');let typeHtml='';if(d.slots[j]&&d.types){let tp=d.types[j];if(tp)typeHtml='<div class="stype">'+tp+'</div>';else typeHtml='<div class="stype unreg">???</div>';}g+='<div class="'+cls+'">'+label+typeHtml+'</div>';g2+='<div class="'+cls+'" onclick="cmd(\'s'+j+'\')">'+j+'</div>';}document.getElementById('grid').innerHTML=g;let g2el=document.getElementById('grid2');if(g2el)g2el.innerHTML=g2;let te=document.getElementById('tv1');te.textContent=d.touchVal1;te.className=d.touch?'on':'off';let t2=document.getElementById('tv2');t2.textContent=d.touchVal2;t2.className=d.touchVal2<700?'on':'off';let df=document.getElementById('dfp');if(df){df.textContent=d.dfplayer?'OK':'--';df.className=d.dfplayer?'on':'off';}let rc=document.getElementById('regcurrent');if(rc){rc.textContent=d.regSlotType?'Current: '+d.regSlotType:'Current: (no tag)';}applyRecipeStates(d.recipeStates);if(typeof d.musicTrack!=='undefined'){currentTrackNum=d.musicTrack;buildTracks();}});fetch('/log').then(r=>r.json()).then(arr=>{document.getElementById('log').textContent=arr.join('\n');let el=document.getElementById('log');el.scrollTop=el.scrollHeight;});}
+fetch('/recipes').then(r=>r.json()).then(function(recipes){buildRecipes(recipes);setInterval(refresh,2000);refresh();});
 </script></body></html>)rawliteral";
 
 // =============================================================================
@@ -1441,7 +1463,7 @@ void handleStatus() {
     }
     if (i < NUM_SLOTS - 1) json += ",";
   }
-  json += "],\"crafted\":[";
+  json += "],\"recipeStates\":[";
   {
     bool seenGroup[10];
     memset(seenGroup, 0, sizeof(seenGroup));
@@ -1453,12 +1475,8 @@ void handleStatus() {
       }
       if (!first) json += ",";
       first = false;
-      // Report state as string: "locked", "unlocked", "completed"
-      switch (recipeState[i]) {
-        case RECIPE_LOCKED:    json += "\"locked\""; break;
-        case RECIPE_UNLOCKED:  json += "\"unlocked\""; break;
-        case RECIPE_COMPLETED: json += "\"completed\""; break;
-      }
+      // Report state as string: "locked" or "unlocked"
+      json += (recipeState[i] == RECIPE_UNLOCKED) ? "\"unlocked\"" : "\"locked\"";
     }
   }
   json += "],\"dfplayer\":";
@@ -1584,10 +1602,9 @@ void handleReset() {
 }
 
 // =============================================================================
-// Recipe State Handler — lock/unlock/complete individual recipes
+// Recipe State Handler — lock/unlock individual recipes
 // GET /recipestate?r=5&s=locked    (lock recipe index 5)
 // GET /recipestate?r=5&s=unlocked  (unlock recipe index 5)
-// GET /recipestate?r=5&s=completed (mark completed)
 // GET /recipestate?name=Compass&s=locked (by name, affects all variants)
 // =============================================================================
 void handleRecipeState() {
@@ -1595,9 +1612,8 @@ void handleRecipeState() {
   RecipeState newState;
   if (state == "locked") newState = RECIPE_LOCKED;
   else if (state == "unlocked") newState = RECIPE_UNLOCKED;
-  else if (state == "completed") newState = RECIPE_COMPLETED;
   else {
-    server.send(400, "application/json", "{\"error\":\"invalid state (locked/unlocked/completed)\"}");
+    server.send(400, "application/json", "{\"error\":\"invalid state (locked/unlocked)\"}");
     return;
   }
 
@@ -1648,6 +1664,45 @@ void handleRecipeState() {
 }
 
 // =============================================================================
+// Manual Craft Trigger — force-fires a recipe's full effect chain
+// GET /craft?r=INDEX      (trigger by recipe index — the index from /recipes)
+// GET /craft?name=Compass (trigger the first recipe matching this name)
+//
+// Runs the exact same executeCraft() path as a real grid match: opens the
+// assigned door, plays the success sound, runs the animation, and returns the
+// recipe to LOCKED. This is the "a kid lost a piece" escape hatch.
+// =============================================================================
+void handleCraft() {
+  String rArg = server.arg("r");
+  String nameArg = server.arg("name");
+  int target = -1;
+
+  if (rArg.length() > 0) {
+    int idx = rArg.toInt();
+    if (idx >= 0 && idx < NUM_RECIPES) target = idx;
+  } else if (nameArg.length() > 0) {
+    for (int i = 0; i < NUM_RECIPES; i++) {
+      if (nameArg.equalsIgnoreCase(String(RECIPES[i].name))) { target = i; break; }
+    }
+  } else {
+    server.send(400, "application/json", "{\"error\":\"provide r=INDEX or name=NAME\"}");
+    return;
+  }
+
+  if (target < 0) {
+    server.send(404, "application/json", "{\"error\":\"recipe not found\"}");
+    return;
+  }
+
+  logMsgf("[ADMIN] Manual craft trigger: %s", RECIPES[target].name);
+  // Respond before running effects — executeCraft blocks ~several seconds on
+  // animation + servo, and we don't want the phone's fetch to time out.
+  server.send(200, "application/json",
+              "{\"success\":true,\"name\":\"" + String(RECIPES[target].name) + "\"}");
+  executeCraft(target);
+}
+
+// =============================================================================
 // Recipes Handler — returns all recipes as JSON
 // =============================================================================
 void handleRecipes() {
@@ -1663,7 +1718,9 @@ void handleRecipes() {
     }
     if (!first) json += ",";
     first = false;
-    json += "{\"name\":\"";
+    json += "{\"index\":";
+    json += r;
+    json += ",\"name\":\"";
     json += RECIPES[r].name;
     json += "\",\"door\":";
     json += RECIPES[r].doorIndex;
@@ -1747,6 +1804,7 @@ void setup() {
   server.on("/reset", handleReset);
   server.on("/recipes", handleRecipes);
   server.on("/recipestate", handleRecipeState);
+  server.on("/craft", handleCraft);
   server.on("/volume", handleVolume);
   server.on("/motor", handleMotorPWM);
   server.begin();
@@ -1854,14 +1912,12 @@ void setup() {
   // --- Recipe state (load from flash) ---
   loadRecipeState();
   {
-    int completed = 0, locked = 0, unlocked = 0;
+    int locked = 0, unlocked = 0;
     for (int i = 0; i < NUM_RECIPES; i++) {
-      if (recipeState[i] == RECIPE_COMPLETED) completed++;
-      else if (recipeState[i] == RECIPE_LOCKED) locked++;
+      if (recipeState[i] == RECIPE_LOCKED) locked++;
       else unlocked++;
     }
-    logMsgf("[CRAFT] State loaded: %d completed, %d locked, %d unlocked",
-            completed, locked, unlocked);
+    logMsgf("[CRAFT] State loaded: %d locked, %d unlocked", locked, unlocked);
   }
 
   // --- Touch baseline ---
