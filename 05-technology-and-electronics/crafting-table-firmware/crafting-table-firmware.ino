@@ -13,7 +13,8 @@
 //   - ESP32 DevKit v1
 //   - 2x PCA9548A I2C multiplexers (0x70, 0x71)
 //   - 9x PN532 NFC readers (one per grid slot)
-//   - 9x WS2812B NeoPixel 24-LED rings (daisy-chained)
+//   - 9x WS2812B NeoPixel 24-LED rings (daisy-chained) + 24 door LEDs
+//     (8 per door, chained after the rings: door 0, then 1, then 2)
 //   - 1x DFPlayer Mini MP3 module (UART)
 //   - 3x MG90S micro servos (one per door)
 //   - 1x Vibration motor (via MOSFET)
@@ -111,7 +112,14 @@
 // =============================================================================
 #define NUM_SLOTS       9
 #define LEDS_PER_RING   24
-#define TOTAL_LEDS      (NUM_SLOTS * LEDS_PER_RING)
+#define RING_LEDS       (NUM_SLOTS * LEDS_PER_RING)   // 216 grid ring LEDs
+#define NUM_DOORS       3
+#define DOOR_LEDS       8                             // LEDs inside each door
+#define DOOR_LEDS_TOTAL (NUM_DOORS * DOOR_LEDS)       // 24 door LEDs
+#define TOTAL_LEDS      (RING_LEDS + DOOR_LEDS_TOTAL) // 240 total on the chain
+// Door LEDs are chained AFTER the 9 grid rings, 8 per door in door order 0,1,2.
+// Door d occupies chain indices [RING_LEDS + d*DOOR_LEDS .. +DOOR_LEDS-1].
+#define DOOR_LED_START(d)  (RING_LEDS + (d) * DOOR_LEDS)
 #define LED_SKIP        2    // Light every-other LED
 #define BRIGHTNESS      25
 
@@ -209,6 +217,7 @@ struct Recipe {
   const char* pattern[NUM_SLOTS];  // [0]-[8], "" means slot must be empty
   uint8_t doorIndex;               // Which door to open (0, 1, 2, or 255=none)
   int8_t craftGroup;               // Recipes with same group share crafted state (-1 = standalone)
+  uint32_t color;                  // Color of the item produced — used to light the door LEDs
 };
 
 const Recipe RECIPES[NUM_RECIPES] = {
@@ -219,52 +228,52 @@ const Recipe RECIPES[NUM_RECIPES] = {
   {
     "Crafting Table",
     {"wood_plank", "wood_plank", "", "wood_plank", "wood_plank", "", "", "", ""},
-    255, 0
+    255, 0, 0xC8820A   // oak brown
   },
   {
     "Crafting Table",
     {"", "wood_plank", "wood_plank", "", "wood_plank", "wood_plank", "", "", ""},
-    255, 0
+    255, 0, 0xC8820A
   },
   {
     "Crafting Table",
     {"", "", "", "wood_plank", "wood_plank", "", "wood_plank", "wood_plank", ""},
-    255, 0
+    255, 0, 0xC8820A
   },
   {
     "Crafting Table",
     {"", "", "", "", "wood_plank", "wood_plank", "", "wood_plank", "wood_plank"},
-    255, 0
+    255, 0, 0xC8820A
   },
   // Recipe 4: Compass → door 2 (Step 2)
   {
     "Compass",
     {"", "iron_ingot", "", "iron_ingot", "redstone", "iron_ingot", "", "iron_ingot", ""},
-    2, -1
+    2, -1, 0xE02020   // compass red
   },
   // Recipe 5: Stone Pickaxe → door 0 (Step 4 — "Cobblestone Pickaxe")
   {
     "Stone Pickaxe",
     {"", "stick", "", "", "stick", "", "cobblestone", "cobblestone", "cobblestone"},
-    0, -1
+    0, -1, 0x808080   // cobblestone grey
   },
   // Recipe 6: Map → door 1 (Step 6)
   {
     "Map",
     {"paper", "paper", "paper", "paper", "compass", "paper", "paper", "paper", "paper"},
-    1, -1
+    1, -1, 0xF0F0E0   // paper/parchment white
   },
   // Recipe 7: Fishing Rod → door 2 (Step 8)
   {
     "Fishing Rod",
     {"stick", "", "string", "", "stick", "string", "", "", "stick"},
-    2, -1
+    2, -1, 0x40B0B0   // string teal
   },
   // Recipe 8: Diamond Pickaxe → door 0 (Step 10)
   {
     "Diamond Pickaxe",
     {"", "stick", "", "", "stick", "", "diamond", "diamond", "diamond"},
-    0, -1
+    0, -1, 0x00E5CC   // diamond aqua
   },
   // Recipe 9-14: Torch → door 1 (Step 13)
   // Coal directly above a stick, valid in any of 6 grid positions
@@ -273,62 +282,62 @@ const Recipe RECIPES[NUM_RECIPES] = {
   {
     "Torch",  // left column, top pair: coal@6 / stick@3
     {"", "", "", "stick", "", "", "coal", "", ""},
-    1, 1
+    1, 1, 0xFF7000   // flame orange
   },
   {
     "Torch",  // left column, bottom pair: coal@3 / stick@0
     {"stick", "", "", "coal", "", "", "", "", ""},
-    1, 1
+    1, 1, 0xFF7000
   },
   {
     "Torch",  // center column, top pair: coal@7 / stick@4
     {"", "", "", "", "stick", "", "", "coal", ""},
-    1, 1
+    1, 1, 0xFF7000
   },
   {
     "Torch",  // center column, bottom pair: coal@4 / stick@1
     {"", "stick", "", "", "coal", "", "", "", ""},
-    1, 1
+    1, 1, 0xFF7000
   },
   {
     "Torch",  // right column, top pair: coal@8 / stick@5
     {"", "", "", "", "", "stick", "", "", "coal"},
-    1, 1
+    1, 1, 0xFF7000
   },
   {
     "Torch",  // right column, bottom pair: coal@5 / stick@2
     {"", "", "stick", "", "", "coal", "", "", ""},
-    1, 1
+    1, 1, 0xFF7000
   },
   // Recipe 15: Iron Sword → door 2 (Step 14)
   {
     "Iron Sword",
     {"", "stick", "", "", "iron_ingot", "", "", "iron_ingot", ""},
-    2, -1
+    2, -1, 0xD0D0D0   // iron silver
   },
   // Recipe 16: Spyglass → door 0 (Step 16)
   {
     "Spyglass",
     {"", "copper_ingot", "", "", "copper_ingot", "", "", "amethyst_shard", ""},
-    0, -1
+    0, -1, 0xAA44FF   // amethyst purple
   },
   // Recipe 17: TNT → door 1 (Step 20)
   {
     "TNT",
     {"gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder", "sand", "gunpowder"},
-    1, -1
+    1, -1, 0xFF2200   // TNT red
   },
   // Recipe 18: Bow (no door — bonus)
   {
     "Bow",
     {"", "stick", "string", "stick", "", "string", "", "stick", "string"},
-    255, -1
+    255, -1, 0x8B5A2B   // bow wood brown
   },
   // Recipe 19: Crossbow (no door — bonus)
   {
     "Crossbow",
     {"", "stick", "", "string", "tripwire_hook", "string", "stick", "iron_ingot", "stick"},
-    255, -1
+    255, -1, 0x8B5A2B
   },
 };
 
@@ -419,6 +428,35 @@ Preferences prefs;
 uint8_t jukeboxTrack = 1;          // Current track (1-10, folder 03)
 String lastSteveUid = "";          // Prevent re-trigger while Steve stays on table
 
+// Background music is advanced on a TIMER, not the DFPlayer "track finished"
+// event: the DFPlayer is wired TX-only (ESP32 -> module), so the module's
+// status messages can't be received. Instead we track when the current track
+// started and how long it runs, and move to the next track when it elapses.
+// Exact measured folder-03 track lengths in milliseconds (from ffprobe on the
+// SD-card files). A small pad is added at playback time so the song fully ends
+// before we advance (the DFPlayer is TX-only, so we time from the play command
+// and can't detect the true end). Index 0 = track 1, etc.
+#define JUKEBOX_ADVANCE_PAD_MS  1500
+const uint32_t JUKEBOX_TRACK_MS[JUKEBOX_NUM_TRACKS] = {
+  229773,  // 001 sweden
+   89714,  // 002 wet_hands
+  280894,  // 003 mice_on_venus
+  191053,  // 004 haggstrom
+  188000,  // 005 living_mice
+  209190,  // 006 subwoofer_lullaby
+  255260,  // 007 danny
+   68116,  // 008 dry_hands
+  201585,  // 009 clark
+  260544,  // 010 minecraft_calm
+};
+unsigned long musicTrackStartMs = 0;   // millis() when the current bg track began
+unsigned long celebrationEndMs = 0;    // millis() when the current celebration song should be considered done
+
+// Door LED auto-off — each door light turns off this long after it lights up
+#define DOOR_LED_ON_MS  30000
+// millis() at which each door's light should turn off (0 = off / no timer)
+unsigned long doorLedOffAt[NUM_DOORS] = {0, 0, 0};
+
 // Background music auto-advance + idle restart
 // - When a background track finishes, the next one in sequence starts.
 // - After MUSIC_IDLE_MS of silence (music stopped, nothing happening),
@@ -435,6 +473,14 @@ const uint8_t GOLD_TRACKS[] = {1, 3};   // Folder 04 tracks to cycle through
 #define GOLD_NUM_TRACKS 2
 uint8_t goldTrackIdx = 0;          // Index into GOLD_TRACKS
 String lastGoldUid = "";           // Prevent re-trigger while gold stays on table
+
+// Exact measured folder-04 (celebration song) durations in ms, by track number.
+// Index 0 = track 1. Used to time when a gold/dragon song has finished.
+const uint32_t CELEBRATION_TRACK_MS[3] = {
+  180000,  // 001 gold victory song A
+  180240,  // 002 dragon egg song
+  170240,  // 003 gold victory song B
+};
 
 // LED spin mode — disabled, using solid color
 // (spin code removed — too slow due to NFC scan cycle timing)
@@ -588,6 +634,90 @@ void clearAllRings() {
   strip.show();
 }
 
+// -----------------------------------------------------------------------------
+// Door LED helpers — 5 LEDs per door, chained after the 9 grid rings.
+// -----------------------------------------------------------------------------
+
+// Scale an 0xRRGGBB color by a 0-255 brightness factor.
+uint32_t scaleColor(uint32_t color, uint8_t factor) {
+  uint8_t r = ((color >> 16) & 0xFF) * factor / 255;
+  uint8_t g = ((color >> 8) & 0xFF) * factor / 255;
+  uint8_t b = (color & 0xFF) * factor / 255;
+  return strip.Color(r, g, b);
+}
+
+// Set all LEDs of one door to a solid color (does not call show()).
+void setDoor(uint8_t door, uint32_t color) {
+  if (door >= NUM_DOORS) return;
+  uint16_t start = DOOR_LED_START(door);
+  for (uint8_t i = 0; i < DOOR_LEDS; i++) strip.setPixelColor(start + i, color);
+}
+
+void clearDoor(uint8_t door) {
+  setDoor(door, 0);
+  if (door < NUM_DOORS) doorLedOffAt[door] = 0;  // cancel any pending auto-off
+}
+
+void clearAllDoorLeds() {
+  for (uint8_t d = 0; d < NUM_DOORS; d++) clearDoor(d);
+  strip.show();
+}
+
+// Playful reveal for the door that just opened: a quick fill-chase in the
+// item's color, a couple of cheerful sparkle pulses, then leave the
+// compartment lit steady in that color so the prop is illuminated.
+void lightDoorReveal(uint8_t door, uint32_t color) {
+  if (door >= NUM_DOORS) return;
+  uint16_t start = DOOR_LED_START(door);
+  logMsgf("[DOOR-LED] Door %d reveal (color 0x%06X)", door, color);
+
+  // 1. Chase: light the 5 LEDs one at a time, bright, with a white leading spark.
+  clearDoor(door);
+  strip.show();
+  for (uint8_t i = 0; i < DOOR_LEDS; i++) {
+    // Trail already-lit LEDs in the item color
+    for (uint8_t j = 0; j < i; j++) strip.setPixelColor(start + j, color);
+    // Leading LED as a bright white-ish spark
+    strip.setPixelColor(start + i, scaleColor(0xFFFFFF, 200));
+    strip.show();
+    delay(70);
+  }
+
+  // 2. Two cheerful sparkle pulses — alternate LEDs bright/dim in the item color.
+  for (uint8_t pulse = 0; pulse < 2; pulse++) {
+    for (uint8_t phase = 0; phase < 2; phase++) {
+      for (uint8_t i = 0; i < DOOR_LEDS; i++) {
+        bool bright = ((i + phase) % 2) == 0;
+        strip.setPixelColor(start + i, scaleColor(color, bright ? 255 : 60));
+      }
+      strip.show();
+      delay(120);
+    }
+  }
+
+  // 3. Settle: leave the whole door lit steady in the item color.
+  setDoor(door, color);
+  strip.show();
+
+  // Arm the auto-off timer — the light will turn off after DOOR_LED_ON_MS.
+  doorLedOffAt[door] = millis() + DOOR_LED_ON_MS;
+}
+
+// Called every loop: turn off any door light whose auto-off time has passed.
+void serviceDoorLeds() {
+  unsigned long now = millis();
+  bool changed = false;
+  for (uint8_t d = 0; d < NUM_DOORS; d++) {
+    if (doorLedOffAt[d] != 0 && (long)(now - doorLedOffAt[d]) >= 0) {
+      setDoor(d, 0);
+      doorLedOffAt[d] = 0;
+      changed = true;
+      logMsgf("[DOOR-LED] Door %d light auto-off", d);
+    }
+  }
+  if (changed) strip.show();
+}
+
 uint32_t getSlotColor(uint8_t slot) {
   uint16_t hue = SLOT_HUES[slot];
   return strip.gamma32(strip.ColorHSV(hue, 255, 180));
@@ -600,11 +730,13 @@ void rainbowSweep() {
   logMsg("[ANIM] Rainbow sweep");
   unsigned long startTime = millis();
   uint16_t hueOffset = 0;
-  // Run for ~2 seconds, advancing hue each frame
+  // Run for ~2 seconds, advancing hue each frame.
+  // Only paints the grid ring LEDs (0..RING_LEDS-1) — never the door LEDs,
+  // which are driven solely by the door functions.
   while (millis() - startTime < 2000) {
-    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
-      // Spread hue across the strip + offset for animation
-      uint16_t pixelHue = hueOffset + (i * 65536L / TOTAL_LEDS);
+    for (uint16_t i = 0; i < RING_LEDS; i++) {
+      // Spread hue across the rings + offset for animation
+      uint16_t pixelHue = hueOffset + (i * 65536L / RING_LEDS);
       strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue, 255, 180)));
     }
     strip.show();
@@ -671,8 +803,8 @@ void victoryFlash() {
   logMsg("[ANIM] Victory flash (gold_ingot)");
   unsigned long startTime = millis();
   while (millis() - startTime < 2500) {
-    // Alternating gold/white sparkle across all rings
-    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+    // Alternating gold/white sparkle across all rings (grid LEDs only)
+    for (uint16_t i = 0; i < RING_LEDS; i++) {
       uint32_t c;
       unsigned long t = millis() - startTime;
       int phase = (i + (int)(t / 80)) % 6;
@@ -706,8 +838,8 @@ void dragonEggFlash() {
   logMsg("[ANIM] Dragon egg shimmer (dragon_egg)");
   unsigned long startTime = millis();
   while (millis() - startTime < 2500) {
-    // Alternating purple/magenta sparkle across all rings
-    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+    // Alternating purple/magenta sparkle across all rings (grid LEDs only)
+    for (uint16_t i = 0; i < RING_LEDS; i++) {
       uint32_t c;
       unsigned long t = millis() - startTime;
       int phase = (i + (int)(t / 80)) % 6;
@@ -783,9 +915,9 @@ void explosionFlash() {
     strip.show();
   }
 
-  // === Phase 2: Explosion (2800ms+) ===
+  // === Phase 2: Explosion (2800ms+) === (grid ring LEDs only, never doors)
   // Bright white flash
-  for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+  for (uint16_t i = 0; i < RING_LEDS; i++) {
     strip.setPixelColor(i, strip.Color(255, 255, 255));
   }
   strip.show();
@@ -795,7 +927,7 @@ void explosionFlash() {
   unsigned long explodeStart = millis();
   while (millis() - explodeStart < 2000) {
     unsigned long t = millis() - explodeStart;
-    for (uint16_t i = 0; i < TOTAL_LEDS; i++) {
+    for (uint16_t i = 0; i < RING_LEDS; i++) {
       int phase = (i * 7 + (int)(t / 40)) % 12;
       uint32_t c;
       if (phase < 3) c = strip.Color(255, 0, 0);        // Red
@@ -866,6 +998,7 @@ void startBackgroundMusic() {
   musicPlaying = true;
   celebrationPlaying = false;
   musicStoppedByUser = false;
+  musicTrackStartMs = millis();   // start the play-time timer for auto-advance
   lastActivityMs = millis();
   logMsgf("[SOUND] Background music playing — track %d/%d", jukeboxTrack, JUKEBOX_NUM_TRACKS);
 }
@@ -877,45 +1010,47 @@ void advanceBackgroundMusic() {
 }
 
 // Play a long one-shot celebration song (gold ingot / dragon egg) from the
-// given folder/track. Unlike a short effect, the idle timer will NOT interrupt
-// this — it's allowed to play to completion, after which background music
-// resumes on the normal idle timer.
-void playCelebrationSong(uint8_t folder, uint8_t track) {
+// given folder/track, with its known duration (ms). The idle timer will NOT
+// interrupt it — it plays to completion (timed, since the module is TX-only),
+// after which background music resumes on the normal idle timer.
+void playCelebrationSong(uint8_t folder, uint8_t track, uint32_t durationMs) {
   if (!dfPlayerReady) return;
   dfPlayer.disableLoop();
   musicPlaying = false;
   celebrationPlaying = true;
+  celebrationEndMs = millis() + durationMs + JUKEBOX_ADVANCE_PAD_MS;
   dfPlayer.playFolder(folder, track);
 }
 
-// Called every loop. Handles two things:
-//   1. Auto-advance: when a track finishes, play the next one. If background
-//      music was playing, advance the playlist. If an effect finished (music
-//      not playing), leave silence for the idle timer to handle.
-//   2. Idle restart: after MUSIC_IDLE_MS of silence (and not stopped by the
+// Called every loop. Advances/resumes background music on TIMERS (the DFPlayer
+// is TX-only, so we can't receive its "track finished" event):
+//   1. Auto-advance: when the current background track's measured duration has
+//      elapsed, roll to the next track in sequence.
+//   2. Celebration end: when a long gold/dragon song's duration elapses, mark
+//      it done so the idle timer can bring background music back.
+//   3. Idle restart: after MUSIC_IDLE_MS of silence (and not stopped by the
 //      user), resume background music on the current track.
 void serviceBackgroundMusic() {
   if (!dfPlayerReady) return;
 
-  // Drain DFPlayer messages; act on track-finished events.
-  while (dfPlayer.available()) {
-    uint8_t type = dfPlayer.readType();
-    if (type == DFPlayerPlayFinished) {
-      if (celebrationPlaying) {
-        // A long celebration song (gold/dragon) finished — let the idle timer
-        // bring background music back after a quiet spell.
-        celebrationPlaying = false;
-        lastActivityMs = millis();
-      } else if (musicPlaying) {
-        // A background track finished — roll to the next one in sequence.
-        advanceBackgroundMusic();
-      }
-      // If a short effect finished (musicPlaying == false), do nothing here;
-      // the idle timer below brings background music back after a quiet spell.
+  unsigned long now = millis();
+
+  // 1. Background track auto-advance (timed).
+  if (musicPlaying) {
+    uint32_t trackLen = JUKEBOX_TRACK_MS[jukeboxTrack - 1] + JUKEBOX_ADVANCE_PAD_MS;
+    if (now - musicTrackStartMs >= trackLen) {
+      advanceBackgroundMusic();
+      return;  // startBackgroundMusic reset the timer; done for this pass
     }
   }
 
-  // Idle restart: quiet long enough, not deliberately stopped, and no long
+  // 2. Celebration song end (timed).
+  if (celebrationPlaying && (long)(now - celebrationEndMs) >= 0) {
+    celebrationPlaying = false;
+    lastActivityMs = now;  // begin the idle countdown from the song's end
+  }
+
+  // 3. Idle restart: quiet long enough, not deliberately stopped, and no long
   // celebration song currently playing (those must finish uninterrupted).
   if (!musicPlaying && !celebrationPlaying && !musicStoppedByUser &&
       (millis() - lastActivityMs >= MUSIC_IDLE_MS)) {
@@ -1202,8 +1337,11 @@ void executeCraft(int recipeIndex) {
   rainbowSweep();
 
   // Open the corresponding door (skip if no door assigned)
-  if (RECIPES[recipeIndex].doorIndex < 3) {
-    servoSweepN(RECIPES[recipeIndex].doorIndex);
+  if (RECIPES[recipeIndex].doorIndex < NUM_DOORS) {
+    uint8_t door = RECIPES[recipeIndex].doorIndex;
+    servoSweepN(door);
+    // Light the opened compartment playfully, in the produced item's color
+    lightDoorReveal(door, RECIPES[recipeIndex].color);
   }
 
   // Haptic feedback: 3 short pulses
@@ -1264,6 +1402,8 @@ void resetGame() {
   for (uint8_t i = 0; i < 3; i++) {
     servos[i]->detach();
   }
+  // Turn off all door compartment LEDs
+  clearAllDoorLeds();
   logMsg("[GAME] All recipes unlocked, doors closed");
 }
 
@@ -1407,6 +1547,9 @@ buildTracks();
 <div class="panel" id="tab2">
 <h2>LED Tests</h2>
 <div class="btn-row"><button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button><button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button><button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button></div>
+<h2>Door Lights</h2>
+<div class="btn-row"><button class="btn-light" onclick="cmd('dr0')">&#x1F6AA; Door 0</button><button class="btn-light" onclick="cmd('dr1')">&#x1F6AA; Door 1</button><button class="btn-light" onclick="cmd('dr2')">&#x1F6AA; Door 2</button></div>
+<div class="btn-row"><button class="btn-off" onclick="cmd('droff')">&#x26AB; Door Lights Off</button></div>
 <h2>Motors</h2>
 <div class="btn-row"><button class="btn-motor" onclick="cmd('sv0')">Servo 0</button><button class="btn-motor" onclick="cmd('sv1')">Servo 1</button><button class="btn-motor" onclick="cmd('sv2')">Servo 2</button></div>
 <div class="btn-row"><button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button><button class="btn-off" onclick="cmd('voff')">Vibe OFF</button></div>
@@ -1449,6 +1592,7 @@ void handleCmd() {
     testPixelCrawl();
   } else if (c == "off") {
     clearAllRings();
+    clearAllDoorLeds();
     for (uint8_t i = 0; i < NUM_SLOTS; i++) {
       slotActive[i] = false;
       slotUid[i] = "";
@@ -1456,6 +1600,22 @@ void handleCmd() {
     }
     logMsg("[WEB] All LEDs off");
     server.send(200, "text/plain", "OK: All off");
+  } else if (c == "droff") {
+    // Turn off all door compartment LEDs
+    clearAllDoorLeds();
+    logMsg("[WEB] Door LEDs off");
+    server.send(200, "text/plain", "OK: Door LEDs off");
+  } else if (c.startsWith("dr")) {
+    // Door light test: dr0/dr1/dr2 — run the reveal animation for that door.
+    int n = c.substring(2).toInt();
+    if (n >= 0 && n < NUM_DOORS) {
+      // Distinct test color per door so they're easy to tell apart.
+      const uint32_t testColors[NUM_DOORS] = {0x00E5CC, 0xFF7000, 0xAA44FF};  // aqua / orange / purple
+      server.send(200, "text/plain", "OK: Door light test");
+      lightDoorReveal((uint8_t)n, testColors[n]);
+    } else {
+      server.send(400, "text/plain", "Invalid door (0-2)");
+    }
   } else if (c.startsWith("sv")) {
     int n = c.substring(2).toInt();
     if (n >= 0 && n <= 2) {
@@ -1924,7 +2084,7 @@ void setup() {
   strip.setBrightness(BRIGHTNESS);
   strip.clear();
   strip.show();
-  logMsgf("[LED] %d LEDs across %d rings initialized", TOTAL_LEDS, NUM_SLOTS);
+  logMsgf("[LED] %d LEDs initialized (%d ring + %d door)", TOTAL_LEDS, RING_LEDS, DOOR_LEDS_TOTAL);
 
   // Build SLOT_TO_RING reverse lookup from RING_ORDER
   for (uint8_t i = 0; i < NUM_SLOTS; i++) SLOT_TO_RING[i] = -1;
@@ -2028,6 +2188,9 @@ void loop() {
 
   // ----- BACKGROUND MUSIC SERVICE (auto-advance + idle restart) -----
   serviceBackgroundMusic();
+
+  // ----- DOOR LED AUTO-OFF (turn off each door light after 30s) -----
+  serviceDoorLeds();
 
   // ----- SERIAL COMMANDS -----
   if (Serial.available()) {
@@ -2155,7 +2318,7 @@ void loop() {
         lastGoldUid = slotUid[i];
         uint8_t goldTrack = GOLD_TRACKS[goldTrackIdx];
         logMsgf("[SCAN] Gold ingot — victory! Playing folder 04 track %d", goldTrack);
-        playCelebrationSong(4, goldTrack);  // Folder 04, tracks 001/003 (cycled) — plays to completion
+        playCelebrationSong(4, goldTrack, CELEBRATION_TRACK_MS[goldTrack - 1]);  // cycled 001/003, plays to completion
         // Advance to next track for the next placement
         goldTrackIdx = (goldTrackIdx + 1) % GOLD_NUM_TRACKS;
         victoryFlash();
@@ -2177,7 +2340,7 @@ void loop() {
       if (slotType[i] == "dragon_egg" && slotUid[i] != lastDragonEggUid) {
         lastDragonEggUid = slotUid[i];
         logMsg("[SCAN] Dragon egg — playing folder 04 track 2");
-        playCelebrationSong(4, 2);  // Folder 04, track 002 = dragon egg song — plays to completion
+        playCelebrationSong(4, 2, CELEBRATION_TRACK_MS[1]);  // Folder 04 track 002 — plays to completion
         dragonEggFlash();
       }
 

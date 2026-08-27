@@ -112,6 +112,9 @@ buildTracks();
 <div class="panel" id="tab2">
 <h2>LED Tests</h2>
 <div class="btn-row"><button class="btn-light" onclick="cmd('L')">&#x1F4A1; Light Test</button><button class="btn-crawl" onclick="cmd('P')">&#x1F41B; Pixel Crawl</button><button class="btn-off" onclick="cmd('off')">&#x26AB; All Off</button></div>
+<h2>Door Lights</h2>
+<div class="btn-row"><button class="btn-light" onclick="cmd('dr0')">&#x1F6AA; Door 0</button><button class="btn-light" onclick="cmd('dr1')">&#x1F6AA; Door 1</button><button class="btn-light" onclick="cmd('dr2')">&#x1F6AA; Door 2</button></div>
+<div class="btn-row"><button class="btn-off" onclick="cmd('droff')">&#x26AB; Door Lights Off</button></div>
 <h2>Motors</h2>
 <div class="btn-row"><button class="btn-motor" onclick="cmd('sv0')">Servo 0</button><button class="btn-motor" onclick="cmd('sv1')">Servo 1</button><button class="btn-motor" onclick="cmd('sv2')">Servo 2</button></div>
 <div class="btn-row"><button class="btn-motor vibe" onclick="cmd('von')">&#x1F4F3; Vibe ON</button><button class="btn-off" onclick="cmd('voff')">Vibe OFF</button></div>
@@ -195,6 +198,8 @@ var MOCK = (function(){
           if(sl>=0&&sl<9){slots[sl]=!slots[sl];if(!slots[sl])types[sl]=null;push('[WEB] Slot '+sl+' '+(slots[sl]?'ON':'OFF'));}
           return {text:'OK'};
         }
+        if(c==='droff'){push('[WEB] Door LEDs off');return {text:'OK: Door LEDs off'};}
+        if(c.indexOf('dr')===0){var dn=parseInt(c.slice(2),10);if(dn>=0&&dn<3){push('[DOOR-LED] Door '+dn+' reveal (test color)');return {text:'OK: Door light test'};}return {status:400,text:'Invalid door'};}
         if(c.indexOf('sv')===0){push('[SERVO] Sweeping servo '+c.slice(2));return {text:'OK: Servo sweep'};}
         if(c==='mon'){musicPlaying=true;push('[SOUND] Music ON — track '+musicTrack);return {text:'OK'};}
         if(c==='moff'){musicPlaying=false;push('[SOUND] Music OFF');return {text:'OK'};}
