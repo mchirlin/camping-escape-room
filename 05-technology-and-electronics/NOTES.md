@@ -50,8 +50,17 @@ Last updated: 2026-08-25
 - Speaker for sound effects (crafting sound on success)
 - Screen/tablet as stretch goal (show crafted item image)
 - **No craft button** — continuous scanning, auto-triggers on valid pattern
-- **No quest state tracking** — all recipes active at all times, physical block availability handles sequencing
-- Recipe list is just a flat array of patterns to match against
+- **Per-recipe state IS tracked and persisted.** The firmware keeps a
+  `recipeState[]` array (`RECIPE_LOCKED` / `RECIPE_UNLOCKED`) and saves it to
+  ESP32 flash via `Preferences` (NVS namespace `"craft"`). A successful or
+  manually-triggered craft flips that recipe back to `RECIPE_LOCKED` ("done").
+  **This state survives a power cycle** — on boot `loadRecipeState()` restores
+  it from flash. Physical block availability still handles most sequencing, but
+  a reboot does NOT reset progress.
+  - **Between runs:** use the explicit **"Reset Game"** command to clear stored
+    recipe state. Powering the table off and on will NOT reset it.
+  - (Superseded earlier note: this was originally planned as "no quest state
+    tracking / flat array of patterns," but the shipped `.ino` persists state.)
 
 ### Power
 - USB power bank (10,000mAh+)

@@ -16,10 +16,13 @@
 import { getApp } from 'firebase/app';
 import {
   getFirestore,
+  collection,
   doc,
   getDoc,
+  getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   onSnapshot,
   arrayUnion,
   type Unsubscribe,
@@ -114,6 +117,30 @@ export async function saveFogToFirebase(regionId: string, allLevel4Keys: string[
     await setDoc(ref, { tiles: allLevel4Keys });
   } catch (err) {
     console.warn('Failed to save fog to Firebase:', err);
+  }
+}
+
+/**
+ * Admin: delete every fog doc from Firestore (all regions). Removes the shared
+ * revealed-tiles state entirely rather than resetting a single region. Docs are
+ * re-created lazily the next time tiles are revealed.
+ * Returns the number of fog docs deleted.
+ */
+export async function deleteAllFog(): Promise<number> {
+  if (!db || !syncActive) return 0;
+  try {
+    const snap = await getDocs(collection(db, COLLECTION));
+    let count = 0;
+    const ops: Promise<void>[] = [];
+    snap.forEach((docSnap) => {
+      ops.push(deleteDoc(docSnap.ref));
+      count++;
+    });
+    await Promise.all(ops);
+    return count;
+  } catch (err) {
+    console.warn('Failed to delete all fog docs from Firebase:', err);
+    return 0;
   }
 }
 

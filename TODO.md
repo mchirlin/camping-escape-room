@@ -143,7 +143,7 @@
 - [x] Write ESP32 firmware:
   - [x] Sequential I2C scanning of 9 readers
   - [x] NFC tag reading + block type parsing
-  - [x] Recipe matching (6 recipes: pickaxe, fishing rod, gold sword, TNT, compass, diamond shovel)
+  - [x] Recipe matching (10 recipes: crafting table, compass, cobblestone pickaxe, map, fishing pole, diamond pickaxe, torch, iron sword, spyglass, TNT)
   - [x] NeoPixel feedback (type-colored on detect, rainbow=success, red=fail)
   - [x] Sound playback on successful craft
   - [x] Empty-grid detection (prevent re-triggering)
@@ -173,7 +173,7 @@
   - [x] Sticker tripwire_hook item (sticker-tripwire_hook.pdf)
 - [x] Copy updated mp3/ folder to DFPlayer SD card (now 20 tracks)
 - [x] Test every block on every grid slot
-- [ ] Test all 13 recipes
+- [ ] Test all 10 recipes
 - [x] Test wrong recipe rejection
 
 ## 🪑 Crafting Table — Physical Build

@@ -21,7 +21,8 @@ export interface UIOverlay {
   onToggleRealMap: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
-  onResetFog: () => void;
+  onResetRun: () => void;
+  onResetGame: () => void;
   onHeadingChange: (degrees: number) => void;
   onAvatarChange: (skinName: string) => void;
   onNameChange: (name: string) => void;
@@ -48,10 +49,9 @@ export class UIOverlayImpl implements UIOverlay {
   onToggleRealMap: () => void = () => {};
   onZoomIn: () => void = () => {};
   onZoomOut: () => void = () => {};
-  onResetFog: () => void = () => {};
-  onResetOnboarding: () => void = () => {};
   onRevealAll: () => void = () => {};
-  onRemoveAllItems: () => void = () => {};
+  onResetRun: () => void = () => {};
+  onResetGame: () => void = () => {};
   onHeadingChange: (degrees: number) => void = () => {};
   onRegionChange: (regionId: string) => void = () => {};
   onExitSimulation: () => void = () => {};
@@ -74,10 +74,10 @@ export class UIOverlayImpl implements UIOverlay {
   private gpsTextEl: HTMLElement | null = null;
   private craftingStatusEl: HTMLElement | null = null;
   private simBanner: HTMLElement | null = null;
-  private resetFogBtn: HTMLElement | null = null;
-  private revealAllBtn: HTMLElement | null = null;
-  private removeAllItemsBtn: HTMLElement | null = null;
-  private actionRow: HTMLElement | null = null;
+  private adminPanel: HTMLElement | null = null;
+  private adminToggleBtn: HTMLElement | null = null;
+  private adminBody: HTMLElement | null = null;
+  private adminExpanded = false;
   private fullscreenBtn: HTMLElement | null = null;
   private toastContainer: HTMLElement | null = null;
   private toggleMapBtn: HTMLElement | null = null;
@@ -121,10 +121,10 @@ export class UIOverlayImpl implements UIOverlay {
     this.createMapLevel();
     this.createToggleMapButton();
 
-    // Bottom-left: region selector, action buttons row, marker panel, fullscreen
+    // Bottom-left: region selector + collapsible admin panel (holds all
+    // admin actions grouped into sections, plus the marker visibility panel)
     this.createRegionSelector();
-    this.createActionButtonsRow();
-    this.createMarkerVisibilityPanel();
+    this.createAdminPanel();
 
     // Bottom-right: center button
     this.createCenterButton();
@@ -178,11 +178,12 @@ export class UIOverlayImpl implements UIOverlay {
     if (this.toggleMapBtn) {
       this.toggleMapBtn.style.display = visible ? 'flex' : 'none';
     }
-    if (this.actionRow) {
-      this.actionRow.style.display = visible ? 'flex' : 'none';
+    if (this.adminPanel) {
+      this.adminPanel.style.display = visible ? 'flex' : 'none';
     }
-    if (this.markerPanel) {
-      this.markerPanel.style.display = visible ? 'block' : 'none';
+    if (!visible) {
+      // Collapse the panel when leaving admin so it doesn't linger expanded
+      this.setAdminExpanded(false);
     }
     if (this.regionSelect) {
       this.regionSelect.style.display = visible ? 'flex' : 'none';
@@ -620,64 +621,120 @@ export class UIOverlayImpl implements UIOverlay {
     }
   }
 
-  private createActionButtonsRow(): void {
-    const row = document.createElement('div');
-    row.classList.add('ui-action-row');
-    row.style.display = 'none';
+  /**
+   * Build a single collapsible admin panel that holds every admin action,
+   * grouped into labeled sections. Collapsed by default so the map stays clean
+   * during a live game; one ⚙️ toggle reveals the whole menu. Destructive
+   * actions live in a visually distinct "danger zone" at the bottom.
+   */
+  private createAdminPanel(): void {
+    const panel = document.createElement('div');
+    panel.classList.add('ui-admin-panel');
+    panel.setAttribute('data-testid', 'admin-panel');
+    panel.style.display = 'none';
 
-    const resetBtn = document.createElement('button');
-    resetBtn.classList.add('ui-btn', 'ui-action-btn');
-    resetBtn.setAttribute('data-testid', 'reset-fog');
-    resetBtn.setAttribute('aria-label', 'Reset fog of war');
-    resetBtn.textContent = '🔄 Reset';
-    resetBtn.addEventListener('click', () => {
-      if (confirm('Reset all fog of war? This clears all explored areas.')) this.onResetFog();
-    });
-    row.appendChild(resetBtn);
-    this.resetFogBtn = resetBtn;
+    // --- Toggle header ---
+    const toggle = document.createElement('button');
+    toggle.classList.add('ui-btn', 'ui-admin-toggle');
+    toggle.setAttribute('data-testid', 'admin-toggle');
+    toggle.setAttribute('aria-label', 'Toggle admin menu');
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.innerHTML = '<span class="ui-admin-toggle-label">⚙️ Admin</span><span class="ui-admin-toggle-caret">▸</span>';
+    toggle.addEventListener('click', () => this.setAdminExpanded(!this.adminExpanded));
+    panel.appendChild(toggle);
+    this.adminToggleBtn = toggle;
 
-    const revealBtn = document.createElement('button');
-    revealBtn.classList.add('ui-btn', 'ui-action-btn');
-    revealBtn.setAttribute('data-testid', 'reveal-all');
-    revealBtn.setAttribute('aria-label', 'Reveal entire map');
-    revealBtn.textContent = '👁 Reveal';
-    revealBtn.addEventListener('click', () => {
-      if (confirm('Reveal the entire map? This removes all fog of war.')) this.onRevealAll();
-    });
-    row.appendChild(revealBtn);
-    this.revealAllBtn = revealBtn;
+    // --- Collapsible body ---
+    const body = document.createElement('div');
+    body.classList.add('ui-admin-body');
+    body.setAttribute('data-testid', 'admin-body');
+    body.style.display = 'none';
 
-    const removeBtn = document.createElement('button');
-    removeBtn.classList.add('ui-btn', 'ui-action-btn');
-    removeBtn.setAttribute('data-testid', 'remove-all-items');
-    removeBtn.setAttribute('aria-label', 'Remove all items');
-    removeBtn.textContent = '🗑 Items';
-    removeBtn.addEventListener('click', () => {
-      if (confirm('Remove all placed items from the map?')) this.onRemoveAllItems();
-    });
-    row.appendChild(removeBtn);
-    this.removeAllItemsBtn = removeBtn;
+    // Section: gameplay triggers used mid-game (not resets)
+    const controlsSection = this.buildAdminSection('Controls');
+    controlsSection.appendChild(this.buildAdminButton(
+      '👁 Reveal All', 'reveal-all', 'Reveal entire map',
+      'Reveal the entire map? This removes all fog of war.',
+      () => this.onRevealAll(),
+    ));
+    controlsSection.appendChild(this.buildMarkerVisibilityPanel());
+    body.appendChild(controlsSection);
 
-    const resetIntroBtn = document.createElement('button');
-    resetIntroBtn.classList.add('ui-btn', 'ui-action-btn');
-    resetIntroBtn.setAttribute('data-testid', 'reset-onboarding');
-    resetIntroBtn.setAttribute('aria-label', 'Reset intro for all players');
-    resetIntroBtn.textContent = '📖 Intro';
-    resetIntroBtn.addEventListener('click', () => {
-      if (confirm('Show the intro again for ALL players on their next load?')) this.onResetOnboarding();
-    });
-    row.appendChild(resetIntroBtn);
+    // Danger zone: two reset buttons.
+    //  - Reset Run (light): wipe players + fog + intro, KEEP placed items/locations.
+    //    Use between groups when the map setup stays the same.
+    //  - Reset Game (full): also removes all placed items/locations. Start fresh.
+    const danger = document.createElement('div');
+    danger.classList.add('ui-admin-section', 'ui-admin-danger');
+    const dangerLabel = document.createElement('div');
+    dangerLabel.classList.add('ui-admin-section-label', 'ui-admin-danger-label');
+    dangerLabel.textContent = '⚠ Danger Zone';
+    danger.appendChild(dangerLabel);
 
-    this.bottomLeftGroup!.appendChild(row);
-    this.actionRow = row;
+    const resetRunBtn = this.buildAdminButton(
+      '🔁 Reset Run', 'reset-run', 'Reset for the next group',
+      'Reset for the next group? This clears all players and fog and resets the intro, but keeps your placed items and locations. This cannot be undone.',
+      () => this.onResetRun(),
+    );
+    resetRunBtn.classList.add('ui-admin-danger-btn');
+    danger.appendChild(resetRunBtn);
+
+    const resetGameBtn = this.buildAdminButton(
+      '🧨 Reset Game', 'reset-game', 'Reset the whole game',
+      'Fully reset the game? This deletes all players, clears all fog, resets the intro, AND removes all placed items and locations. This cannot be undone.',
+      () => this.onResetGame(),
+    );
+    resetGameBtn.classList.add('ui-admin-danger-btn');
+    danger.appendChild(resetGameBtn);
+
+    body.appendChild(danger);
+
+    panel.appendChild(body);
+    this.adminBody = body;
+
+    this.bottomLeftGroup!.appendChild(panel);
+    this.adminPanel = panel;
   }
 
-  private createMarkerVisibilityPanel(): void {
+  /** Build a labeled section container for the admin panel. */
+  private buildAdminSection(label: string): HTMLElement {
+    const section = document.createElement('div');
+    section.classList.add('ui-admin-section');
+    const heading = document.createElement('div');
+    heading.classList.add('ui-admin-section-label');
+    heading.textContent = label;
+    section.appendChild(heading);
+    return section;
+  }
+
+  /**
+   * Build an admin action button. Wraps the handler in a confirm() dialog,
+   * matching the existing pattern for destructive admin actions.
+   */
+  private buildAdminButton(
+    text: string,
+    testId: string,
+    ariaLabel: string,
+    confirmMsg: string,
+    handler: () => void,
+  ): HTMLElement {
+    const btn = document.createElement('button');
+    btn.classList.add('ui-btn', 'ui-action-btn', 'ui-admin-action');
+    btn.setAttribute('data-testid', testId);
+    btn.setAttribute('aria-label', ariaLabel);
+    btn.textContent = text;
+    btn.addEventListener('click', () => {
+      if (confirm(confirmMsg)) handler();
+    });
+    return btn;
+  }
+
+  /** Build the marker visibility sub-panel (nested inside the Items section). */
+  private buildMarkerVisibilityPanel(): HTMLElement {
     const panel = document.createElement('div');
     panel.classList.add('ui-marker-panel');
-    panel.style.display = 'none';
     panel.innerHTML = `
-      <div style="font-family:var(--mc-font);font-size:7px;color:#aaa;margin-bottom:4px;">MARKER VISIBILITY</div>
+      <div class="ui-marker-panel-label">MARKER VISIBILITY</div>
       <div class="ui-marker-panel-buttons"></div>
       <div style="display:flex;gap:4px;margin-top:6px;">
         <button class="ui-btn ui-action-btn ui-reveal-all-markers" style="font-size:7px;padding:4px 6px;">👁 Reveal All</button>
@@ -692,8 +749,21 @@ export class UIOverlayImpl implements UIOverlay {
       this.onHideAllMarkers();
     });
 
-    this.bottomLeftGroup!.appendChild(panel);
     this.markerPanel = panel;
+    return panel;
+  }
+
+  /** Expand or collapse the admin panel body. */
+  private setAdminExpanded(expanded: boolean): void {
+    this.adminExpanded = expanded;
+    if (this.adminBody) {
+      this.adminBody.style.display = expanded ? 'flex' : 'none';
+    }
+    if (this.adminToggleBtn) {
+      this.adminToggleBtn.setAttribute('aria-expanded', String(expanded));
+      const caret = this.adminToggleBtn.querySelector('.ui-admin-toggle-caret');
+      if (caret) caret.textContent = expanded ? '▾' : '▸';
+    }
   }
 
   /** Update the marker visibility panel buttons based on current marker states */

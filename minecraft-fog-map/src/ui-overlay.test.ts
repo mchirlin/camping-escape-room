@@ -35,7 +35,7 @@ describe('UIOverlay', () => {
     { status: 'active', expectedText: 'GPS Active', expectedIcon: '📡' },
     { status: 'lost', expectedText: 'GPS Signal Lost', expectedIcon: '⚠️' },
     { status: 'denied', expectedText: 'GPS Denied', expectedIcon: '🚫' },
-    { status: 'simulation', expectedText: 'Simulation', expectedIcon: '🎮' },
+    { status: 'simulation', expectedText: 'Admin', expectedIcon: '🎮' },
   ])('setGPSStatus("$status") shows "$expectedText"', ({ status, expectedText, expectedIcon }) => {
     overlay.setGPSStatus(status);
 
@@ -71,6 +71,79 @@ describe('UIOverlay', () => {
     const banner = container.querySelector('[data-testid="sim-banner"]') as HTMLElement;
 
     expect(banner.style.display).toBe('none');
+  });
+
+  /**
+   * Admin panel: collapsible menu holding all admin actions.
+   */
+  it('hides the admin panel by default', () => {
+    const panel = container.querySelector('[data-testid="admin-panel"]') as HTMLElement;
+    expect(panel).not.toBeNull();
+    expect(panel.style.display).toBe('none');
+  });
+
+  it('shows the admin panel when setSimulationVisible(true)', () => {
+    overlay.setSimulationVisible(true);
+    const panel = container.querySelector('[data-testid="admin-panel"]') as HTMLElement;
+    expect(panel.style.display).toBe('flex');
+  });
+
+  it('admin panel body is collapsed until the toggle is clicked', () => {
+    overlay.setSimulationVisible(true);
+    const body = container.querySelector('[data-testid="admin-body"]') as HTMLElement;
+    const toggle = container.querySelector('[data-testid="admin-toggle"]') as HTMLElement;
+
+    expect(body.style.display).toBe('none');
+    toggle.click();
+    expect(body.style.display).toBe('flex');
+    toggle.click();
+    expect(body.style.display).toBe('none');
+  });
+
+  it('leaving admin collapses the panel body again', () => {
+    overlay.setSimulationVisible(true);
+    const toggle = container.querySelector('[data-testid="admin-toggle"]') as HTMLElement;
+    toggle.click();
+    const body = container.querySelector('[data-testid="admin-body"]') as HTMLElement;
+    expect(body.style.display).toBe('flex');
+
+    overlay.setSimulationVisible(false);
+    expect(body.style.display).toBe('none');
+  });
+
+  it.each([
+    { testId: 'reset-run', label: 'Reset Run', set: (o: UIOverlayImpl, fn: () => void) => { o.onResetRun = fn; } },
+    { testId: 'reset-game', label: 'Reset Game', set: (o: UIOverlayImpl, fn: () => void) => { o.onResetGame = fn; } },
+  ])('$label button fires its handler after confirm', ({ testId, set }) => {
+    const origConfirm = window.confirm;
+    window.confirm = () => true;
+    try {
+      let fired = false;
+      set(overlay, () => { fired = true; });
+      const btn = container.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
+      expect(btn).not.toBeNull();
+      btn.click();
+      expect(fired).toBe(true);
+    } finally {
+      window.confirm = origConfirm;
+    }
+  });
+
+  it.each([
+    { testId: 'reset-run', label: 'Reset Run', set: (o: UIOverlayImpl, fn: () => void) => { o.onResetRun = fn; } },
+    { testId: 'reset-game', label: 'Reset Game', set: (o: UIOverlayImpl, fn: () => void) => { o.onResetGame = fn; } },
+  ])('$label button does nothing when confirm is cancelled', ({ testId, set }) => {
+    const origConfirm = window.confirm;
+    window.confirm = () => false;
+    try {
+      let fired = false;
+      set(overlay, () => { fired = true; });
+      const btn = container.querySelector(`[data-testid="${testId}"]`) as HTMLElement;
+      btn.click();
+      expect(fired).toBe(false);
+    } finally {
+      window.confirm = origConfirm;
+    }
   });
 
   /**

@@ -311,25 +311,99 @@
   background: rgba(85, 255, 85, 0.3);
 }
 
-/* --- Action Buttons Row (bottom-left group) --- */
-.ui-action-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
 .ui-action-btn {
   font-size: 7px !important;
   padding: 5px 8px !important;
 }
 
-/* --- Marker Visibility Panel (admin mode) --- */
-.ui-marker-panel {
-  background: rgba(0, 0, 0, 0.75);
-  border: 2px solid var(--mc-btn-shadow);
+/* --- Admin Panel (collapsible, bottom-left group) --- */
+.ui-admin-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 300px;
+}
+
+.ui-admin-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mc-font);
+  font-size: 8px !important;
+  padding: 6px 10px !important;
+}
+
+.ui-admin-toggle-caret {
+  font-size: 8px;
+  opacity: 0.8;
+}
+
+.ui-admin-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
   padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid var(--mc-btn-shadow);
   border-radius: 4px;
   max-width: 300px;
+}
+
+.ui-admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ui-admin-section-label {
+  font-family: var(--mc-font);
+  font-size: 7px;
+  color: #aaa;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ui-admin-section .ui-admin-action {
+  align-self: flex-start;
+}
+
+/* Danger zone — irreversible / shared-state actions */
+.ui-admin-danger {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 2px solid rgba(255, 85, 85, 0.5);
+}
+
+.ui-admin-danger-label {
+  color: #ff5555;
+}
+
+.ui-admin-danger-btn {
+  border: 2px solid #ff5555 !important;
+  background: rgba(255, 85, 85, 0.15) !important;
+  color: #ff8888 !important;
+}
+
+.ui-admin-danger-btn:hover {
+  background: rgba(255, 85, 85, 0.3) !important;
+}
+
+/* --- Marker Visibility Panel (nested in admin Items section) --- */
+.ui-marker-panel {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--mc-btn-shadow);
+  padding: 6px;
+  border-radius: 4px;
+  max-width: 300px;
+}
+
+.ui-marker-panel-label {
+  font-family: var(--mc-font);
+  font-size: 7px;
+  color: #aaa;
+  margin-bottom: 4px;
 }
 
 .ui-marker-panel-buttons {

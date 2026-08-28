@@ -808,10 +808,6 @@ async function main(): Promise<void> {
     mapInteraction.setZoomLevel(vp.zoomLevel - 0.5);
   };
 
-  uiOverlay.onResetFog = () => {
-    fogEngine.reset();
-  };
-
   uiOverlay.onRevealAll = () => {
     fogEngine.revealAll();
   };
@@ -820,22 +816,47 @@ async function main(): Promise<void> {
     simHeading = degrees;
   };
 
-  uiOverlay.onRemoveAllItems = () => {
+  // Shared reset: wipe ALL players + ALL fog from Firestore, reset the intro for
+  // everyone, and clear locally-rendered fog. Both danger-zone buttons use this;
+  // they differ only in whether placed items/locations are also removed.
+  // Uses clearLocal() (not reset()) so we don't write an empty fog doc back and
+  // recreate what we're deleting.
+  const resetPlayersAndFog = (): Promise<[number, number]> => {
+    fogEngine.clearLocal();
+    return Promise.all([
+      import('./player-db').then(({ initPlayerDb, deleteAllPlayers, resetAllOnboarding }) => {
+        initPlayerDb();
+        // Reset onboarding before deleting so it applies to existing docs;
+        // deleting them afterward is fine (devices re-create + re-onboard).
+        return resetAllOnboarding().then(() => deleteAllPlayers());
+      }),
+      import('./fog-sync').then(({ deleteAllFog }) => deleteAllFog()),
+    ]);
+  };
+
+  // Admin (danger zone) — Reset Run: for the next group. Clears players + fog +
+  // intro but KEEPS placed items/locations (map setup stays put). Irreversible.
+  uiOverlay.onResetRun = () => {
+    resetPlayersAndFog().then(([players, fog]) => {
+      uiOverlay.showToast(
+        `🔁 Run reset — cleared ${players} player${players === 1 ? '' : 's'} + ${fog} fog region${fog === 1 ? '' : 's'} (items kept)`
+      );
+    });
+  };
+
+  // Admin (danger zone) — Reset Game: full wipe. Everything Reset Run does, PLUS
+  // removing all placed items/locations for a fresh start. Irreversible.
+  uiOverlay.onResetGame = () => {
+    // Also clear placed markers + their leaflet layers.
     markerStore.removeAll();
-    // Clean up leaflet markers if any
     for (const id of Object.keys(leafletMarkerLayers)) {
       if (leafletMap) leafletMap.removeLayer(leafletMarkerLayers[id]);
       delete leafletMarkerLayers[id];
     }
-  };
-
-  // Admin: clear onboarding for all players so everyone sees the intro again
-  uiOverlay.onResetOnboarding = () => {
-    import('./player-db').then(({ initPlayerDb, resetAllOnboarding }) => {
-      initPlayerDb();
-      resetAllOnboarding().then((count) => {
-        uiOverlay.showToast(`📖 Intro reset for ${count} player${count === 1 ? '' : 's'}`);
-      });
+    resetPlayersAndFog().then(([players, fog]) => {
+      uiOverlay.showToast(
+        `🧨 Game reset — cleared ${players} player${players === 1 ? '' : 's'} + ${fog} fog region${fog === 1 ? '' : 's'} + all items`
+      );
     });
   };
 

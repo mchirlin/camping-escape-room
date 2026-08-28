@@ -663,39 +663,33 @@ void clearAllDoorLeds() {
   strip.show();
 }
 
-// Playful reveal for the door that just opened: a quick fill-chase in the
-// item's color, a couple of cheerful sparkle pulses, then leave the
-// compartment lit steady in that color so the prop is illuminated.
+// Reveal for the door that just opened: a rainbow sweep across the door's
+// LEDs (same look as the grid-ring rainbowSweep) that runs for 5 seconds
+// AFTER the door has opened, then settles the compartment to the item's
+// color so the prop stays illuminated.
+#define DOOR_REVEAL_RAINBOW_MS  5000   // Rainbow runs this long after door opens
 void lightDoorReveal(uint8_t door, uint32_t color) {
   if (door >= NUM_DOORS) return;
   uint16_t start = DOOR_LED_START(door);
-  logMsgf("[DOOR-LED] Door %d reveal (color 0x%06X)", door, color);
+  logMsgf("[DOOR-LED] Door %d rainbow reveal (color 0x%06X)", door, color);
 
-  // 1. Chase: light the 5 LEDs one at a time, bright, with a white leading spark.
+  // Rainbow sweep across the door's LEDs for 5 seconds. Hue is spread across
+  // the door's LEDs and rotated each frame, matching the grid-ring rainbow.
   clearDoor(door);
   strip.show();
-  for (uint8_t i = 0; i < DOOR_LEDS; i++) {
-    // Trail already-lit LEDs in the item color
-    for (uint8_t j = 0; j < i; j++) strip.setPixelColor(start + j, color);
-    // Leading LED as a bright white-ish spark
-    strip.setPixelColor(start + i, scaleColor(0xFFFFFF, 200));
-    strip.show();
-    delay(70);
-  }
-
-  // 2. Two cheerful sparkle pulses — alternate LEDs bright/dim in the item color.
-  for (uint8_t pulse = 0; pulse < 2; pulse++) {
-    for (uint8_t phase = 0; phase < 2; phase++) {
-      for (uint8_t i = 0; i < DOOR_LEDS; i++) {
-        bool bright = ((i + phase) % 2) == 0;
-        strip.setPixelColor(start + i, scaleColor(color, bright ? 255 : 60));
-      }
-      strip.show();
-      delay(120);
+  unsigned long startTime = millis();
+  uint16_t hueOffset = 0;
+  while (millis() - startTime < DOOR_REVEAL_RAINBOW_MS) {
+    for (uint8_t i = 0; i < DOOR_LEDS; i++) {
+      uint16_t pixelHue = hueOffset + (i * 65536L / DOOR_LEDS);
+      strip.setPixelColor(start + i, strip.gamma32(strip.ColorHSV(pixelHue, 255, 180)));
     }
+    strip.show();
+    hueOffset += 1500;  // Speed of rotation (matches rainbowSweep)
+    delay(20);
   }
 
-  // 3. Settle: leave the whole door lit steady in the item color.
+  // Settle: leave the whole door lit steady in the item color.
   setDoor(door, color);
   strip.show();
 

@@ -13,6 +13,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   deleteField,
   onSnapshot,
   type Unsubscribe,
@@ -143,6 +144,31 @@ export async function resetAllOnboarding(): Promise<number> {
     return count;
   } catch (err) {
     console.warn('Failed to reset onboarding', err);
+    return 0;
+  }
+}
+
+/**
+ * Admin: delete every player doc from Firestore. Unlike removePlayer (which
+ * just marks a player offline) this permanently removes all player records,
+ * including persistent fields like onboardedAt. Every connected device will
+ * re-create its own doc on its next broadcast / onboarding.
+ * Returns the number of player docs deleted.
+ */
+export async function deleteAllPlayers(): Promise<number> {
+  if (!db) return 0;
+  try {
+    const snap = await getDocs(collection(db, COLLECTION_NAME));
+    let count = 0;
+    const ops: Promise<void>[] = [];
+    snap.forEach((docSnap) => {
+      ops.push(deleteDoc(docSnap.ref));
+      count++;
+    });
+    await Promise.all(ops);
+    return count;
+  } catch (err) {
+    console.warn('Failed to delete all players', err);
     return 0;
   }
 }

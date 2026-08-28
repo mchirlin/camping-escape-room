@@ -329,14 +329,23 @@ export class FogEngine {
 
   /** Reset all fog — clear revealed tiles and localStorage. */
   reset(): void {
+    this.clearLocal();
+    // Clear Firebase fog state
+    if (isFogSyncActive() && this.config.regionId) {
+      saveFogToFirebase(this.config.regionId, []);
+    }
+  }
+
+  /**
+   * Clear only the locally-rendered fog and localStorage, WITHOUT writing to
+   * Firebase. Used when Firebase fog docs are being deleted directly (a full
+   * wipe), so we don't recreate an empty doc for the current region.
+   */
+  clearLocal(): void {
     this.revealedTiles.clear();
     const key = this.storageKey;
     if (key) {
       try { localStorage.removeItem(key); } catch { /* ignore */ }
-    }
-    // Clear Firebase fog state
-    if (isFogSyncActive() && this.config.regionId) {
-      saveFogToFirebase(this.config.regionId, []);
     }
   }
 
